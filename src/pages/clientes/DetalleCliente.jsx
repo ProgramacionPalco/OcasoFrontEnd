@@ -14,6 +14,7 @@ function DetalleCliente() {
     const [cliente, setCliente] = useState(null);
     const [loading, setLoading] = useState(true);
     const [mostrarForm, setMostrarForm] = useState(false);
+    const [permisos, setPermisos] = useState([]);
     const [resumen, setResumen] = useState({
         contactos: 0,
         documentosSubidos: 0,
@@ -26,6 +27,9 @@ function DetalleCliente() {
         fechaVencimiento: null,
         idCliente: id
     });
+    const permisoModulo = (ruta) => {
+         return permisos.find(p => p.ruta?.toLowerCase() === ruta.toLowerCase());
+    };
     const [modoEdicion, setModoEdicion] = useState(false);
     const [clienteEditado, setClienteEditado] = useState({});
     const [catalogoDocs, setCatalogoDocs] = useState([]);
@@ -33,6 +37,7 @@ function DetalleCliente() {
     const [tabActiva, setTabActiva] = useState("info");
     const [docPreview, setDocPreview] = useState(null);
     const [eventos, setEventos] = useState([]);
+    const tieneContactos = cliente?.contactos?.length > 0;
     const [catalogoEjecutivos, setCatalogoEjecutivos] = useState([]);
     const [catalogoEjecutivosVentas, setCatalogoEjecutivosVentas] = useState([]);
     
@@ -195,14 +200,16 @@ function DetalleCliente() {
                     docsRes,
                     requeridosRes,
                     ejecutivosRes,
-                    ejecutivosVentasRes
+                    ejecutivosVentasRes,
+                    permisosRes
                 ] = await Promise.all([
                     api.get(`/altas/clientes/${id}`),
                     api.get(`/altas/clientes/${id}/resumen`),
                     api.get("/catalogos/documentos?page=1&pageSize=100"),
                     api.get(`/altas/clientes/${id}/documentos-requeridos`),
                     api.get("/catalogos/ejecutivos"),
-                    api.get("/catalogos/ejecutivosVentas")
+                    api.get("/catalogos/ejecutivosVentas"),
+                    api.get("/seguridad/mis-permisos")
                 ]);
 
                 setCliente(clienteRes.data);
@@ -212,6 +219,7 @@ function DetalleCliente() {
                 setDocsRequeridos(requeridosRes.data);
                 setCatalogoEjecutivos(ejecutivosRes.data);
                 setCatalogoEjecutivosVentas(ejecutivosVentasRes.data);
+                setPermisos(permisosRes.data);
 
             } catch (error) {
 
@@ -318,6 +326,18 @@ function DetalleCliente() {
                 )}
 
             </div>
+
+            {/* ALERTA CONTACTOS */}
+            {!tieneContactos && (
+
+                <div className="alert alert-warning d-flex align-items-center mb-4">
+                    <div className="me-2">⚠</div>
+                    <div>
+                        <strong>Cliente incompleto. </strong>  
+                        Debe registrar al menos un contacto para continuar con el expediente.
+                    </div>
+                </div>
+            )}
             
             {/* Pestañas */}
             <ul className="nav nav-tabs mb-4">
@@ -371,9 +391,25 @@ function DetalleCliente() {
                                 Nuevo contacto
                             </button>
 
-                            <button
-                                className="btn btn-dark"
-                                onClick={() => setTabActiva("documentos")}
+                                <button
+                                    className="btn btn-dark"
+                                    disabled={!tieneContactos}
+                                    onClick={() => {
+
+                                    if(!tieneContactos){
+
+                                    Swal.fire({
+                                    icon:"warning",
+                                    title:"Contacto requerido",
+                                    text:"Debe registrar al menos un contacto antes de subir documentos."
+                                    })
+
+                                    return
+                                    }
+
+                                    setTabActiva("documentos")
+
+                                    }}
                                 >
                                 <FaFileUpload className="me-2"/>
                                 Subir documento
@@ -466,37 +502,39 @@ function DetalleCliente() {
 
                     <h5 className="mb-0">Información General</h5>
 
-                    {!modoEdicion ? (
+                    {!modoEdicion && permisoModulo("/clientes")?.puedeEditar && (
 
-                    <button
-                    className="btn btn-outline-primary btn-sm"
-                    onClick={()=>setModoEdicion(true)}
-                    >
-                    Editar
-                    </button>
+                        <button
+                        className="btn btn-outline-primary btn-sm"
+                        onClick={()=>setModoEdicion(true)}
+                        >
+                        Editar
+                        </button>
 
-                    ) : (
+                        )}
 
-                    <div className="d-flex gap-2">
+                        {modoEdicion && (
 
-                    <button
-                    className="btn btn-success btn-sm"
-                    onClick={guardarCambios}
-                    >
-                    Guardar
-                    </button>
+                        <div className="d-flex gap-2">
 
-                    <button
-                    className="btn btn-secondary btn-sm"
-                    onClick={()=>{
-                    setModoEdicion(false);
-                    setClienteEditado(cliente);
-                    }}
-                    >
-                    Cancelar
-                    </button>
+                        <button
+                        className="btn btn-success btn-sm"
+                        onClick={guardarCambios}
+                        >
+                        Guardar
+                        </button>
 
-                    </div>
+                        <button
+                        className="btn btn-secondary btn-sm"
+                        onClick={()=>{
+                        setModoEdicion(false);
+                        setClienteEditado(cliente);
+                        }}
+                        >
+                        Cancelar
+                        </button>
+
+                        </div>
 
                     )}
 
@@ -1076,12 +1114,16 @@ function DetalleCliente() {
                         <div className="d-flex justify-content-between align-items-center mb-3">
                             <h5>Contactos</h5>
 
+                            {permisoModulo("/clientes")?.puedeCrear && (
+
                             <button
-                                className="btn btn-primary"
-                                onClick={() => setMostrarForm(true)}
+                            className="btn btn-primary"
+                            onClick={() => setMostrarForm(true)}
                             >
-                                + Agregar Contacto
+                            + Agregar Contacto
                             </button>
+
+                            )}
                         </div>
 
                         {mostrarForm && (
@@ -1103,17 +1145,75 @@ function DetalleCliente() {
                                     <tr>
                                         <th>Nombre</th>
                                         <th>Correo</th>
-                                        <th>Teléfono</th>
+                                        <th>Teléfono Ofi</th>
+                                        <th>Ext</th>
+                                        <th>Celular</th>
+                                        <th>Área</th>
+                                        <th>Puesto</th>
+                                        <th>Acciones</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {cliente.contactos.map((c) => (
-                                        <tr key={c.id}>
-                                            <td>{c.nombreContacto}</td>
-                                            <td>{c.correoContacto}</td>
-                                            <td>{c.telefonoContacto}</td>
-                                        </tr>
-                                    ))}
+                                {cliente.contactos.map((c) => (
+                                <tr key={c.id}>
+                                <td>{c.nombreContacto}</td>
+                                <td>{c.correoContacto}</td>
+                                <td>{c.numeroOficina}</td>
+                                <td>{c.ext}</td>
+                                <td>{c.telefonoContacto}</td>
+                                <td>{c.area}</td>
+                                <td>{c.puesto}</td>
+                                <td>
+                                    {permisoModulo("/clientes")?.puedeEliminar && (
+                                    <button
+                                        className="btn btn-sm btn-danger"
+                                        onClick={async ()=>{
+
+                                        const confirm = await Swal.fire({
+                                        title:"Eliminar contacto",
+                                        text:"¿Desea eliminar este contacto?",
+                                        icon:"warning",
+                                        showCancelButton:true,
+                                        confirmButtonText:"Eliminar",
+                                        cancelButtonText:"Cancelar"
+                                        })
+
+                                        if(!confirm.isConfirmed) return
+
+                                        try{
+
+                                        await api.delete(`/altas/clientes/contactos/${c.id}`)
+
+                                        await recargarCliente()
+
+                                        Swal.fire({
+                                        icon:"success",
+                                        title:"Contacto eliminado"
+                                        })
+
+
+                                        }
+                                        catch{
+
+                                        Swal.fire({
+                                        icon:"error",
+                                        title:"Error",
+                                        text:"No se pudo eliminar el contacto"
+                                        })
+
+                                        }
+
+                                        }}
+                                        >
+
+                                        🗑 Eliminar
+
+                                    </button>
+                                    )}
+                                </td>
+
+                                </tr>
+                                ))}
                                 </tbody>
                             </table>
                         )}
@@ -1151,28 +1251,56 @@ function DetalleCliente() {
                                 setNuevoDoc({ ...nuevoDoc, fechaVencimiento: e.target.value })
                             }
                         />
-
+                        {permisoModulo("/clientes")?.puedeCrear && (
                         <button
-                            className="btn btn-dark"
-                            onClick={async () => {
-                                try {
-                                    await api.post(`/altas/clientes/${id}/documentos`, nuevoDoc);
+                        className="btn btn-dark"
+                        onClick={async () => {
 
-                                    setNuevoDoc({
-                                        idDocumento: "",
-                                        rutaDocumento: "",
-                                        fechaVencimiento: null,
-                                        idCliente: id
-                                    });
+                        if(!tieneContactos){
 
-                                    await recargarCliente();
-                                } catch (error) {
-                                    alert("Error al guardar documento");
-                                }
-                            }}
+                        Swal.fire({
+                        icon:"warning",
+                        title:"Contacto requerido",
+                        text:"Debe registrar al menos un contacto antes de subir documentos."
+                        })
+
+                        return
+                        }
+
+                        try {
+
+                        await api.post(`/altas/clientes/${id}/documentos`, nuevoDoc);
+
+                        setNuevoDoc({
+                        idDocumento: "",
+                        rutaDocumento: "",
+                        fechaVencimiento: null,
+                        idCliente: id
+                        });
+
+                        await recargarCliente();
+
+                        Swal.fire({
+                        icon:"success",
+                        title:"Documento guardado",
+                        text:"El documento fue agregado correctamente."
+                        })
+
+                        } catch (error) {
+
+                        Swal.fire({
+                        icon:"error",
+                        title:"Error",
+                        text:"No se pudo guardar el documento."
+                        })
+
+                        }
+
+                        }}
                         >
-                            Guardar Documento
+                        Guardar Documento
                         </button>
+                        )}
                     </div>
 
                     {/* DOCUMENTOS SUBIDOS */}

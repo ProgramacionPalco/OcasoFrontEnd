@@ -8,6 +8,8 @@ function NuevoCliente() {
 
   const [step, setStep] = useState(1);
 
+  const [contactos, setContactos] = useState([]);
+
   const [cliente, setCliente] = useState({
     rfc: "",
     razonSocial: "",
@@ -58,6 +60,12 @@ function NuevoCliente() {
   };
 
   const guardarCliente = async () => {
+
+    if (!contactos || contactos.length === 0) {
+      alert("Debe registrar al menos un contacto para continuar.");
+      return;
+    }
+
     try {
 
       const payload = {
@@ -65,7 +73,8 @@ function NuevoCliente() {
         servicioPalco: cliente.servicioPalco ? 1 : 0,
         servicioSLP: cliente.servicioSLP ? 1 : 0,
         servicioMAYA: cliente.servicioMAYA ? 1 : 0,
-        servicioOla: cliente.servicioOla ? 1 : 0
+        servicioOla: cliente.servicioOla ? 1 : 0,
+        contactos
       };
 
       const res = await api.post("/altas/clientes", payload);
@@ -73,8 +82,10 @@ function NuevoCliente() {
       navigate(`/clientes/${res.data.data.id}`);
 
     } catch (error) {
+
       console.error(error);
       alert("Error al guardar cliente");
+
     }
   };
 

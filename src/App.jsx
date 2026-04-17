@@ -15,57 +15,63 @@ import ReporteClientesDocumentos from "./pages/reportes/ReporteClientesDocumento
 import MainLayout from "./layouts/MainLayout";
 import ProtectedRoute from "./components/ProtectedRoute";
 
+import { PermisosProvider } from "./context/PermisosContext";
+
 function App() {
 
   const token = localStorage.getItem("token");
 
   return (
 
-    <BrowserRouter>
+    <PermisosProvider>
 
-      <Routes>
+      <BrowserRouter>
 
-        {/* LOGIN */}
-        <Route path="/login" element={<Login />} />
+        <Routes>
 
-        {/* REDIRECCIÓN INICIAL */}
-        <Route
-          path="/"
-          element={token ? <Navigate to="/dashboard" replace /> : <Navigate to="/login" replace />}
-        />
+          {/* LOGIN */}
+          <Route path="/login" element={<Login />} />
 
-        {/* RUTAS PROTEGIDAS */}
-        <Route element={<ProtectedRoute />}>
+          {/* REDIRECCIÓN INICIAL */}
+          <Route
+            path="/"
+            element={token ? <Navigate to="/dashboard" replace /> : <Navigate to="/login" replace />}
+          />
 
-          <Route element={<MainLayout />}>
+          {/* RUTAS PROTEGIDAS */}
+          <Route element={<ProtectedRoute />}>
 
-            <Route path="/dashboard" element={<Dashboard />} />
+            <Route element={<MainLayout />}>
 
-            <Route path="/clientes" element={<Clientes />} />
+              <Route path="/dashboard" element={<Dashboard />} />
 
-            <Route path="/clientes/nuevo" element={<NuevoCliente />} />
+              <Route path="/clientes" element={<Clientes />} />
 
-            <Route path="/clientes/:id" element={<DetalleCliente />} />
+              <Route path="/clientes/nuevo" element={<NuevoCliente />} />
 
-            <Route path="/reportes/clientes-documentos" element={<ReporteClientesDocumentos />}/>
+              <Route path="/clientes/:id" element={<DetalleCliente />} />
 
-            <Route path="/catalogos" element={<Catalogos />} />
+              <Route path="/reportes/clientes-documentos" element={<ReporteClientesDocumentos />} />
 
-            <Route path="/catalogos/documentos" element={<CatalogoDocumentos />} />
+              <Route path="/catalogos" element={<Catalogos />} />
 
-            <Route path="/catalogos/empresas" element={<CatalogoEmpresas />} />
+              <Route path="/catalogos/documentos" element={<CatalogoDocumentos />} />
 
-            <Route path="/catalogos/ejecutivos" element={<CatalogoEjecutivos />} />
+              <Route path="/catalogos/empresas" element={<CatalogoEmpresas />} />
 
-            <Route path="/catalogos/ventas" element={<CatalogoEjecutivosVentas />} />
+              <Route path="/catalogos/ejecutivos" element={<CatalogoEjecutivos />} />
+
+              <Route path="/catalogos/ventas" element={<CatalogoEjecutivosVentas />} />
+
+            </Route>
 
           </Route>
 
-        </Route>
+        </Routes>
 
-      </Routes>
+      </BrowserRouter>
 
-    </BrowserRouter>
+    </PermisosProvider>
 
   );
 

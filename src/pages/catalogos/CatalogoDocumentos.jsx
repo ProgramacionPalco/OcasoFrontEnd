@@ -15,10 +15,20 @@ const [nuevoDoc, setNuevoDoc] = useState({
 
 const obtenerDocumentos = async () => {
     try {
+
         const res = await api.get("/catalogos/documentos");
-        setDocumentos(res.data);
+
+        console.log("Respuesta documentos:", res.data);
+
+        const data = Array.isArray(res.data)
+            ? res.data
+            : res.data.data || [];
+
+        setDocumentos(data);
+
     } catch (error) {
         console.error("Error cargando catálogo", error);
+        setDocumentos([]);
     }
 };
 

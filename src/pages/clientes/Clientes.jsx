@@ -11,9 +11,22 @@ function Clientes() {
   const [loading, setLoading] = useState(true);
   const [busqueda, setBusqueda] = useState("");
   const [estatusFiltro, setEstatusFiltro] = useState("");
+  const [permisos, setPermisos] = useState([]);
 
   const navigate = useNavigate();
 
+  const permisoModulo = (ruta) => {
+    return permisos.find(p => p.ruta?.toLowerCase() === ruta.toLowerCase());
+  };
+
+  const obtenerPermisos = async () => {
+    try {
+      const res = await api.get("/seguridad/mis-permisos");
+      setPermisos(res.data);
+    } catch (error) {
+      console.error("Error cargando permisos", error);
+    }
+  };
   const obtenerClientes = async () => {
     try {
 
@@ -35,6 +48,7 @@ function Clientes() {
   useEffect(() => {
 
     obtenerClientes();
+    obtenerPermisos();
 
   }, []);
 
@@ -113,12 +127,17 @@ function Clientes() {
 
         <h2 className="fw-bold">Clientes</h2>
 
-        <Button
-          variant="contained"
-          onClick={() => navigate("/clientes/nuevo")}
-        >
-          + Nuevo Cliente
-        </Button>
+
+       {permisoModulo("/clientes")?.puedeCrear && (
+
+          <Button
+            variant="contained"
+            onClick={() => navigate("/clientes/nuevo")}
+          >
+            + Nuevo Cliente
+          </Button>
+
+        )}
 
       </div>
 
