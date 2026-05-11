@@ -37,8 +37,8 @@ function ContactoForm({ clienteId, onClose, onSuccess }) {
       <form onSubmit={handleSubmit}>
         <input className="form-control mb-2" name="nombreContacto" placeholder="Nombre" onChange={handleChange} required />
         <input className="form-control mb-2" name="correoContacto" placeholder="Correo" onChange={handleChange} />
-        <input className="form-control mb-2" name="telefonoContacto" placeholder="Teléfono" onChange={handleChange} />
-        <input className="form-control mb-2" name="numeroOficina" placeholder="Número Oficina" onChange={handleChange} />
+        <input className="form-control mb-2" name="telefonoContacto" placeholder="Teléfono celular" onChange={handleChange} />
+        <input className="form-control mb-2" name="numeroOficina" placeholder="Número oficina" onChange={handleChange} />
         <input className="form-control mb-2" name="ext" placeholder="Extensión" onChange={handleChange} />
         <input className="form-control mb-2" name="area" placeholder="Área" onChange={handleChange} />
         <input className="form-control mb-2" name="puesto" placeholder="Puesto" onChange={handleChange} />

@@ -11,7 +11,10 @@ import {
   FaBuilding,
   FaUserTie,
   FaUserTag,
-  FaBars
+  FaBars,
+  FaUserCog,
+  FaExchangeAlt,
+   FaShieldAlt 
 } from "react-icons/fa";
 
 function Sidebar() {
@@ -20,7 +23,8 @@ function Sidebar() {
   const [catalogosOpen, setCatalogosOpen] = useState(false);
   const [reportesOpen, setReportesOpen] = useState(false);
   const [altasOpen, setAltasOpen] = useState(false);
-  const [hoverMenu, setHoverMenu] = useState(null);
+  const [adminOpen, setAdminOpen] = useState(false);
+  const [calidadOpen, setCalidadOpen] = useState(false);
 
   const [menus, setMenus] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -39,7 +43,6 @@ function Sidebar() {
       try {
 
         const response = await api.get("/seguridad/mis-permisos");
-        //console.log("Permisos:", response.data);
         setMenus(response.data);
 
       } catch (error) {
@@ -52,9 +55,6 @@ function Sidebar() {
 
       }
 
-    };
-    const permisoModulo = (ruta) => {
-      return menus.find(m => m.ruta?.toLowerCase() === ruta.toLowerCase());
     };
 
     cargarPermisos();
@@ -95,7 +95,7 @@ function Sidebar() {
       <ul className="menu">
 
         {tienePermiso("/dashboard") && (
-          <li title={collapsed ? "Dashboard" : ""}>
+          <li>
             <NavLink to="/dashboard" className="menu-link">
               <FaTachometerAlt className="icon" />
               {!collapsed && "Dashboard"}
@@ -103,8 +103,71 @@ function Sidebar() {
           </li>
         )}
 
+        {tienePermiso("/calidad") && (
+
+          <li className="menu-group">
+
+            <div
+              className="menu-title"
+              onClick={() => !collapsed && setCalidadOpen(!calidadOpen)}
+            >
+
+              <FaShieldAlt className="icon" />
+              {!collapsed && "Calidad"}
+
+              {!collapsed &&
+                <FaChevronDown
+                  className={`arrow ${calidadOpen ? "open" : ""}`}
+                />
+              }
+
+            </div>
+
+            {!collapsed && calidadOpen && (
+
+              <ul className="submenu">
+
+                <li>
+
+                  <NavLink
+                    to="/calidad/iso"
+                    className="menu-link"
+                  >
+
+                    <FaFileAlt className="icon" />
+                    {!collapsed && "ISO"}
+
+                  </NavLink>
+
+                </li>
+
+                <li>
+
+                  <NavLink
+                    to="/calidad/oea"
+                    className="menu-link"
+                  >
+
+                    <FaFileAlt className="icon" />
+                    {!collapsed && "OEA"}
+
+                  </NavLink>
+
+                </li>
+
+              </ul>
+
+            )}
+
+          </li>
+
+        )}
+
+
+
+
         {tienePermiso("/clientes") && (
-          <li title={collapsed ? "Clientes" : ""}>
+          <li>
             <NavLink to="/clientes" className="menu-link">
               <FaUsers className="icon" />
               {!collapsed && "Clientes"}
@@ -114,12 +177,7 @@ function Sidebar() {
 
         {tienePermiso("/reportes/clientes-documentos") && (
 
-          <li
-            className="menu-group"
-            title={collapsed ? "Reportes" : ""}
-            onMouseEnter={() => collapsed && setHoverMenu("reportes")}
-            onMouseLeave={() => setHoverMenu(null)}
-          >
+          <li className="menu-group">
 
             <div
               className="menu-title"
@@ -179,7 +237,7 @@ function Sidebar() {
           tienePermiso("/catalogos/empresas") ||
           tienePermiso("/catalogos/ejecutivos")) && (
 
-            <li className="menu-group" title={collapsed ? "Catálogos" : ""}>
+            <li className="menu-group">
 
               <div
                 className="menu-title"
@@ -261,6 +319,22 @@ function Sidebar() {
 
                   )}
 
+                  {/* NUEVA OPCION */}
+                  {tienePermiso("/catalogos/reasignar-clientes") && (
+
+                    <li>
+
+                      <NavLink to="/catalogos/reasignar-clientes" className="menu-link">
+
+                        <FaExchangeAlt className="icon" />
+                        {!collapsed && "Reasignar clientes"}
+
+                      </NavLink>
+
+                    </li>
+
+                  )}
+
                 </ul>
 
               )}
@@ -268,6 +342,52 @@ function Sidebar() {
             </li>
 
           )}
+
+        {tienePermiso("/admin/usuarios") && (
+
+          <li className="menu-group">
+
+            <div
+              className="menu-title"
+              onClick={() => setAdminOpen(!adminOpen)}
+            >
+
+              <FaUserCog className="icon" />
+              {!collapsed && "Administrador"}
+
+              {!collapsed &&
+                <FaChevronDown
+                  className={`arrow ${adminOpen ? "open" : ""}`}
+                />
+              }
+
+            </div>
+
+            {adminOpen && !collapsed && (
+
+              <ul className="submenu">
+
+                <li>
+
+                  <NavLink
+                    to="/admin/usuarios"
+                    className="menu-link"
+                  >
+
+                    <FaUsers className="icon" />
+                    {!collapsed && "Usuarios"}
+
+                  </NavLink>
+
+                </li>
+
+              </ul>
+
+            )}
+
+          </li>
+
+        )}
 
       </ul>
 

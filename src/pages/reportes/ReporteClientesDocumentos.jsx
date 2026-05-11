@@ -9,6 +9,12 @@ function ReporteClientesDocumentos() {
   const [clienteSeleccionado, setClienteSeleccionado] = useState(null);
   const [busqueda, setBusqueda] = useState("");
   const [mostrarModal, setMostrarModal] = useState(false);
+  const [loadingReporte, setLoadingReporte] = useState(false);
+  const [paginaActual, setPaginaActual] = useState(1);
+  const registrosPorPagina = 10;
+  const indiceFinal = paginaActual * registrosPorPagina;
+  const indiceInicial = indiceFinal - registrosPorPagina;
+
 
   const obtenerReporte = async () => {
 
@@ -28,6 +34,33 @@ function ReporteClientesDocumentos() {
 
   };
 
+const descargarExcel = async () => {
+
+    try {
+
+        setLoadingReporte(true);
+        // Llamada a la API para obtener el archivo Excel en localhost
+        //const response = await fetch("https://localhost:7094/api/reportes/excel");
+
+        // Llamada a la API para obtener el archivo Excel en producción
+        const response = await fetch("http://192.168.1.234:9099/api/reportes/excel");
+        const blob = await response.blob();
+
+        const url = window.URL.createObjectURL(blob);
+
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "ReporteDocumentos.xlsx";
+        a.click();
+
+    } catch (error) {
+        console.error(error);
+    }
+    finally {
+        setLoadingReporte(false);
+    }
+};
+
   useEffect(() => {
 
     obtenerReporte();
@@ -37,6 +70,7 @@ function ReporteClientesDocumentos() {
   const clientesFiltrados = clientes.filter(c =>
     c.razonSocial?.toLowerCase().includes(busqueda.toLowerCase())
   );
+  const clientesPagina = clientesFiltrados.slice(indiceInicial, indiceFinal);
 
   const calcularFaltantes = (cliente) =>
     Object.values(cliente.estados || {}).filter(x => x === "FALTANTE").length;
@@ -48,10 +82,18 @@ function ReporteClientesDocumentos() {
 
     <div className="container-fluid">
 
-      <h2 className="mb-4">
-        Reporte Documental de Clientes
-      </h2>
+      {/* boton para descargar Excel */}
+      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "20px" }}>
+          <h2>Reporte Documental de Clientes</h2>
 
+        <button 
+            onClick={descargarExcel} 
+            className="btn btn-success"
+            disabled={loadingReporte}
+        >
+            {loadingReporte ? "Generando reporte..." : "Descargar Excel"}
+        </button>
+      </div>
       {/* DASHBOARD EJECUTIVOS */}
 
       <div className="row mb-4">
@@ -94,7 +136,10 @@ function ReporteClientesDocumentos() {
           className="form-control"
           placeholder="Buscar cliente..."
           value={busqueda}
-          onChange={(e) => setBusqueda(e.target.value)}
+          onChange={(e) => {
+            setBusqueda(e.target.value);
+            setPaginaActual(1);
+          }}
         />
 
       </div>
@@ -108,7 +153,7 @@ function ReporteClientesDocumentos() {
           <thead className="table-dark">
 
             <tr>
-              <th>Empresa</th>
+              <th style={{ width: "320px" }}>Empresa</th>
               <th>RFC</th>
               <th>Cumplimiento</th>
               <th>Faltantes</th>
@@ -120,11 +165,21 @@ function ReporteClientesDocumentos() {
 
           <tbody>
 
-            {clientesFiltrados.map(cliente => (
+            {clientesPagina.map(cliente => (
 
               <tr key={cliente.clienteId}>
 
-                <td>{cliente.razonSocial}</td>
+                <td
+                    style={{
+                      maxWidth: "320px",
+                      whiteSpace: "nowrap",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis"
+                    }}
+                    title={cliente.razonSocial}
+                  >
+                    {cliente.razonSocial}
+                </td>
 
                 <td>{cliente.rfc}</td>
 
@@ -154,7 +209,8 @@ function ReporteClientesDocumentos() {
                 <td>
 
                   <button
-                    className="btn btn-sm btn-primary"
+                    className="btn btn-outline-primary btn-sm px-2 py-1"
+                    style={{ fontSize: "12px" }}
                     onClick={() => {
 
                       setClienteSeleccionado(cliente);
@@ -174,6 +230,29 @@ function ReporteClientesDocumentos() {
           </tbody>
 
         </table>
+        <div className="d-flex justify-content-between align-items-center p-3">
+
+          <button
+            className="btn btn-sm btn-secondary"
+            disabled={paginaActual === 1}
+            onClick={() => setPaginaActual(paginaActual - 1)}
+          >
+            ← Anterior
+          </button>
+
+          <span>
+            Página {paginaActual} de {Math.ceil(clientesFiltrados.length / registrosPorPagina)}
+          </span>
+
+          <button
+            className="btn btn-sm btn-secondary"
+            disabled={indiceFinal >= clientesFiltrados.length}
+            onClick={() => setPaginaActual(paginaActual + 1)}
+          >
+            Siguiente →
+          </button>
+
+        </div>
 
       </div>
 

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import api from "../../services/api";
 import { useNavigate } from "react-router-dom";
+import Swal from "sweetalert2";
 
 function NuevoCliente() {
 
@@ -9,6 +10,7 @@ function NuevoCliente() {
   const [step, setStep] = useState(1);
 
   const [contactos, setContactos] = useState([]);
+  const [permisos, setPermisos] = useState([]);
 
   const [cliente, setCliente] = useState({
     rfc: "",
@@ -59,35 +61,92 @@ function NuevoCliente() {
 
   };
 
+ //const guardarCliente = async () => {
+
+ //  try {
+
+ //    const payload = {
+ //      ...cliente,
+ //      servicioPalco: cliente.servicioPalco ? 1 : 0,
+ //      servicioSLP: cliente.servicioSLP ? 1 : 0,
+ //      servicioMAYA: cliente.servicioMAYA ? 1 : 0,
+ //      servicioOla: cliente.servicioOla ? 1 : 0,
+ //      contactos
+ //    };
+
+ //    const res = await api.post("/altas/clientes", payload);
+ //    console.log(res.data);
+ //    navigate(`/clientes/${res.data}`);
+
+ //  } catch (error) {
+
+ //    console.error(error);
+ //    alert("Error al guardar cliente");
+
+ //  }
+ //};
+
   const guardarCliente = async () => {
 
-    if (!contactos || contactos.length === 0) {
-      alert("Debe registrar al menos un contacto para continuar.");
-      return;
+  try {
+
+    const payload = {
+      ...cliente,
+      servicioPalco: cliente.servicioPalco ? 1 : 0,
+      servicioSLP: cliente.servicioSLP ? 1 : 0,
+      servicioMAYA: cliente.servicioMAYA ? 1 : 0,
+      servicioOla: cliente.servicioOla ? 1 : 0,
+      contactos
+    };
+    console.log("PAYLOAD:", payload);
+
+    const res = await api.post("/altas/clientes", payload);
+
+    console.log("RESPUESTA API:", res.data);
+
+    // NORMALIZAR RESPUESTA (YA CONTEMPLA TU CASO)
+    let clienteId = null;
+
+    if (typeof res.data === "number") {
+      clienteId = res.data;
+    } 
+    else if (res.data?.clienteId) {
+      clienteId = res.data.clienteId;
+    }
+    else if (res.data?.data?.id) {
+      clienteId = res.data.data.id;
+    } 
+    else if (res.data?.id) {
+      clienteId = res.data.id;
     }
 
-    try {
-
-      const payload = {
-        ...cliente,
-        servicioPalco: cliente.servicioPalco ? 1 : 0,
-        servicioSLP: cliente.servicioSLP ? 1 : 0,
-        servicioMAYA: cliente.servicioMAYA ? 1 : 0,
-        servicioOla: cliente.servicioOla ? 1 : 0,
-        contactos
-      };
-
-      const res = await api.post("/altas/clientes", payload);
-
-      navigate(`/clientes/${res.data.data.id}`);
-
-    } catch (error) {
-
-      console.error(error);
-      alert("Error al guardar cliente");
-
+    if (!clienteId) {
+      throw new Error("No se pudo obtener el ID del cliente");
     }
-  };
+
+    // MENSAJE DE ÉXITO
+    Swal.fire({
+      icon: "success",
+      title: "Cliente guardado correctamente",
+      timer: 1500,
+      showConfirmButton: false
+    });
+
+    //  REDIRECCIÓN
+    navigate(`/clientes/${clienteId}`);
+
+  } catch (error) {
+
+    console.error("ERROR GUARDAR:", error);
+
+    const mensaje =
+      error.response?.data?.message ||
+      error.message ||
+      "Error al guardar cliente";
+
+    alert(mensaje);
+  }
+};
 
   const cargarEjecutivos = async () => {
     const res = await api.get("/catalogos/ejecutivos");
@@ -208,6 +267,7 @@ function NuevoCliente() {
           <select
             className="form-control mb-3"
             name="ejecutivoVentasId"
+            value={cliente.ejecutivoVentasId || ""}
             onChange={handleChange}
           >
             <option value="">Ejecutivo de ventas responsable</option>

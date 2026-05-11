@@ -11,9 +11,16 @@ import CatalogoEmpresas from "./pages/catalogos/CatalogoEmpresas";
 import CatalogoEjecutivos from "./pages/catalogos/CatalogoEjecutivos";
 import CatalogoEjecutivosVentas from "./pages/catalogos/CatalogoEjecutivosVentas";
 import ReporteClientesDocumentos from "./pages/reportes/ReporteClientesDocumentos";
+import ReasignarClientes from "./pages/catalogos/ReasignarClientes";
+import CalidadExplorador from "./pages/calidad/CalidadExplorador";
+import ExploradorDocumentos from "./pages/calidad/ExploradorDocumentos";
+
+import Usuarios from "./pages/admin/Usuarios";
+import NuevoUsuario from "./pages/admin/NuevoUsuario";
 
 import MainLayout from "./layouts/MainLayout";
 import ProtectedRoute from "./components/ProtectedRoute";
+import "./styles/admin.css";
 
 import { PermisosProvider } from "./context/PermisosContext";
 
@@ -45,6 +52,10 @@ function App() {
 
               <Route path="/dashboard" element={<Dashboard />} />
 
+              <Route path="/calidad" element={<CalidadExplorador />} />
+              
+              <Route path="/calidad/:tipo" element={<ExploradorDocumentos />} />
+
               <Route path="/clientes" element={<Clientes />} />
 
               <Route path="/clientes/nuevo" element={<NuevoCliente />} />
@@ -62,6 +73,12 @@ function App() {
               <Route path="/catalogos/ejecutivos" element={<CatalogoEjecutivos />} />
 
               <Route path="/catalogos/ventas" element={<CatalogoEjecutivosVentas />} />
+
+              <Route path="/catalogos/reasignar-clientes" element={<ReasignarClientes />} />
+
+              <Route path="/admin/usuarios" element={<Usuarios />} />
+
+              <Route path="/admin/usuarios/nuevo" element={<NuevoUsuario />} />
 
             </Route>
 

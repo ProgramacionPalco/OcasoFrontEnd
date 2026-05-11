@@ -14,11 +14,18 @@ export function PermisosProvider({ children }) {
 
   const cargarPermisos = async () => {
 
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      setLoadingPermisos(false);
+      return;
+    }
+
     try {
 
-      const res = await api.get("/seguridad/mis-permisos");
+      const response = await api.get("/seguridad/mis-permisos");
 
-      setPermisos(res.data);
+      setPermisos(response.data);
 
     } catch (error) {
 

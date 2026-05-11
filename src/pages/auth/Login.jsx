@@ -34,14 +34,20 @@ setTimeout(()=>{
 navigate("/dashboard");
 },600);
 
-}catch{
+}catch(error){
 
-setError("Credenciales incorrectas");
+const mensaje =
+    error?.response?.data?.message ||
+    error?.response?.data ||
+    "Credenciales incorrectas";
+
+setError(mensaje);
 setLoading(false);
 
 }
 
 };
+
 return(
     <div className="login-container">
         {/* IMAGEN IZQUIERDA */}

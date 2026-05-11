@@ -3,10 +3,27 @@ import { useParams } from "react-router-dom";
 import api from "../../services/api";
 import ContactoForm from "../../components/ContactoForm";
 import MainLayout from "../../layouts/MainLayout";
+import UploadDocumentos from "../../components/UploadDocumentos";
 import { FaCheckCircle, FaTimesCircle, FaClock } from "react-icons/fa";
 import { FaUserPlus, FaFileUpload, FaDownload, FaHistory } from "react-icons/fa";
 import Swal from "sweetalert2";
+import dayjs from "dayjs";
+import relativeTime from "dayjs/plugin/relativeTime";
+import "dayjs/locale/es";
 
+dayjs.extend(relativeTime);
+dayjs.locale("es");
+const FILE_SERVER = "http://192.168.1.234:9099";
+
+
+const obtenerHistorial = async () => {
+
+const res = await api.get(`/altas/clientes/${id}/historial`);
+
+
+setEventos(res.data);
+
+};
 
 function DetalleCliente() {
 
@@ -15,6 +32,8 @@ function DetalleCliente() {
     const [loading, setLoading] = useState(true);
     const [mostrarForm, setMostrarForm] = useState(false);
     const [permisos, setPermisos] = useState([]);
+    const [historialDocs,setHistorialDocs] = useState([]);
+    const [mostrarHistorial,setMostrarHistorial] = useState(false);
     const [resumen, setResumen] = useState({
         contactos: 0,
         documentosSubidos: 0,
@@ -23,9 +42,7 @@ function DetalleCliente() {
     });
     const [nuevoDoc, setNuevoDoc] = useState({
         idDocumento: "",
-        rutaDocumento: "",
-        fechaVencimiento: null,
-        idCliente: id
+        fechaVencimiento: null
     });
     const permisoModulo = (ruta) => {
          return permisos.find(p => p.ruta?.toLowerCase() === ruta.toLowerCase());
@@ -40,8 +57,82 @@ function DetalleCliente() {
     const tieneContactos = cliente?.contactos?.length > 0;
     const [catalogoEjecutivos, setCatalogoEjecutivos] = useState([]);
     const [catalogoEjecutivosVentas, setCatalogoEjecutivosVentas] = useState([]);
+    const [noAplica, setNoAplica] = useState(false);
+
+    const verHistorialDocumento = async (idDocumento)=>{
+
+        try{
+
+            const res = await api.get(
+            `/altas/clientes/${id}/documentos/${idDocumento}/historial`
+            );
+
+            setHistorialDocs(res.data);
+            setMostrarHistorial(true);
+
+        }
+        catch(error){
+
+            console.error("Error cargando historial del documento",error);
+
+            Swal.fire({
+            icon:"error",
+            title:"Error",
+            text:"No se pudo cargar el historial del documento"
+            });
+
+        }
+
+    };
+    const descargarDocumento = (idDocumento)=>{
+        window.open(
+        `${api.defaults.baseURL}/altas/clientes/documentos/descargar/${idDocumento}`,
+        "_blank"
+        );
+    };
     
-    
+    const eliminarDocumento = async (idDocumento) => {
+
+        const confirm = await Swal.fire({
+            title: "¿Eliminar documento?",
+            text: "El documento se eliminará del expediente",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonText: "Sí, eliminar"
+        });
+
+        if(!confirm.isConfirmed) return;
+
+        try{
+
+            const res = await api.delete(`/altas/clientes/documentos/${idDocumento}`);
+
+            //console.log(res); // para ver la respuesta real
+
+            if(res.status >= 200 && res.status < 300){
+
+                Swal.fire({
+                    icon:"success",
+                    title:"Documento eliminado"
+                });
+
+                await recargarCliente();
+
+            }
+
+        }
+        catch(err){
+
+            console.log(err);
+
+            Swal.fire({
+                icon:"error",
+                title:"Error al eliminar documento",
+                text: err.response?.data?.message || "Error inesperado"
+            });
+
+        }
+    };
 
     const obtenerDetalle = async () => {
         try {
@@ -115,7 +206,7 @@ function DetalleCliente() {
 
             };
 
-            console.log("Payload enviado:", payload);
+            //console.log("Payload enviado:", payload);
 
             await api.put(`/altas/clientes/${id}`, payload);
 
@@ -133,7 +224,7 @@ function DetalleCliente() {
 
         } catch (error) {
 
-            console.error("Error actualización:", error.response?.data);
+            //console.error("Error actualización:", error.response?.data);
 
             Swal.fire({
                 icon: "error",
@@ -153,6 +244,10 @@ function DetalleCliente() {
         } catch (error) {
             console.error("Error cargando resumen", error);
         }
+    };
+    const verDocumento = (ruta) => {
+        const url = `${import.meta.env.VITE_API_URL}/documentos/ver?ruta=${encodeURIComponent(ruta)}`;
+        window.open(url, "_blank");
     };
 
     const obtenerCatalogoDocs = async () => {
@@ -186,6 +281,20 @@ function DetalleCliente() {
         setResumen(resumenRes.data);
         setDocsRequeridos(docsReqRes.data);
 
+    };
+
+    const cargarHistorial = async () => {
+        try {
+
+            const res = await api.get(`/altas/clientes/${id}/historial`);
+
+            setEventos(res.data);
+
+        } catch (error) {
+
+            console.error("Error cargando historial", error);
+
+        }
     };
 
     useEffect(() => {
@@ -367,10 +476,15 @@ function DetalleCliente() {
                 </li>
                 <li className="nav-item">
                     <button
-                        className={`nav-link ${tabActiva === "historial" ? "active" : ""}`}
-                        onClick={() => setTabActiva("historial")}
+                    className={`nav-link ${tabActiva === "historial" ? "active" : ""}`}
+                    onClick={() => {
+
+                    setTabActiva("historial");
+                    cargarHistorial();
+
+                    }}
                     >
-                        Historial
+                    Historial
                     </button>
                 </li>
             </ul>
@@ -427,7 +541,7 @@ function DetalleCliente() {
                                 className="btn btn-outline-secondary"
                                 onClick={() => {
                                 setTabActiva("historial");
-                                setMostrarForm(true);
+                                cargarHistorial();
                                 }}
                                 >
                                 <FaHistory className="me-2"/>
@@ -537,6 +651,7 @@ function DetalleCliente() {
                         </div>
 
                     )}
+                    
 
                     </div>
 
@@ -1224,83 +1339,72 @@ function DetalleCliente() {
             {/*TabDocumentos*/}
             {tabActiva === "documentos" && (
                 <>
+
                     {/* AGREGAR DOCUMENTO */}
                     <div className="card p-3 mb-4">
+
                         <h5>Agregar Documento</h5>
 
                         <select
                             className="form-select mb-2"
                             value={nuevoDoc.idDocumento}
-                            onChange={(e) =>
-                                setNuevoDoc({ ...nuevoDoc, idDocumento: e.target.value })
+                            onChange={(e)=>
+                            setNuevoDoc({...nuevoDoc,idDocumento:e.target.value})
                             }
                         >
+
                             <option value="">Seleccione documento</option>
 
-                            {(catalogoDocs || []).map((doc) => (
-                                <option key={doc.id} value={doc.id}>
-                                    {doc.nombreDocumento}
-                                </option>
+                            {catalogoDocs.map(doc=>(
+                            <option key={doc.id} value={doc.id}>
+                            {doc.nombreDocumento}
+                            </option>
                             ))}
+
                         </select>
 
                         <input
                             type="date"
-                            className="form-control mb-2"
-                            onChange={(e) =>
-                                setNuevoDoc({ ...nuevoDoc, fechaVencimiento: e.target.value })
+                            className="form-control mb-3"
+                            onChange={(e)=>
+                            setNuevoDoc({...nuevoDoc,fechaVencimiento:e.target.value})
                             }
                         />
-                        {permisoModulo("/clientes")?.puedeCrear && (
-                        <button
-                        className="btn btn-dark"
-                        onClick={async () => {
 
-                        if(!tieneContactos){
+                        <div className="form-check mb-2">
 
-                        Swal.fire({
-                        icon:"warning",
-                        title:"Contacto requerido",
-                        text:"Debe registrar al menos un contacto antes de subir documentos."
-                        })
+                            <input
+                                type="checkbox"
+                                className="form-check-input"
+                                id="noAplica"
+                                checked={noAplica}
+                                onChange={(e) => setNoAplica(e.target.checked)}
+                            />
 
-                        return
-                        }
+                            <label className="form-check-label">
+                                Documento no aplica (generar justificación)
+                            </label>
 
-                        try {
+                        </div>
 
-                        await api.post(`/altas/clientes/${id}/documentos`, nuevoDoc);
-
-                        setNuevoDoc({
-                        idDocumento: "",
-                        rutaDocumento: "",
-                        fechaVencimiento: null,
-                        idCliente: id
-                        });
-
-                        await recargarCliente();
-
-                        Swal.fire({
-                        icon:"success",
-                        title:"Documento guardado",
-                        text:"El documento fue agregado correctamente."
-                        })
-
-                        } catch (error) {
-
-                        Swal.fire({
-                        icon:"error",
-                        title:"Error",
-                        text:"No se pudo guardar el documento."
-                        })
-
-                        }
-
-                        }}
-                        >
-                        Guardar Documento
-                        </button>
+                        {!modoEdicion && permisoModulo("/clientes")?.puedeEditar && (
+                                                    
+                            <UploadDocumentos
+                                clienteId={id}
+                                idDocumento={nuevoDoc.idDocumento}
+                                fechaVencimiento={nuevoDoc.fechaVencimiento}
+                                noAplica={noAplica}
+                                onUploadComplete={()=>{
+                                recargarCliente();
+                                setNuevoDoc({
+                                idDocumento:"",
+                                fechaVencimiento:""
+                                });
+                                    setNoAplica(false);
+                                }}
+                            />
                         )}
+                        
                     </div>
 
                     {/* DOCUMENTOS SUBIDOS */}
@@ -1315,6 +1419,7 @@ function DetalleCliente() {
                                     <tr>
                                         <th>Documento</th>
                                         <th>Vencimiento</th>
+                                        <th>Estado</th>
                                         <th>Acciones</th>
                                     </tr>
                                 </thead>
@@ -1328,19 +1433,69 @@ function DetalleCliente() {
                                                     : "Sin vencimiento"}
                                             </td>
                                             <td>
+                                                {d.noAplica ? (
+                                                    <span className="badge text-dark" style={{
+                                                        background:"rgb(223, 233, 138)",
+                                                        color:"white"
+                                                        }}>
+                                                        ⚠ Justificado
+                                                    </span>
+                                                    ) : (
+                                                    <span className="badge bg-success">
+                                                        Documento vigente
+                                                    </span>
+                                                )}
+                                            </td>
+                                            <td>
                                                 <button
                                                     className="btn btn-sm btn-primary me-2"
-                                                    onClick={() => setDocPreview(d.rutaDocumento)}
-                                                >
+                                                    onClick={() => {
+
+                                                        const url = `${api.defaults.baseURL}/documentos/ver?ruta=${encodeURIComponent(d.rutaDocumento)}`;
+
+                                                        const extension = d.rutaDocumento.split('.').pop().toLowerCase();
+
+                                                        if(extension === "pdf"){
+                                                            setDocPreview(url);
+                                                        }
+                                                        else if(extension === "doc" || extension === "docx" || extension === "xls" || extension === "xlsx"){
+
+                                                            window.open(`${api.defaults.baseURL}/altas/clientes/documentos/descargar/${d.id}`, "_blank");
+
+                                                        }
+                                                        else{
+                                                            window.open(url, "_blank");
+                                                        }
+
+                                                    }}
+                                                    >
                                                     Ver
                                                 </button>
                                                 <a
-                                                    className="btn btn-sm btn-dark"
-                                                    href={d.rutaDocumento}
-                                                    download
-                                                >
+                                                    className="btn btn-sm btn-dark me-2"
+                                                    href={`${api.defaults.baseURL}/altas/clientes/documentos/descargar/${d.id}`}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    >
                                                     Descargar
                                                 </a>
+                                                
+
+                                                {!modoEdicion && permisoModulo("/clientes")?.puedeEditar && (
+                                                    <button
+                                                        className="btn btn-sm btn-danger"
+                                                        onClick={()=>eliminarDocumento(d.id)}
+                                                        >
+                                                        Eliminar
+                                                    </button>
+                                                )}
+                                                <button
+                                                    className="btn btn-secondary btn-sm"
+                                                    onClick={() => verHistorialDocumento(d.idDocumento)}
+                                                    
+                                                    >
+                                                    Historial
+                                                </button>
                                             </td>
                                         </tr>
                                     ))}
@@ -1401,45 +1556,153 @@ function DetalleCliente() {
 
             <h5 className="mb-4">Historial del Expediente</h5>
 
-            <ul className="timeline list-unstyled">
+            {eventos.length === 0 ? (
 
-            {eventos.map((e, index) => (
+            <p className="text-muted">No hay movimientos registrados.</p>
 
-            <li key={index} className="mb-3">
+            ) : (
 
-            <div className="d-flex align-items-start">
+            <div className="timeline-container">
 
-            <div className="me-3">
+            {eventos.map((e,index)=>{
 
-            {e.tipo === "documento" && "📄"}
-            {e.tipo === "contacto" && "👤"}
-            {e.tipo === "cliente" && "✔"}
+            let icon="📄";
+            let color="#0d6efd";
 
+            if(e.tipo==="contacto"){
+            icon="👤";
+            color="#6f42c1";
+            }
+
+            if(e.tipo==="cliente"){
+            icon="✔";
+            color="#198754";
+            }
+
+            return(
+
+            <div key={index} className="timeline-row">
+
+            <div className="timeline-dot" style={{background:color}}>
+            {icon}
             </div>
 
-            <div>
+            <div className="timeline-card">
+
+            <div className="d-flex justify-content-between">
 
             <div className="fw-semibold">
             {e.texto}
             </div>
 
             <small className="text-muted">
-            {new Date(e.fecha).toLocaleDateString()}
+            {dayjs(e.fecha).fromNow()}
             </small>
 
             </div>
 
+            <div className="text-muted small mt-1">
+
+            <span className="timeline-user">
+            {e.usuario?.charAt(0).toUpperCase()}
+            </span>
+
+            {e.usuario}
+
             </div>
 
-            </li>
+            </div>
 
-            ))}
+            </div>
 
-            </ul>
+            )
+
+            })}
 
             </div>
 
             )}
+
+            </div>
+
+            )}
+
+            {mostrarHistorial && (
+
+                <div className="modal fade show d-block" style={{background:"rgba(0,0,0,0.5)"}}>
+                <div className="modal-dialog modal-lg">
+                <div className="modal-content">
+
+                <div className="modal-header">
+                <h5>Historial del documento</h5>
+
+                <button
+                className="btn-close"
+                onClick={()=>setMostrarHistorial(false)}
+                ></button>
+
+                </div>
+
+                <div className="modal-body">
+
+                <table className="table">
+
+                <thead>
+                <tr>
+                <th>Versión</th>
+                <th>Fecha subida</th>
+                <th>Vence</th>
+                <th>Usuario</th>
+                <th></th>
+                </tr>
+                </thead>
+
+                <tbody>
+
+                {historialDocs.map((doc,index)=>(
+                <tr key={doc.id}>
+
+                <td>v{historialDocs.length-index}</td>
+
+                <td>
+                {new Date(doc.creadoEn).toLocaleDateString()}
+                </td>
+
+                <td>
+                {doc.fechaVencimiento
+                ? new Date(doc.fechaVencimiento).toLocaleDateString()
+                : "-"
+                }
+                </td>
+
+                <td>{doc.creadoPor}</td>
+
+                <td>
+
+                <button
+                className="btn btn-primary btn-sm"
+                onClick={()=>descargarDocumento(doc.id)}
+                >
+                Descargar
+                </button>
+
+                </td>
+
+                </tr>
+                ))}
+
+                </tbody>
+
+                </table>
+
+                </div>
+
+                </div>
+                </div>
+                </div>
+
+                )}
+
             {docPreview && (
 
                 <div className="modal show d-block" tabIndex="-1">
@@ -1473,6 +1736,7 @@ function DetalleCliente() {
 
             )}
         </div>
+        
 
     );
 }

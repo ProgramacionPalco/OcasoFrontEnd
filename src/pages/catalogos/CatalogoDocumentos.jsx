@@ -10,15 +10,16 @@ const [nuevoDoc, setNuevoDoc] = useState({
     personaFisica: false,
     personaMoral: false,
     internacional: false,
-    requiereVencimiento: false
+    requiereVencimiento: false,
+    obligatorio:false
 });
 
 const obtenerDocumentos = async () => {
     try {
 
-        const res = await api.get("/catalogos/documentos");
+        const res = await api.get("/catalogos/documentos?pageSize=500");
 
-        console.log("Respuesta documentos:", res.data);
+       //console.log("Respuesta documentos:", res.data);
 
         const data = Array.isArray(res.data)
             ? res.data
@@ -37,31 +38,43 @@ useEffect(() => {
 }, []);
 
 const guardarDocumento = async () => {
-    try{
+
+    try {
+
         const payload = {
             nombreDocumento: nuevoDoc.nombreDocumento,
             personaFisica: nuevoDoc.personaFisica ? 1 : 0,
             personaMoral: nuevoDoc.personaMoral ? 1 : 0,
             internacional: nuevoDoc.internacional ? 1 : 0,
-            requiereVencimiento: nuevoDoc.requiereVencimiento ? 1 : 0
+            requiereVencimiento: nuevoDoc.requiereVencimiento ? 1 : 0,
+            obligatorio: nuevoDoc.obligatorio
         };
-        if(nuevoDoc.id){
+
+        //console.log("Payload enviado:", payload);
+
+        if (nuevoDoc.id) {
             await api.put(`/catalogos/documentos/${nuevoDoc.id}`, payload);
-        }else{
+        } else {
             await api.post("/catalogos/documentos", payload);
         }
 
+        // 🔹 RECARGAR TABLA
+        await obtenerDocumentos();
+        //console.log(obtenerDocumentos);
+        // 🔹 LIMPIAR FORMULARIO
         setNuevoDoc({
             nombreDocumento: "",
-            personaFisica:false,
-            personaMoral:false,
-            internacional:false,
-            requiereVencimiento:false
+            personaFisica: false,
+            personaMoral: false,
+            internacional: false,
+            requiereVencimiento: false,
+            obligatorio: false
         });
-        obtenerDocumentos();
-    }catch{
+
+    } catch {
         alert("Error al guardar documento");
     }
+
 };
 
 const eliminarDocumento = async (id) => {
@@ -76,14 +89,17 @@ const eliminarDocumento = async (id) => {
 };
 
 const editarDocumento = (doc) => {
+
     setNuevoDoc({
         id: doc.id,
         nombreDocumento: doc.nombreDocumento,
-        personaFisica: doc.personaFisica === 1,
-        personaMoral: doc.personaMoral === 1,
-        internacional: doc.internacional === 1,
-        requiereVencimiento: doc.requiereVencimiento === 1
+        personaFisica: doc.personaFisica === 1 || doc.personaFisica === true,
+        personaMoral: doc.personaMoral === 1 || doc.personaMoral === true,
+        internacional: doc.internacional === 1 || doc.internacional === true,
+        requiereVencimiento: doc.requiereVencimiento === 1 || doc.requiereVencimiento === true,
+        obligatorio: doc.obligatorio === 1 || doc.obligatorio === true
     });
+
 };
 
 return (
@@ -179,14 +195,32 @@ return (
                         Requiere fecha de vencimiento
                     </label>
                 </div>
+                <div className="col-md-3 form-check">
+                <input
+                    type="checkbox"
+                    className="form-check-input"
+                    checked={nuevoDoc.obligatorio}
+                    onChange={(e)=>
+                    setNuevoDoc({
+                    ...nuevoDoc,
+                    obligatorio:e.target.checked
+                    })
+                    }
+                />
+
+                    <label className="form-check-label">
+                        Documento obligatorio
+                    </label>
+
+                </div>
 
             </div>
 
             <button
-                className="btn btn-primary"
-                onClick={guardarDocumento}
+            className="btn btn-primary"
+            onClick={guardarDocumento}
             >
-                Guardar Documento
+            {nuevoDoc.id ? "Actualizar Documento" : "Guardar Documento"}
             </button>
 
         </div>
@@ -205,6 +239,7 @@ return (
                         <th>PM</th>
                         <th>Internacional</th>
                         <th>Vencimiento</th>
+                        <th>Obligatorio</th>
                         <th>Acciones</th>
                     </tr>
                 </thead>
@@ -223,6 +258,8 @@ return (
                             <td>{d.internacional ? "✔" : "❌"}</td>
 
                             <td>{d.requiereVencimiento ? "Sí" : "No"}</td>
+
+                            <td>{d.obligatorio ? "Sí" : "No"}</td>
 
                             <td>
                                 <button
