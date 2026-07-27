@@ -28,7 +28,7 @@ setEventos(res.data);
 function DetalleCliente() {
 
     const { id } = useParams();
-    const [cliente, setCliente] = useState(null);
+    const [cliente, setCliente] = useState(null); 
     const [loading, setLoading] = useState(true);
     const [mostrarForm, setMostrarForm] = useState(false);
     const [permisos, setPermisos] = useState([]);
@@ -44,9 +44,22 @@ function DetalleCliente() {
         idDocumento: "",
         fechaVencimiento: null
     });
+    const [mostrarModalServicio,setMostrarModalServicio]=useState(false);
+    const [motivoNegacion,setMotivoNegacion]=useState("");
+    const [comentarioReactivacion,setComentarioReactivacion]=useState("");
+    
+    //console.log(permisos);
     const permisoModulo = (ruta) => {
          return permisos.find(p => p.ruta?.toLowerCase() === ruta.toLowerCase());
     };
+
+    const puedeSubirDocumentos =
+    permisoModulo("/clientes")?.puedeCrear;
+
+    const puedeSubirCotizaciones =
+        permisoModulo("/cotizaciones")?.puedeCrear;
+
+
     const [modoEdicion, setModoEdicion] = useState(false);
     const [clienteEditado, setClienteEditado] = useState({});
     const [catalogoDocs, setCatalogoDocs] = useState([]);
@@ -84,6 +97,62 @@ function DetalleCliente() {
         }
 
     };
+
+    const descargarExpediente = async () => {
+
+        try {
+
+            const response = await api.get(
+                `/altas/clientes/${id}/descargar-expediente`,
+                {
+                    responseType: "blob"
+                }
+            );
+
+            const blob = new Blob([response.data], {
+                type: "application/zip"
+            });
+
+            const url = window.URL.createObjectURL(blob);
+
+            const link = document.createElement("a");
+
+            link.href = url;
+
+            const disposition = response.headers["content-disposition"];
+
+            let nombre = "expediente.zip";
+
+            if (disposition) {
+
+                const match = disposition.match(/filename="(.+)"/);
+
+                if (match?.[1]) {
+                    nombre = match[1];
+                }
+            }
+
+            link.setAttribute("download", nombre);
+
+            document.body.appendChild(link);
+
+            link.click();
+
+            link.remove();
+
+        }
+        catch (error) {
+
+            console.error(error);
+
+            Swal.fire({
+                icon: "error",
+                title: "Error",
+                text: "No se pudo descargar el expediente"
+            });
+        }
+    };
+
     const descargarDocumento = (idDocumento)=>{
         window.open(
         `${api.defaults.baseURL}/altas/clientes/documentos/descargar/${idDocumento}`,
@@ -232,6 +301,102 @@ function DetalleCliente() {
                 text: "No se pudo actualizar el cliente.",
                 confirmButtonColor: "#d33"
             });
+
+        }
+
+    };
+
+    const negarServicio = async()=>{
+
+        if(!motivoNegacion.trim()){
+
+        Swal.fire({
+        icon:"warning",
+        title:"Motivo requerido",
+        text:"Debe indicar por qué se negó el servicio"
+        });
+
+        return;
+
+        }
+
+        try{
+
+        await api.put(
+
+        `/altas/clientes/${id}/negar-servicio`,
+        {
+        motivo:motivoNegacion
+        }
+
+        );
+
+        setMostrarModalServicio(false);
+
+        await recargarCliente();
+
+        await cargarHistorial();
+
+        Swal.fire({
+        icon:"success",
+        title:"Servicio negado"
+        });
+
+        }
+        catch{
+
+        Swal.fire({
+        icon:"error",
+        title:"Error",
+        text:"No se pudo actualizar"
+        });
+
+        }
+
+    };
+
+    const reactivarServicio=async()=>{
+
+        const confirm=await Swal.fire({
+
+        title:"Reactivar cliente",
+
+        text:"¿Desea habilitar nuevamente este expediente?",
+
+        icon:"question",
+
+        showCancelButton:true,
+
+        confirmButtonText:"Reactivar"
+
+        });
+
+        if(!confirm.isConfirmed)return;
+
+        try{
+
+        await api.put(
+
+        `/altas/clientes/${id}/reactivar-servicio`
+
+        );
+
+        await recargarCliente();
+
+        await cargarHistorial();
+
+        Swal.fire({
+        icon:"success",
+        title:"Cliente reactivado"
+        });
+
+        }
+        catch{
+
+        Swal.fire({
+        icon:"error",
+        title:"Error"
+        });
 
         }
 
@@ -505,10 +670,10 @@ function DetalleCliente() {
                                 Nuevo contacto
                             </button>
 
-                                <button
-                                    className="btn btn-dark"
-                                    disabled={!tieneContactos}
-                                    onClick={() => {
+                            <button
+                                className="btn btn-dark"
+                                disabled={!tieneContactos}
+                                onClick={() => {
 
                                     if(!tieneContactos){
 
@@ -524,14 +689,14 @@ function DetalleCliente() {
                                     setTabActiva("documentos")
 
                                     }}
-                                >
+                            >
                                 <FaFileUpload className="me-2"/>
                                 Subir documento
                             </button>
 
                             <button
                                 className="btn btn-success"
-                                onClick={() => window.print()}
+                                onClick={descargarExpediente}
                                 >
                                 <FaDownload className="me-2"/>
                                 Descargar expediente
@@ -547,6 +712,34 @@ function DetalleCliente() {
                                 <FaHistory className="me-2"/>
                                 Historial
                             </button>
+                        {!modoEdicion &&
+                        permisoModulo("/clientes")?.puedeEditar && (
+
+                            !cliente?.servicioNegado ? (
+
+                                <button
+                                    className="btn btn-danger"
+                                    onClick={() => {
+                                        setMotivoNegacion("");
+                                        setMostrarModalServicio(true);
+                                    }}
+                                >
+                                    🚫 Negar servicio
+                                </button>
+
+                            ) : (
+
+                                <button
+                                    className="btn btn-success"
+                                    onClick={reactivarServicio}
+                                >
+                                    ✔ Reactivar cliente
+                                </button>
+
+                            )
+
+                        )}
+
 
                         </div>
                 </div>
@@ -1354,11 +1547,42 @@ function DetalleCliente() {
                         >
 
                             <option value="">Seleccione documento</option>
-
+                            {/**
                             {catalogoDocs.map(doc=>(
                             <option key={doc.id} value={doc.id}>
                             {doc.nombreDocumento}
                             </option>
+                            ))}
+                            **/}
+
+                            {catalogoDocs
+                                .filter(doc => {
+
+                                    const esCotizacionDoc =
+                                        doc.nombreDocumento
+                                            ?.toLowerCase()
+                                            .normalize("NFD")
+                                            .replace(/[\u0300-\u036f]/g, "")
+                                            .includes("cotizacion");
+
+                                    // VENTAS -> SOLO COTIZACIONES
+                                    if(puedeSubirCotizaciones && !puedeSubirDocumentos){
+                                        return esCotizacionDoc;
+                                    }
+
+                                    // ALTAS -> TODO MENOS COTIZACIONES
+                                    if(puedeSubirDocumentos){
+                                        return true;
+                                    }
+
+                                    // ADMIN O AMBOS
+                                    return true;
+
+                                })
+                                .map(doc=>(
+                                    <option key={doc.id} value={doc.id}>
+                                        {doc.nombreDocumento}
+                                    </option>
                             ))}
 
                         </select>
@@ -1386,7 +1610,7 @@ function DetalleCliente() {
                             </label>
 
                         </div>
-
+                        {/**    
                         {!modoEdicion && permisoModulo("/clientes")?.puedeEditar && (
                                                     
                             <UploadDocumentos
@@ -1404,7 +1628,133 @@ function DetalleCliente() {
                                 }}
                             />
                         )}
-                        
+                        **/}
+                        {!modoEdicion && (
+                            <>
+
+                                {/* DOCUMENTO SELECCIONADO */}
+                                {(() => {
+
+                                    const documentoSeleccionado = catalogoDocs.find(
+                                        x => x.id == nuevoDoc.idDocumento
+                                    );
+
+                                    const esCotizacion =
+                                        documentoSeleccionado?.nombreDocumento
+                                            ?.toLowerCase()
+                                            .normalize("NFD")
+                                            .replace(/[\u0300-\u036f]/g, "")
+                                            .includes("cotizacion");
+
+                                    // SIN DOCUMENTO SELECCIONADO
+                                    if(!nuevoDoc.idDocumento){
+
+                                        return (
+                                            <UploadDocumentos
+                                                clienteId={id}
+                                                idDocumento={nuevoDoc.idDocumento}
+                                                fechaVencimiento={nuevoDoc.fechaVencimiento}
+                                                noAplica={noAplica}
+
+                                                puedeEditar={
+                                                    !modoEdicion &&
+                                                    permisoModulo("/clientes")?.puedeEditar
+                                                }
+
+                                                onUploadComplete={() => {
+
+                                                    recargarCliente();
+
+                                                    setNuevoDoc({
+                                                        idDocumento:"",
+                                                        fechaVencimiento:""
+                                                    });
+
+                                                    setNoAplica(false);
+
+                                                }}
+                                            />
+                                        );
+
+                                    }
+
+                                    // COTIZACIONES -> SOLO VENTAS
+                                    if(esCotizacion && puedeSubirCotizaciones){
+
+                                        return (
+                                        <UploadDocumentos
+                                            clienteId={id}
+                                            idDocumento={nuevoDoc.idDocumento}
+                                            fechaVencimiento={nuevoDoc.fechaVencimiento}
+                                            noAplica={noAplica}
+
+                                            puedeEditar={
+                                                !modoEdicion &&
+                                                permisoModulo("/clientes")?.puedeEditar
+                                            }
+
+                                            onUploadComplete={() => {
+                                                recargarCliente();
+
+                                                setNuevoDoc({
+                                                    idDocumento:"",
+                                                    fechaVencimiento:""
+                                                });
+
+                                                setNoAplica(false);
+                                            }}
+                                        />
+                                        );
+
+                                    }
+
+                                    // DOCUMENTOS NORMALES -> ALTAS
+                                    if(!esCotizacion && puedeSubirDocumentos){
+
+                                        return (
+                                        <UploadDocumentos
+                                            clienteId={id}
+                                            idDocumento={nuevoDoc.idDocumento}
+                                            fechaVencimiento={nuevoDoc.fechaVencimiento}
+                                            noAplica={noAplica}
+
+                                            puedeEditar={
+                                                !modoEdicion &&
+                                                permisoModulo("/clientes")?.puedeEditar
+                                            }
+
+                                            onUploadComplete={() => {
+
+                                                recargarCliente();
+
+                                                setNuevoDoc({
+                                                    idDocumento:"",
+                                                    fechaVencimiento:""
+                                                });
+
+                                                setNoAplica(false);
+
+                                            }}
+                                        />
+                                        );
+
+                                    }
+
+                                    // SIN PERMISOS
+                                    return (
+
+                                        <div className="alert alert-warning mt-3 mb-0">
+                                            No tienes permisos para subir este tipo de documento.
+                                        </div>
+
+                                    );
+
+                                })()}
+
+                            </>
+
+                        )}
+
                     </div>
 
                     {/* DOCUMENTOS SUBIDOS */}
@@ -1701,7 +2051,103 @@ function DetalleCliente() {
                 </div>
                 </div>
 
-                )}
+            )}
+
+            {mostrarModalServicio && (
+
+                <div
+                className="modal fade show d-block"
+                style={{
+                background:"rgba(0,0,0,.5)"
+                }}
+                >
+
+                <div className="modal-dialog">
+
+                <div className="modal-content">
+
+                <div className="modal-header">
+
+                <h5>
+
+                Negar servicio
+
+                </h5>
+
+                <button
+                className="btn-close"
+                onClick={()=>
+                setMostrarModalServicio(false)
+                }
+                />
+
+                </div>
+
+                <div className="modal-body">
+
+                <div className="alert alert-warning">
+
+                El expediente permanecerá almacenado
+                pero el cliente aparecerá con
+                estatus Servicio Negado.
+
+                </div>
+
+                <label>
+
+                Motivo
+
+                </label>
+
+                <textarea
+
+                className="form-control"
+
+                rows="5"
+
+                value={motivoNegacion}
+
+                onChange={(e)=>
+                setMotivoNegacion(
+                e.target.value
+                )
+                }
+
+                />
+
+                </div>
+
+                <div className="modal-footer">
+
+                <button
+                className="btn btn-secondary"
+                onClick={()=>
+                setMostrarModalServicio(false)
+                }
+                >
+
+                Cancelar
+
+                </button>
+
+                <button
+                className="btn btn-danger"
+                onClick={negarServicio}
+                >
+
+                Guardar
+
+                </button>
+
+                </div>
+
+                </div>
+
+                </div>
+
+                </div>
+
+            )}
 
             {docPreview && (
 

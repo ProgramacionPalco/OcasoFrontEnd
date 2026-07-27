@@ -35,11 +35,43 @@ export default function ExploradorDocumentos(){
   const [showModalActualizar, setShowModalActualizar] = useState(false);
   const [archivoActualizar, setArchivoActualizar] = useState(null);
   const [documentoSeleccionado, setDocumentoSeleccionado] = useState(null);
+  const [permisos, setPermisos] = useState([]);
+
 
   const irRuta = (index) => {
     const nueva = partesRuta.slice(0,index+1).join("/");
     cargar(nueva);
  };
+
+     //console.log(permisos);
+const permisoModulo = (ruta) => {
+
+    if(!permisos?.length)
+        return null;
+
+    return permisos.find(
+        p =>
+            p?.ruta?.trim()?.toLowerCase()
+            ===
+            ruta?.trim()?.toLowerCase()
+    );
+
+};
+
+const permisoCalidad =
+    permisoModulo("/calidad");
+
+//console.log("PERMISO CALIDAD", permisoCalidad);
+
+const puedeSubirDocumentos =
+    Boolean(
+        permisoCalidad?.puedeEditar
+    );
+
+const puedeDescargarDocumentos =
+    Boolean(
+        permisoCalidad?.puedeImprimir
+    );
 
     const abrirActualizar = (item) => {
     setDocumentoSeleccionado(item);
@@ -62,20 +94,23 @@ export default function ExploradorDocumentos(){
 
             // EXTRAER NOMBRE BASE REAL
             const nombreArchivo = documentoSeleccionado.nombre;
+            // quitar extensión
+            const sinExtension = nombreArchivo.replace(/\.[^/.]+$/, "");
 
             if (!nombreArchivo) {
             Swal.fire("Error", "No se pudo obtener el nombre del documento", "error");
             return;
             }
 
-            const nombreBase = nombreArchivo.split(" ")[0]; 
+            // tomar clave documental
+            const nombreBase = sinExtension.trim().split(/\s+/)[0];
 
             formData.append("archivo", archivoActualizar);
             formData.append("nombreBase", nombreBase);
             formData.append("tipo", tipo.toUpperCase() || "ISO"); //fallback
             formData.append("carpeta", path || ""); //Fallback
 
-            console.log("FORMDATA:");
+            //console.log("FORMDATA:");
             for (let pair of formData.entries()) {
             console.log(pair[0] + ': ' + pair[1]);
             }
@@ -127,6 +162,8 @@ export default function ExploradorDocumentos(){
     try{
       const fullPath = `${tipo}${rutaActual ? "/" + rutaActual : ""}`;
       const res = await api.get(`/calidad/explorar?path=${fullPath}`);
+      //console.log(res.data);
+
       setItems(res.data);
       setPath(rutaActual);
     }catch(err){
@@ -135,16 +172,61 @@ export default function ExploradorDocumentos(){
     setLoading(false);
   };
 
-  useEffect(()=>{
-    cargar("");
-  },[tipo]);
+useEffect(() => {
+
+    const cargarDatos = async () => {
+
+        try {
+
+            const permisosRes =
+                await api.get(
+                    "/seguridad/mis-permisos"
+                );
+
+            //console.log(
+            //    "PERMISOS API",
+            //    permisosRes.data
+            //);
+
+            setPermisos(
+                permisosRes.data || []
+            );
+
+        }
+        catch (error) {
+
+            console.error(
+                "Error cargando permisos",
+                error
+            );
+
+        }
+
+        // LIMPIAR EXPLORADOR AL CAMBIAR ISO/OEA
+        setItems([]);
+
+        // SOLO SI EXISTEN EN TU COMPONENTE
+        if (typeof setRutaActual !== "undefined")
+            setRutaActual("");
+
+        if (typeof setBreadcrumbs !== "undefined")
+            setBreadcrumbs([]);
+
+        // RECARGAR RAÍZ
+        cargar("");
+
+    };
+
+    cargarDatos();
+
+}, [tipo]);
 
     const abrirHistorial = async(item) => {
         try{
 
             const res = await api.get(`/calidad/historial`, {
                 params: {
-                    nombre: item.nombre.split(" ")[0], // 👈 nombreBase disfrazado
+                    nombre: item.nombre.split(" ")[0], // nombreBase disfrazado
                     path: path
                 }
             });
@@ -266,6 +348,7 @@ export default function ExploradorDocumentos(){
                   {getIcon(item)}
                 </div>
 
+
                 <div className="text-center">
                   <p className="mb-1">{item.nombre}</p>
                 </div>
@@ -292,14 +375,15 @@ export default function ExploradorDocumentos(){
         <tbody>
         {filtrados.map((item,index)=>{
 
-            const esVigente = item.esVigente !== false;
+            const esVigente =
+                item.esVigente ?? item.EsVigente;
 
             return(
             <tr key={index}>
 
                 <td className="d-flex align-items-center gap-2">
-                {getIcon(item)}
-                {item.nombre}
+                  {getIcon(item)}
+                  {item.nombre}
                 </td>
 
                 {item.tipo === "carpeta" ? (
@@ -319,21 +403,19 @@ export default function ExploradorDocumentos(){
                 ) : (
                 <>
                     <td>
-                    v{item.version ?? 1}
 
-                    {item.version == null && (
-                        <span className="badge bg-warning text-dark ms-2">
-                        Sin control
-                        </span>
-                    )}
+                      <span className="fw-bold">
+                          v{item.version || 1}
+                      </span>
+
                     </td>
 
                     <td>
-                    {esVigente ? (
-                        <span className="badge bg-success">Vigente</span>
-                    ) : (
-                        <span className="badge bg-secondary">Obsoleto</span>
-                    )}
+
+                    <span className="badge bg-success">
+                        Vigente
+                    </span>
+
                     </td>
 
                     <td>
@@ -353,14 +435,19 @@ export default function ExploradorDocumentos(){
                         </button>
                     )}
 
-                    {esVigente && (
-                        <button
-                        className="btn btn-sm btn-dark"
-                        onClick={()=>descargarArchivo(item)}
-                        >
-                        Descargar
-                        </button>
-                    )}
+                      {
+                        puedeDescargarDocumentos &&
+                        esVigente && (
+
+                          <button
+                            className="btn btn-sm btn-dark"
+                            onClick={() => descargarArchivo(item)}
+                          >
+                            Descargar
+                          </button>
+
+                      )}
+                    
 
                         <button
                             className="btn btn-sm btn-secondary"
@@ -372,15 +459,23 @@ export default function ExploradorDocumentos(){
                             Historial
                         </button>
 
-                        <button
+
+                      {
+                        puedeSubirDocumentos &&
+                        esVigente && (
+
+                          <button
                             className="btn btn-sm btn-warning"
                             onClick={(e)=>{
-                                e.stopPropagation();
-                                abrirActualizar(item);
+                              e.stopPropagation();
+                              abrirActualizar(item);
                             }}
-                        >
+                          >
                             Actualizar
-                        </button>
+                          </button>
+
+                      )}
+                        
 
                     </td>
                 </>
@@ -621,9 +716,34 @@ export default function ExploradorDocumentos(){
                     <td>
                       <button
                         className="btn btn-sm btn-primary"
-                        onClick={()=>window.open(
-                          `${api.defaults.baseURL}/calidad/descargar?path=${encodeURIComponent(h.ruta)}`
-                        )}
+                        onClick={() => {
+
+                          const ext = h.ruta.split(".").pop().toLowerCase();
+
+                          if(ext === "pdf"){
+
+                            // cerrar historial
+                            setModalHistorial(false);
+
+                            // abrir visor
+                            setTimeout(() => {
+
+                              setPdfUrl(
+                                `${api.defaults.baseURL}/calidad/ver?path=${encodeURIComponent(h.ruta)}`
+                              );
+
+                            }, 200);
+
+                          }else{
+
+                            window.open(
+                              `${api.defaults.baseURL}/calidad/ver?path=${encodeURIComponent(h.ruta)}`,
+                              "_blank"
+                            );
+
+                          }
+
+                        }}
                       >
                         Ver
                       </button>

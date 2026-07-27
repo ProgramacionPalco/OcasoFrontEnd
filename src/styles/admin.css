@@ -147,3 +147,119 @@
 .btn-secondary{
   background:#e0e0e0;
 }
+
+.table-responsive-custom{
+    overflow-x:auto;
+    -webkit-overflow-scrolling:touch;
+}
+
+@media (max-width: 768px){
+
+    .table-responsive{
+        overflow-x:auto;
+        -webkit-overflow-scrolling:touch;
+    }
+
+    .productos-table{
+        min-width:850px;
+    }
+
+    .productos-table th,
+    .productos-table td{
+        white-space:nowrap;
+    }
+
+    .card-body{
+        padding:1rem;
+    }
+
+    .card-header h5{
+        font-size:1rem;
+    }
+
+    .btn{
+        min-height:45px;
+    }
+
+    .form-control,
+    .form-select{
+        min-height:45px;
+    }
+
+}
+
+@media (max-width:768px){
+
+    .productos-table{
+        min-width:950px !important;
+        table-layout:auto;
+    }
+
+    .productos-table th{
+        white-space:nowrap;
+        min-width:120px;
+    }
+
+    .productos-table td{
+        white-space:nowrap;
+    }
+
+    .productos-table input.form-control{
+        min-width:140px;
+    }
+
+    .productos-table td:nth-child(1){
+        min-width:120px;
+    }
+
+    .productos-table td:nth-child(2){
+        min-width:250px;
+    }
+
+    .productos-table td:nth-child(3){
+        min-width:180px;
+    }
+
+    .productos-table td:nth-child(4){
+        min-width:120px;
+    }
+
+    .productos-table td:nth-child(5){
+        min-width:120px;
+    }
+
+    .productos-table td:nth-child(6){
+        min-width:90px;
+    }
+
+}
+
+.requisicion-card{
+
+    border-radius:16px;
+
+    transition:.25s;
+
+    cursor:pointer;
+
+}
+
+.requisicion-card:hover{
+
+    transform:translateY(-3px);
+
+    box-shadow:0 12px 28px rgba(0,0,0,.12);
+
+}
+
+.requisicion-card h5{
+
+    color:#1d3557;
+
+}
+
+.badge{
+
+    padding:.7rem 1rem;
+
+}

@@ -1,0 +1,124 @@
+import "../../../styles/workflow.css";
+import {
+    FaFileAlt,
+    FaCheckCircle,
+    FaShoppingCart,
+    FaBoxes,
+    FaClipboardCheck
+} from "react-icons/fa";
+
+function Workflow({ detalle }) {
+
+    const pasos = [
+
+        {
+            nombre: "Solicitud",
+            icono: <FaFileAlt size={20} />,
+            fecha: detalle.general.fechaRequisicion,
+            estado: "completado"
+        },
+
+        {
+            nombre: "Aprobación",
+            icono: <FaCheckCircle size={20} />,
+            fecha: detalle.aprobacion?.fecha,
+            estado:
+                detalle.aprobacion
+                    ? "completado"
+                    : "actual"
+        },
+
+        {
+            nombre: "Orden Compra",
+            icono: <FaShoppingCart size={20} />,
+            fecha: detalle.general.oc ? detalle.general.fecha : null,
+            estado:
+                detalle.general.oc
+                    ? "completado"
+                    : "pendiente"
+        },
+
+        {
+            nombre: "Recepción",
+            icono: <FaBoxes size={20} />,
+            fecha: detalle.general.entregado ? detalle.general.fecha : null,
+            estado:
+                detalle.general.entregado
+                    ? "completado"
+                    : "pendiente"
+        },
+
+        {
+            nombre: "Entregada",
+            icono: <FaClipboardCheck size={20} />,
+            fecha: detalle.general.entregado ? detalle.general.fecha : null,
+            estado:
+                detalle.general.entregado
+                    ? "completado"
+                    : "pendiente"
+        }
+
+    ];
+
+    const completados = pasos.filter(x => x.estado === "completado").length;
+
+    const porcentaje =
+        ((completados - 1) / (pasos.length - 1)) * 80;
+
+    return (
+
+        <div className="card shadow-sm mb-4">
+
+            <div className="card-body">
+
+                <div className="workflow">
+
+                    <div
+                        className="workflow-progress"
+                        style={{
+                            width: `${porcentaje}%`
+                        }}
+                    />
+
+                    {
+                        pasos.map((paso, i) => (
+
+                            <div
+                                key={i}
+                                className="workflow-step"
+                            >
+
+                                <div
+                                    className={`workflow-circle ${paso.estado}`}
+                                >
+                                    {paso.icono}
+                                </div>
+
+                                <div className="workflow-title">
+                                    {paso.nombre}
+                                </div>
+
+                                <div className="workflow-date">
+                                    {
+                                        paso.fecha
+                                            ? new Date(paso.fecha).toLocaleDateString("es-MX")
+                                            : "Pendiente"
+                                    }
+                                </div>
+
+                            </div>
+
+                        ))
+                    }
+
+                </div>
+
+            </div>
+
+        </div>
+
+    );
+
+}
+
+export default Workflow;

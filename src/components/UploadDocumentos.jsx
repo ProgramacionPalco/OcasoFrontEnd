@@ -4,34 +4,35 @@ import api from "../services/api";
 import Swal from "sweetalert2";
 
 export default function UploadDocumentos({
-  clienteId,
-  idDocumento,
-  fechaVencimiento,
-  noAplica,
-  onUploadComplete
-}) {
+    clienteId,
+    idDocumento,
+    fechaVencimiento,
+    noAplica,
+    onUploadComplete,
+    puedeEditar
+  }) {
 
-  const [files,setFiles] = useState([]);
-  const [progress,setProgress] = useState(0);
-  const [subiendo,setSubiendo] = useState(false);
+    const [files,setFiles] = useState([]);
+    const [progress,setProgress] = useState(0);
+    const [subiendo,setSubiendo] = useState(false);
 
-  const onDrop = (acceptedFiles) => {
+    const onDrop = (acceptedFiles) => {
 
-  if(noAplica) return;
+    if(noAplica) return;
 
-  const nuevos = acceptedFiles.map(file => ({
-  file,
-  preview: URL.createObjectURL(file)
-  }));
+    const nuevos = acceptedFiles.map(file => ({
+    file,
+    preview: URL.createObjectURL(file)
+    }));
 
-  setFiles(prev => [...prev,...nuevos]);
+    setFiles(prev => [...prev,...nuevos]);
 
 };
 
 const {getRootProps,getInputProps,isDragActive} = useDropzone({
     onDrop,
     multiple:true,
-    disabled:noAplica,
+    disabled:noAplica || !puedeEditar,
     accept:{
     "application/pdf": [".pdf"],
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document": [".docx"],
@@ -62,67 +63,66 @@ setSubiendo(true);
 
 try{
 
-// CASO JUSTIFICACIÓN
-if(noAplica){
+  // CASO JUSTIFICACIÓN
+  if(noAplica){
 
-const formData = new FormData();
+    const formData = new FormData();
 
-formData.append("idDocumento",idDocumento);
-formData.append("fechaVencimiento", fechaVencimiento || "");
-formData.append("noAplica",true);
+    formData.append("idDocumento",idDocumento);
+    formData.append("fechaVencimiento", fechaVencimiento || "");
+    formData.append("noAplica",true);
 
-await api.post(`/altas/clientes/${clienteId}/documentos`,formData);
+    await api.post(`/altas/clientes/${clienteId}/documentos`,formData);
+      Swal.fire({
+      icon:"success",
+      title:"Justificación generada correctamente"
+    });
 
-Swal.fire({
-icon:"success",
-title:"Justificación generada correctamente"
-});
+  }
 
-}
+    // CASO DOCUMENTO NORMAL
+    else{
 
-// CASO DOCUMENTO NORMAL
-else{
+    for(const item of files){
 
-for(const item of files){
+      const formData = new FormData();
 
-const formData = new FormData();
+      formData.append("Archivo",item.file);
+      formData.append("idDocumento",idDocumento);
+      formData.append("fechaVencimiento",fechaVencimiento || "");
+      formData.append("noAplica",false);
 
-formData.append("Archivo",item.file);
-formData.append("idDocumento",idDocumento);
-formData.append("fechaVencimiento",fechaVencimiento || "");
-formData.append("noAplica",false);
+      await api.post(`/altas/clientes/${clienteId}/documentos`,formData,{
+        headers:{
+        "Content-Type":"multipart/form-data"
+      },
+      onUploadProgress:(p)=>{
 
-await api.post(`/altas/clientes/${clienteId}/documentos`,formData,{
-headers:{
-"Content-Type":"multipart/form-data"
-},
-onUploadProgress:(p)=>{
+      if(!p.total) return;
 
-if(!p.total) return;
+      const porcentaje = Math.round((p.loaded * 100)/p.total);
+      setProgress(porcentaje);
 
-const porcentaje = Math.round((p.loaded * 100)/p.total);
-setProgress(porcentaje);
+    }
+    });
 
-}
-});
+    }
 
-}
+    Swal.fire({
+    icon:"success",
+    title:"Documentos subidos correctamente"
+    });
 
-Swal.fire({
-icon:"success",
-title:"Documentos subidos correctamente"
-});
+  }
 
-}
+  // limpiar previews
+  files.forEach(f => URL.revokeObjectURL(f.preview));
 
-// limpiar previews
-files.forEach(f => URL.revokeObjectURL(f.preview));
+  setFiles([]);
+  setProgress(0);
 
-setFiles([]);
-setProgress(0);
-
-if(onUploadComplete)
-onUploadComplete();
+  if(onUploadComplete)
+  onUploadComplete();
 
 }
 catch(err){
@@ -155,94 +155,105 @@ return (
 
 <div>
 
-<div
-{...getRootProps()}
-style={{
-border:"2px dashed #999",
-padding:"25px",
-textAlign:"center",
-borderRadius:"10px",
-cursor:noAplica ? "not-allowed":"pointer",
-background:isDragActive ? "#f5f5f5":"white",
-opacity:noAplica ? 0.5 : 1
-}}
->
+  <div
+  {...getRootProps()}
+  style={{
+  border:"2px dashed #999",
+  padding:"25px",
+  textAlign:"center",
+  borderRadius:"10px",
+  cursor:(noAplica || !puedeEditar)
+    ? "not-allowed"
+    : "pointer",
 
-<input {...getInputProps()} />
+opacity:(noAplica || !puedeEditar)
+    ? 0.5
+    : 1,
+  background:isDragActive ? "#f5f5f5":"white",
+  opacity:noAplica ? 0.5 : 1
+  }}
+  >
 
-{noAplica
+  <input {...getInputProps()} />
+
+  {!puedeEditar
+? <p>No tiene permisos para cargar documentos</p>
+
+: noAplica
 ? <p>Documento marcado como "No aplica"</p>
+
 : isDragActive
 ? <p>Suelta los archivos aquí...</p>
+
 : <p>Arrastra archivos aquí o haz click para seleccionar</p>
 }
 
-</div>
+  </div>
 
-{!noAplica && files.length > 0 && (
+  {!noAplica && files.length > 0 && (
 
-<div style={{marginTop:"20px"}}>
+  <div style={{marginTop:"20px"}}>
 
-<h6>Archivos seleccionados</h6>
+  <h6>Archivos seleccionados</h6>
 
-{files.map((item,index)=>(
+  {files.map((item,index)=>(
 
-<div
-key={index}
-style={{
-display:"flex",
-justifyContent:"space-between",
-alignItems:"center",
-marginBottom:"10px",
-border:"1px solid #ddd",
-padding:"10px",
-borderRadius:"6px"
-}}
->
+  <div
+  key={index}
+  style={{
+  display:"flex",
+  justifyContent:"space-between",
+  alignItems:"center",
+  marginBottom:"10px",
+  border:"1px solid #ddd",
+  padding:"10px",
+  borderRadius:"6px"
+  }}
+  >
 
-<span>{item.file.name}</span>
+  <span>{item.file.name}</span>
 
-<button
-className="btn btn-danger btn-sm"
-onClick={()=>eliminarArchivo(index)}
->
-Eliminar
-</button>
+  <button
+  className="btn btn-danger btn-sm"
+  onClick={()=>eliminarArchivo(index)}
+  >
+  Eliminar
+  </button>
 
-</div>
+  </div>
 
-))}
+  ))}
 
-</div>
+  </div>
 
-)}
+  )}
 
-{progress > 0 && (
+  {progress > 0 && (
 
-<div className="progress mt-3">
+  <div className="progress mt-3">
 
-<div
-className="progress-bar progress-bar-striped progress-bar-animated"
-style={{width:progress+"%"}}
->
+  <div
+  className="progress-bar progress-bar-striped progress-bar-animated"
+  style={{width:progress+"%"}}
+  >
 
-{progress}%
+  {progress}%
 
-</div>
+  </div>
 
-</div>
+  </div>
 
-)}
+  )}
 
-<button
-className="btn btn-primary mt-3"
-onClick={subirArchivos}
-disabled={subiendo}
->
+  <button
+  className="btn btn-primary mt-3"
+  onClick={subirArchivos}
+  disabled={subiendo || !puedeEditar}
+  >
 
-{subiendo ? "Procesando..." : noAplica ? "Generar justificación" : "Subir documentos"}
+  {subiendo ? "Procesando..." : noAplica ? "Generar justificación" : "Subir documentos"}
 
-</button>
+  </button>
 
 </div>
 

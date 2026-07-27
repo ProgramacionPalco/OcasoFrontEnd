@@ -1,0 +1,78 @@
+.workflow {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    position: relative;
+    padding: 20px 0;
+}
+
+.workflow::before{
+    content:"";
+    position:absolute;
+    top:45px;
+    left:8%;
+    right:8%;
+    height:4px;
+    background:#d6d9de;
+    z-index:1;
+}
+
+.workflow-progress{
+    position:absolute;
+    top:45px;
+    left:8%;
+    height:4px;
+    background:#198754;
+    z-index:2;
+}
+
+.workflow-step{
+    flex:1;
+    text-align:center;
+    position:relative;
+    z-index:3;
+}
+
+.workflow-circle{
+
+    width:50px;
+    height:50px;
+
+    margin:0 auto;
+
+    border-radius:50%;
+
+    display:flex;
+    justify-content:center;
+    align-items:center;
+
+    color:#fff;
+
+    font-size:20px;
+
+    position:relative;
+
+    z-index:4;
+}
+
+.workflow-circle.completed{
+    background:#198754;
+}
+
+.workflow-circle.current{
+    background:#0d6efd;
+}
+
+.workflow-circle.pending{
+    background:#adb5bd;
+}
+
+.workflow-title{
+    margin-top:15px;
+    font-weight:600;
+}
+
+.workflow-date{
+    color:#6c757d;
+    font-size:.8rem;
+}

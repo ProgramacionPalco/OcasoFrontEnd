@@ -1,0 +1,190 @@
+.workflow-card{
+
+    background:#fff;
+
+    border:1px solid #dee2e6;
+
+    border-radius:8px;
+
+    padding:30px;
+
+}
+
+.workflow{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:flex-start;
+
+    gap:20px;
+
+}
+
+.workflow-step{
+
+    flex:1;
+
+    text-align:center;
+
+}
+
+.workflow-circle{
+
+    width:60px;
+
+    height:60px;
+
+    margin:auto;
+
+    border-radius:50%;
+
+    background:#adb5bd;
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+    color:#fff;
+
+    font-size:24px;
+
+}
+
+.workflow-title{
+
+    margin-top:15px;
+
+    font-size:18px;
+
+    font-weight:600;
+
+}
+
+.workflow-date{
+
+    margin-top:5px;
+
+    color:#6c757d;
+
+    font-size:14px;
+
+}
+
+.workflow{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:flex-start;
+
+    position:relative;
+
+    gap:20px;
+
+}
+
+/* Línea gris de fondo */
+.workflow::before{
+
+    content:"";
+
+    position:absolute;
+
+    left:11%;
+
+    right:11%;
+
+    top:30px;
+
+    height:4px;
+
+    background:#d9dee5;
+
+    z-index:0;
+
+}
+
+/* Barra de progreso */
+.workflow-progress{
+
+    position:absolute;
+
+    left:11%;
+
+    top:30px;
+
+    height:4px;
+
+    background:#198754;
+
+    z-index:1;
+
+    transition:.4s ease;
+
+}
+
+.workflow-step{
+
+    flex:1;
+
+    position:relative;
+
+    text-align:center;
+
+    z-index:2;
+
+}
+
+.workflow-circle{
+
+    width:60px;
+
+    height:60px;
+
+    margin:auto;
+
+    border-radius:50%;
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+    font-size:24px;
+
+    color:white;
+
+    position:relative;
+
+    z-index:3;
+}
+
+.workflow-user{
+
+    margin-top:4px;
+
+    font-size:.82rem;
+
+    font-weight:600;
+
+    color:#495057;
+
+}
+
+.workflow-oc{
+
+    margin-top:2px;
+
+    font-size:.78rem;
+
+    color:#0d6efd;
+
+    font-weight:600;
+
+}

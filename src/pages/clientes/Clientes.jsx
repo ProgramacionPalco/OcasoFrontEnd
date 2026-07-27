@@ -21,13 +21,20 @@ function Clientes() {
 
   const obtenerPermisos = async () => {
     try {
+
       const res = await api.get("/seguridad/mis-permisos");
+
       setPermisos(res.data);
+
     } catch (error) {
+
       console.error("Error cargando permisos", error);
+
     }
   };
+
   const obtenerClientes = async () => {
+
     try {
 
       const res = await api.get("/altas/clientes");
@@ -58,10 +65,30 @@ function Clientes() {
       c.razonSocial?.toLowerCase().includes(busqueda.toLowerCase()) ||
       c.rfc?.toLowerCase().includes(busqueda.toLowerCase());
 
-    const coincideEstatus =
-      estatusFiltro === "" ||
-      (estatusFiltro === "activo" && c.estadoClienteId === 3) ||
-      (estatusFiltro === "borrador" && c.estadoClienteId !== 3);
+      const coincideEstatus =
+
+      estatusFiltro==="" ||
+
+      (
+      estatusFiltro==="activo" &&
+      c.estadoClienteId===3 &&
+      !c.servicioNegado
+      )
+
+      ||
+
+      (
+      estatusFiltro==="borrador" &&
+      c.estadoClienteId!==3 &&
+      !c.servicioNegado
+      )
+
+      ||
+
+      (
+      estatusFiltro==="negado" &&
+      c.servicioNegado
+      );
 
     return coincideBusqueda && coincideEstatus;
 
@@ -71,27 +98,100 @@ function Clientes() {
 
     { field: "id", headerName: "ID", width: 90 },
 
-    { field: "rfc", headerName: "RFC", flex: 1 },
+    { field: "rfc", headerName: "RFC", flex: 1, minWidth: 180 },
 
-    { field: "razonSocial", headerName: "Razón Social", flex: 2 },
+    {
+      field: "razonSocial",
+      headerName: "Razón Social",
+      flex: 2,
+      minWidth: 350,
+    },
+    {
+field:"motivoServicioNegado",
+
+headerName:"Motivo",
+
+flex:2,
+
+minWidth:250,
+
+renderCell:(params)=>{
+
+if(!params.row.servicioNegado){
+
+return "-"
+
+}
+
+return(
+
+<div
+style={{
+whiteSpace:"nowrap",
+overflow:"hidden",
+textOverflow:"ellipsis"
+}}
+
+title={params.value}
+>
+
+{params.value}
+
+</div>
+
+)
+
+}
+
+},
 
     {
       field: "estatus",
       headerName: "Estatus",
-      width: 130,
+      width: 140,
       renderCell: (params) => {
 
-        return params.row.estadoClienteId === 3 ? (
+        if(params.row.servicioNegado){
 
-          <span className="badge bg-success">
-            Activo
-          </span>
+        return(
 
-        ) : (
+        <div
+        title={params.row.motivoServicioNegado}
+        >
 
-          <span className="badge bg-warning text-dark">
-            Borrador
-          </span>
+        <span className="badge bg-danger">
+
+        Servicio negado
+
+        </span>
+
+        </div>
+
+        )
+
+        }
+
+        if(params.row.estadoClienteId===3){
+
+        return(
+
+        <span className="badge bg-success">
+
+        Activo
+
+        </span>
+
+        )
+
+        }
+
+        return(
+
+        <span className="badge bg-warning text-dark">
+
+        Borrador
+
+        </span>
 
         );
 
@@ -101,7 +201,9 @@ function Clientes() {
     {
       field: "acciones",
       headerName: "Acciones",
-      width: 130,
+      width: 140,
+      sortable: false,
+      filterable: false,
       renderCell: (params) => (
 
         <Button
@@ -119,16 +221,45 @@ function Clientes() {
 
   return (
 
-    <div>
+    <div className="w-100 overflow-hidden">
 
       {/* HEADER */}
 
-      <div className="d-flex justify-content-between align-items-center mb-4">
+      <div className="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
 
-        <h2 className="fw-bold">Clientes</h2>
+        <h2 className="fw-bold m-0">
+          Clientes
+        </h2>
 
+        <div className="small text-muted">
 
-       {permisoModulo("/clientes")?.puedeCrear && (
+          Activos: {
+            clientes.filter(
+            x=>x.estadoClienteId===3 &&
+            !x.servicioNegado
+            ).length
+          }
+
+          |
+
+          Borrador: {
+            clientes.filter(
+            x=>x.estadoClienteId!==3 &&
+            !x.servicioNegado
+            ).length
+          }
+
+          |
+
+          Negados: {
+            clientes.filter(
+            x=>x.servicioNegado
+            ).length
+          }
+
+        </div>
+
+        {permisoModulo("/clientes")?.puedeCrear && (
 
           <Button
             variant="contained"
@@ -143,9 +274,9 @@ function Clientes() {
 
       {/* FILTROS */}
 
-      <div className="row mb-3">
+      <div className="row mb-4 g-3">
 
-        <div className="col-md-6">
+        <div className="col-md-6 col-12">
 
           <TextField
             fullWidth
@@ -156,7 +287,7 @@ function Clientes() {
 
         </div>
 
-        <div className="col-md-3">
+        <div className="col-md-3 col-12">
 
           <TextField
             select
@@ -169,6 +300,7 @@ function Clientes() {
             <MenuItem value="">Todos</MenuItem>
             <MenuItem value="activo">Activos</MenuItem>
             <MenuItem value="borrador">Borradores</MenuItem>
+            <MenuItem value="negado">Servicio negado</MenuItem>
 
           </TextField>
 
@@ -176,22 +308,67 @@ function Clientes() {
 
       </div>
 
-      {/* TABLA ERP */}
+      {/* TABLA */}
 
-      <div style={{ height: 650, width: "100%" }}>
+      <div
+        className="table-responsive-custom"
+        style={{
+          width: "100%",
+          overflowX: "auto",
+        }}
+      >
 
-        <DataGrid
-          rows={clientesFiltrados}
-          columns={columns}
-          loading={loading}
-          pageSizeOptions={[5, 10, 25, 50]}
-          initialState={{
-            pagination: {
-              paginationModel: { pageSize: 30 },
-            },
+        <div
+          style={{
+            height: 650,
+            minWidth: 1100,
           }}
-          checkboxSelection
-        />
+        >
+
+          <DataGrid
+            rows={clientesFiltrados}
+            columns={columns}
+            loading={loading}
+            pageSizeOptions={[5, 10, 25, 50]}
+            disableRowSelectionOnClick
+            initialState={{
+              pagination: {
+                paginationModel: { pageSize: 30 },
+              },
+            }}
+            checkboxSelection
+            sx={{
+              backgroundColor: "#fff",
+              borderRadius: "10px",
+              border: "1px solid #e5e7eb",
+
+              "& .MuiDataGrid-columnHeaders": {
+                backgroundColor: "#1f2937",
+                color: "#fff",
+                fontWeight: "bold",
+              },
+
+              "& .MuiDataGrid-columnHeaderTitle": {
+                  fontWeight: "bold",
+                  color:"#fff"
+              },
+
+              "& .MuiDataGrid-columnHeader":{
+                  backgroundColor:"#1f2937",
+                  color:"#fff"
+              },
+
+              "& .MuiDataGrid-cell": {
+                borderColor: "#f1f5f9",
+              },
+
+              "& .MuiDataGrid-row:hover": {
+                backgroundColor: "#f8fafc",
+              },
+            }}
+          />
+
+        </div>
 
       </div>
 

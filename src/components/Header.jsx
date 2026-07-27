@@ -1,8 +1,9 @@
 import { jwtDecode } from "jwt-decode";
 import { FaBell, FaUserCircle } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
+import { FaBars } from "react-icons/fa";
 
-function Header() {
+function Header({ setMobileOpen }) {
 
     const navigate = useNavigate();
 
@@ -48,6 +49,12 @@ function Header() {
     return (
 
         <div className="header">
+            <button
+                className="mobile-menu-btn"
+                onClick={() => setMobileOpen(true)}
+            >
+                <FaBars />
+            </button>
 
             <div className="header-left">
                 <h5>Sistema Ocaso</h5>

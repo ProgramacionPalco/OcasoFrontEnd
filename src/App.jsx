@@ -14,6 +14,16 @@ import ReporteClientesDocumentos from "./pages/reportes/ReporteClientesDocumento
 import ReasignarClientes from "./pages/catalogos/ReasignarClientes";
 import CalidadExplorador from "./pages/calidad/CalidadExplorador";
 import ExploradorDocumentos from "./pages/calidad/ExploradorDocumentos";
+import ClientesInactivos from "./pages/clientes/ClientesInactivos";
+import ReporteMovimientos from "./pages/reportes/ReporteMovimientos";
+import NuevaRequisicion from "./pages/compras/NuevaRequisicion";
+import MisRequisiciones from "./pages/compras/MisRequisiciones";
+import DashboardCompras from "./pages/compras/DashboardCompras";
+import DetalleRequisicion from "./pages/compras/DetalleRequisicion";
+import PendientesCompra from "./pages/compras/PendientesCompra";
+import OrdenCompra from "./pages/compras/OrdenCompra";
+import AdministrarOrdenesCompra from "./pages/compras/AdministrarOrdenesCompra";
+import NuevaOrdenCompra from "./pages/compras/NuevaOrdenCompra";
 
 import Usuarios from "./pages/admin/Usuarios";
 import NuevoUsuario from "./pages/admin/NuevoUsuario";
@@ -62,7 +72,11 @@ function App() {
 
               <Route path="/clientes/:id" element={<DetalleCliente />} />
 
+              <Route path="/clientes/inactivos" element={<ClientesInactivos />}/>
+
               <Route path="/reportes/clientes-documentos" element={<ReporteClientesDocumentos />} />
+
+              <Route path="/reportes/movimientos" element={<ReporteMovimientos />}/>
 
               <Route path="/catalogos" element={<Catalogos />} />
 
@@ -79,6 +93,20 @@ function App() {
               <Route path="/admin/usuarios" element={<Usuarios />} />
 
               <Route path="/admin/usuarios/nuevo" element={<NuevoUsuario />} />
+
+              <Route path="/compras/dashboard" element={<DashboardCompras/>} />
+
+              <Route path="/compras/nueva" element={<NuevaRequisicion/>} />
+
+              <Route path="/compras/mis-requisiciones" element={<MisRequisiciones/>} />
+
+              <Route path="/compras/detalle/:id" element={<DetalleRequisicion/>} />
+
+              <Route path="/compras/pendientes" element={<PendientesCompra />} />
+
+              <Route path="/compras/orden-compra/:id" element={<AdministrarOrdenesCompra  />} />
+
+              <Route path="/compras/ordenes-compra/:idRequisicion/nueva" element={<NuevaOrdenCompra />} />
 
             </Route>
 

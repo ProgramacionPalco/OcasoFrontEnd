@@ -8,23 +8,28 @@ import {
   FaCogs,
   FaChevronDown,
   FaFileAlt,
-  FaBuilding,
+  FaBuilding, 
   FaUserTie,
   FaUserTag,
   FaBars,
   FaUserCog,
   FaExchangeAlt,
-   FaShieldAlt 
+   FaShieldAlt,
+   FaUserSlash,
+   FaKey,
+   FaShoppingCart,
+   FaClipboardList
 } from "react-icons/fa";
 
-function Sidebar() {
+function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobileOpen}){
 
-  const [collapsed, setCollapsed] = useState(false);
+  //const [mobileOpen, setMobileOpen] = useState(false);
   const [catalogosOpen, setCatalogosOpen] = useState(false);
   const [reportesOpen, setReportesOpen] = useState(false);
   const [altasOpen, setAltasOpen] = useState(false);
   const [adminOpen, setAdminOpen] = useState(false);
   const [calidadOpen, setCalidadOpen] = useState(false);
+  const [comprasOpen, setComprasOpen] = useState(false);
 
   const [menus, setMenus] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -61,6 +66,33 @@ function Sidebar() {
 
   }, []);
 
+//  useEffect(() => {
+//
+//    const resize = () => {
+//
+//        if(window.innerWidth < 768){
+//
+//            setCollapsed(true);
+//
+//        }
+//
+//    };
+//
+//    resize();
+//
+//    window.addEventListener(
+//        "resize",
+//        resize
+//    );
+//
+//    return () =>
+//        window.removeEventListener(
+//            "resize",
+//            resize
+//        );
+//
+//}, []);
+
   const tienePermiso = (ruta) => {
 
     if (!menus || menus.length === 0) return false;
@@ -78,19 +110,57 @@ function Sidebar() {
   if (loading) return null;
 
   return (
+    
+    <>
+    
+        {mobileOpen && window.innerWidth < 768 && (
 
-    <div className={`sidebar ${collapsed ? "collapsed" : ""}`}>
+            <div
+                className="sidebar-overlay"
+                onClick={() =>
+                    setMobileOpen(false)
+                }
+            />
 
-      <div className="sidebar-header">
+        )}
 
-        {!collapsed && <h4 className="logo">OCASO</h4>}
+        <div
+            className={`
+                sidebar
+                ${collapsed ? "collapsed" : ""}
+                ${mobileOpen ? "mobile-open" : ""}
+            `}
+        >
 
-        <FaBars
-          className="toggle-btn"
-          onClick={() => setCollapsed(!collapsed)}
-        />
+            <div className="sidebar-header">
 
-      </div>
+                {!collapsed &&
+                    <h4 className="logo">
+                        OCASO
+                    </h4>
+                }
+
+              <FaBars
+                  className="toggle-btn"
+                  onClick={() => {
+
+                      if(window.innerWidth < 768){
+
+                          setMobileOpen(false);
+
+                      }
+                      else{
+
+                          setCollapsed(
+                              !collapsed
+                          );
+
+                      }
+
+                  }}
+              />
+
+            </div>
 
       <ul className="menu">
 
@@ -112,14 +182,19 @@ function Sidebar() {
               onClick={() => !collapsed && setCalidadOpen(!calidadOpen)}
             >
 
-              <FaShieldAlt className="icon" />
-              {!collapsed && "Calidad"}
+              <div className="menu-title-left">
 
-              {!collapsed &&
+                <FaShieldAlt className="icon" />
+
+                {!collapsed && <span>Calidad</span>}
+
+              </div>
+
+              {!collapsed && (
                 <FaChevronDown
                   className={`arrow ${calidadOpen ? "open" : ""}`}
                 />
-              }
+              )}
 
             </div>
 
@@ -134,7 +209,7 @@ function Sidebar() {
                     className="menu-link"
                   >
 
-                    <FaFileAlt className="icon" />
+                    <FaKey className="icon" />
                     {!collapsed && "ISO"}
 
                   </NavLink>
@@ -148,7 +223,7 @@ function Sidebar() {
                     className="menu-link"
                   >
 
-                    <FaFileAlt className="icon" />
+                    <FaKey className="icon" />
                     {!collapsed && "OEA"}
 
                   </NavLink>
@@ -163,14 +238,20 @@ function Sidebar() {
 
         )}
 
-
-
-
         {tienePermiso("/clientes") && (
           <li>
-            <NavLink to="/clientes" className="menu-link">
+            <NavLink to="/clientes" end className="menu-link">
               <FaUsers className="icon" />
               {!collapsed && "Clientes"}
+            </NavLink>
+          </li>
+        )}
+
+        {tienePermiso("/clientes/inactivos") && (
+          <li>
+            <NavLink to="/clientes/inactivos" className="menu-link">
+              <FaUserSlash className="icon" />
+              {!collapsed && "Clientes Inactivos"}
             </NavLink>
           </li>
         )}
@@ -184,14 +265,19 @@ function Sidebar() {
               onClick={() => !collapsed && setReportesOpen(!reportesOpen)}
             >
 
-              <FaFileAlt className="icon" />
-              {!collapsed && "Reportes"}
+              <div className="menu-title-left">
 
-              {!collapsed &&
+                <FaFileAlt className="icon" />
+
+                {!collapsed && <span>Reportes</span>}
+
+              </div>
+
+              {!collapsed && (
                 <FaChevronDown
                   className={`arrow ${reportesOpen ? "open" : ""}`}
                 />
-              }
+              )}
 
             </div>
 
@@ -220,6 +306,16 @@ function Sidebar() {
                       </NavLink>
 
                     </li>
+                    <li>
+
+                      <NavLink
+                        to="/reportes/movimientos"
+                        className="menu-link"
+                      >
+                        Movimientos de Clientes
+                      </NavLink>
+
+                    </li>
 
                   </ul>
 
@@ -233,6 +329,159 @@ function Sidebar() {
 
         )}
 
+                {/**Sección de compras**/}
+        {(tienePermiso("/compras/dashboard") || tienePermiso("/compras/nueva") || tienePermiso("/compras/mis-requisiciones")
+        )
+        && (
+
+        <li className="menu-group">
+
+            <div
+                className="menu-title"
+                onClick={() =>
+                    setComprasOpen(!comprasOpen)
+                }
+            >
+
+                <div className="menu-title-left">
+
+                    <FaShoppingCart className="icon" />
+
+                    {!collapsed &&
+                        <span>Compras</span>
+                    }
+
+                </div>
+
+                {!collapsed && (
+
+                    <FaChevronDown
+                        className={`arrow ${
+                            comprasOpen
+                            ? "open"
+                            : ""
+                        }`}
+                    />
+
+                )}
+
+            </div>
+
+            {comprasOpen && !collapsed && (
+
+                <ul className="submenu">
+
+                    {tienePermiso(
+                        "/compras/dashboard"
+                    ) && (
+
+                        <li>
+
+                            <NavLink
+                                to="/compras/dashboard"
+                                className="menu-link"
+                            >
+
+                                <FaTachometerAlt
+                                    className="icon"
+                                />
+
+                                {!collapsed &&
+                                    "Dashboard"
+                                }
+
+                            </NavLink>
+
+                        </li>
+
+                    )}
+
+                    {tienePermiso(
+                        "/compras/pendientes"
+                    ) && (
+
+                        <li>
+
+                            <NavLink
+                                to="/compras/pendientes"
+                                className="menu-link"
+                            >
+
+                                <FaClipboardList
+                                    className="icon"
+                                />
+
+                                {!collapsed &&
+                                    "Requisiciones pendientes"
+                                }
+
+                            </NavLink>
+
+                        </li>
+
+                    )}
+
+                    {tienePermiso(
+                        "/compras/nueva"
+                    ) && (
+
+                        <li>
+
+                            <NavLink
+                                to="/compras/nueva"
+                                className="menu-link"
+                            >
+
+                                <FaFileAlt
+                                    className="icon"
+                                />
+
+                                {!collapsed &&
+                                    "Nueva requisición"
+                                }
+
+                            </NavLink>
+
+                        </li>
+
+                    )}
+
+                    {tienePermiso(
+                        "/compras/mis-requisiciones"
+                    ) && (
+
+                        <li>
+
+                            <NavLink
+                                to="/compras/mis-requisiciones"
+                                className="menu-link"
+                            >
+
+                                <FaUsers
+                                    className="icon"
+                                />
+
+                                {!collapsed &&
+                                    "Mis requisiciones"
+                                }
+
+                            </NavLink>
+
+                        </li>
+
+                    )}
+
+                </ul>
+
+            )}
+
+        </li>
+
+        )}  
+
+
+        {/**Fin de sección de compras**/}  
+
         {(tienePermiso("/catalogos/documentos") ||
           tienePermiso("/catalogos/empresas") ||
           tienePermiso("/catalogos/ejecutivos")) && (
@@ -244,14 +493,19 @@ function Sidebar() {
                 onClick={() => setCatalogosOpen(!catalogosOpen)}
               >
 
-                <FaCogs className="icon" />
-                {!collapsed && "Catálogos"}
+                <div className="menu-title-left">
 
-                {!collapsed &&
+                  <FaCogs className="icon" />
+
+                  {!collapsed && <span>Catálogos</span>}
+
+                </div>
+
+                {!collapsed && (
                   <FaChevronDown
                     className={`arrow ${catalogosOpen ? "open" : ""}`}
                   />
-                }
+                )}
 
               </div>
 
@@ -352,14 +606,19 @@ function Sidebar() {
               onClick={() => setAdminOpen(!adminOpen)}
             >
 
-              <FaUserCog className="icon" />
-              {!collapsed && "Administrador"}
+              <div className="menu-title-left">
 
-              {!collapsed &&
+                <FaUserCog className="icon" />
+
+                {!collapsed && <span>Administrador</span>}
+
+              </div>
+
+              {!collapsed && (
                 <FaChevronDown
                   className={`arrow ${adminOpen ? "open" : ""}`}
                 />
-              }
+              )}
 
             </div>
 
@@ -392,6 +651,8 @@ function Sidebar() {
       </ul>
 
     </div>
+
+    </>
 
   );
 

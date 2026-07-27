@@ -1,28 +1,40 @@
+import { useState } from "react";
 import Sidebar from "./Sidebar";
 import Header from "../components/Header";
 import { Outlet } from "react-router-dom";
 
-function MainLayout(){
+function MainLayout() {
 
-  return(
+    const [collapsed, setCollapsed] = useState(false);
+    const [mobileOpen, setMobileOpen] = useState(false);
 
-    <div className="app-layout">
+    return (
 
-      <Sidebar />
+        <div className="app-layout">
 
-      <div className="main-area">
+            <Sidebar
+                collapsed={collapsed}
+                setCollapsed={setCollapsed}
+                mobileOpen={mobileOpen}
+                setMobileOpen={setMobileOpen}
+            />
 
-        <Header />
+            <div className="main-area">
 
-        <div className="main-content">
-          <Outlet />
+                <Header
+                    setMobileOpen={setMobileOpen}
+                    setCollapsed={setCollapsed}
+                />
+
+                <div className="main-content">
+                    <Outlet />
+                </div>
+
+            </div>
+
         </div>
 
-      </div>
-
-    </div>
-
-  );
+    );
 
 }
 
