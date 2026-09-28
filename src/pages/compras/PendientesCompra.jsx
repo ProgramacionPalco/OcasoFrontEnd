@@ -9,11 +9,16 @@ function PendientesCompra() {
 
     const [requisiciones, setRequisiciones] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [busqueda, setBusqueda] = useState("");
 
     useEffect(() => {
         cargar();
     }, []);
 
+
+    // ==========================================
+    // CARGAR REQUISICIONES
+    // ==========================================
     const cargar = async () => {
 
         try {
@@ -36,6 +41,46 @@ function PendientesCompra() {
 
     };
 
+
+    // ==========================================
+    // FILTRO DE BÚSQUEDA
+    // ==========================================
+    const requisicionesFiltradas = requisiciones.filter((r) => {
+
+        const texto = busqueda
+            .toLowerCase()
+            .trim();
+
+        if (!texto)
+            return true;
+
+        return (
+            String(r.id ?? "")
+                .includes(texto) ||
+
+            (r.solicitante ?? "")
+                .toLowerCase()
+                .includes(texto) ||
+
+            (r.empresa ?? "")
+                .toLowerCase()
+                .includes(texto) ||
+
+            (r.categoria ?? "")
+                .toLowerCase()
+                .includes(texto) ||
+
+            (r.descripcion ?? "")
+                .toLowerCase()
+                .includes(texto)
+        );
+
+    });
+
+
+    // ==========================================
+    // COLUMNAS
+    // ==========================================
     const columnas = [
 
         {
@@ -59,20 +104,28 @@ function PendientesCompra() {
 
         {
             name: "Categoría",
-            selector: row => row.categoria
+            selector: row => row.categoria,
+            sortable: true
         },
 
         {
             name: "Fecha",
             selector: row =>
-                new Date(row.fecha).toLocaleDateString("es-MX"),
+                new Date(row.fecha)
+                    .toLocaleDateString("es-MX"),
             sortable: true
         },
 
         {
             name: "Total",
             selector: row =>
-                "$" + Number(row.total).toLocaleString("es-MX")
+                "$" +
+                Number(row.total)
+                    .toLocaleString("es-MX", {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2
+                    }),
+            sortable: true
         },
 
         {
@@ -82,7 +135,9 @@ function PendientesCompra() {
                 <button
                     className="btn btn-success btn-sm"
                     onClick={() =>
-                        navigate(`/compras/orden-compra/${row.id}`)
+                        navigate(
+                            `/compras/orden-compra/${row.id}`
+                        )
                     }
                 >
                     Administrar OC
@@ -94,6 +149,7 @@ function PendientesCompra() {
 
     ];
 
+
     return (
 
         <div className="container-fluid">
@@ -103,16 +159,101 @@ function PendientesCompra() {
                 <div className="card-body">
 
                     <h3 className="mb-4">
-
                         Pendientes de compra
-
                     </h3>
 
+
+                    {/* BUSCADOR */}
+                    <div className="row mb-4">
+
+                        <div className="col-md-6">
+
+                            <label className="form-label">
+                                Buscar requisición
+                            </label>
+
+                            <div className="input-group">
+
+                                <input
+                                    type="text"
+                                    className="form-control"
+                                    placeholder="REQ, solicitante, empresa, categoría..."
+                                    value={busqueda}
+                                    onChange={(e) =>
+                                        setBusqueda(e.target.value)
+                                    }
+                                />
+
+                                {busqueda && (
+
+                                    <button
+                                        type="button"
+                                        className="btn btn-outline-secondary"
+                                        onClick={() =>
+                                            setBusqueda("")
+                                        }
+                                    >
+                                        Limpiar
+                                    </button>
+
+                                )}
+
+                            </div>
+
+                        </div>
+
+
+                        <div className="col-md-6 d-flex align-items-end">
+
+                            <div className="text-muted pb-2">
+
+                                Mostrando{" "}
+
+                                <strong>
+                                    {requisicionesFiltradas.length}
+                                </strong>
+
+                                {" "}de{" "}
+
+                                <strong>
+                                    {requisiciones.length}
+                                </strong>
+
+                                {" "}requisiciones
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    {/* TABLA */}
                     <DataTable
                         columns={columnas}
-                        data={requisiciones}
+                        data={requisicionesFiltradas}
                         progressPending={loading}
+                        progressComponent={
+                            <div className="py-5">
+                                <div
+                                    className="spinner-border text-primary"
+                                    role="status"
+                                />
+                            </div>
+                        }
                         pagination
+                        paginationPerPage={10}
+                        paginationRowsPerPageOptions={[
+                            10,
+                            25,
+                            50,
+                            100
+                        ]}
+                        noDataComponent={
+                            <div className="py-4 text-muted">
+                                No se encontraron requisiciones.
+                            </div>
+                        }
                         highlightOnHover
                         striped
                         responsive

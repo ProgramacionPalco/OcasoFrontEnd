@@ -13,11 +13,11 @@ function NuevaOrdenCompra() {
 
     const [requisicion, setRequisicion] = useState(null);
     const [productos, setProductos] = useState([]);
-
+    const [numeroOC, setNumeroOC] = useState("");
     const [nombreProveedor, setNombreProveedor] = useState("");
     const [observaciones, setObservaciones] = useState("");
-
     const [guardando, setGuardando] = useState(false);
+    
 
     useEffect(() => {
         cargar();
@@ -119,33 +119,37 @@ function NuevaOrdenCompra() {
                 precioUnitario: x.precioUnitario
             }));
 
+
+        // Validar número OC
+        if (numeroOC.trim() === "") {
+            alert("Capture el número de Orden de Compra.");
+            return;
+        }
+
+
+        // Validar proveedor
         if (nombreProveedor.trim() === "") {
-
             alert("Capture el proveedor.");
-
             return;
-
         }
 
+
+        // Validar productos
         if (productosSeleccionados.length === 0) {
-
             alert("Seleccione al menos un producto.");
-
             return;
-
         }
 
+
+        // DTO QUE SE ENVÍA AL API
         const dto = {
-
             idRequisicion: Number(idRequisicion),
-
-            nombreProveedor,
-
+            numeroOC: numeroOC.trim(),
+            nombreProveedor: nombreProveedor.trim(),
             observaciones,
-
             productos: productosSeleccionados
-
         };
+
 
         try {
 
@@ -155,7 +159,7 @@ function NuevaOrdenCompra() {
 
             alert("Orden de Compra creada correctamente.");
 
-            navigate(`/compras/${id}/ordenes-compra`);
+            navigate(`/compras/orden-compra/${idRequisicion}`);
 
         }
         catch (e) {
@@ -204,7 +208,7 @@ function NuevaOrdenCompra() {
 
                                         <input
                                             className="form-control"
-                                            value={requisicion.requisicion.empresaNombre}
+                                            value={requisicion.requisicion.razonSocial ?? ""}
                                             readOnly
                                         />
 
@@ -246,7 +250,7 @@ function NuevaOrdenCompra() {
 
                                         <input
                                             className="form-control"
-                                            value={requisicion.requisicion.categoriaNombre}
+                                            value={requisicion.requisicion.categoria ?? ""}
                                             readOnly
                                         />
 
@@ -275,32 +279,57 @@ function NuevaOrdenCompra() {
 
                     <hr />
 
-                    <div className="row">
+                    <div className="row g-3">
 
-                        <div className="col-md-6">
+                        <div className="col-md-4">
 
                             <label className="form-label fw-bold">
-                                Proveedor
+                                Número de Orden de Compra *
                             </label>
 
                             <input
+                                type="text"
                                 className="form-control"
-                                value={nombreProveedor}
-                                onChange={e => setNombreProveedor(e.target.value)}
+                                placeholder="Ej. OC-12345"
+                                value={numeroOC}
+                                onChange={(e) =>
+                                    setNumeroOC(e.target.value)
+                                }
                             />
 
                         </div>
 
-                        <div className="col-md-6">
+                        <div className="col-md-4">
+
+                            <label className="form-label fw-bold">
+                                Proveedor *
+                            </label>
+
+                            <input
+                                type="text"
+                                className="form-control"
+                                placeholder="Nombre del proveedor"
+                                value={nombreProveedor}
+                                onChange={(e) =>
+                                    setNombreProveedor(e.target.value)
+                                }
+                            />
+
+                        </div>
+
+                        <div className="col-md-4">
 
                             <label className="form-label fw-bold">
                                 Observaciones
                             </label>
 
                             <input
+                                type="text"
                                 className="form-control"
                                 value={observaciones}
-                                onChange={e => setObservaciones(e.target.value)}
+                                onChange={(e) =>
+                                    setObservaciones(e.target.value)
+                                }
                             />
 
                         </div>

@@ -24,6 +24,10 @@ import PendientesCompra from "./pages/compras/PendientesCompra";
 import OrdenCompra from "./pages/compras/OrdenCompra";
 import AdministrarOrdenesCompra from "./pages/compras/AdministrarOrdenesCompra";
 import NuevaOrdenCompra from "./pages/compras/NuevaOrdenCompra";
+import Aprobaciones from "./pages/compras/Aprobaciones";
+import DetalleAprobacion from "./pages/compras/DetalleAprobacion";
+import DetalleOrdenCompra from "./pages/compras/DetalleOrdenCompra";
+
 
 import Usuarios from "./pages/admin/Usuarios";
 import NuevoUsuario from "./pages/admin/NuevoUsuario";
@@ -107,6 +111,12 @@ function App() {
               <Route path="/compras/orden-compra/:id" element={<AdministrarOrdenesCompra  />} />
 
               <Route path="/compras/ordenes-compra/:idRequisicion/nueva" element={<NuevaOrdenCompra />} />
+
+              <Route path="/compras/aprobaciones" element={<Aprobaciones />} />
+
+              <Route path="/compras/aprobaciones/:id" element={<DetalleAprobacion />} />
+
+              <Route path="/compras/orden-compra/detalle/:idOrdenCompra" element={<DetalleOrdenCompra />} />
 
             </Route>
 

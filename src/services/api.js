@@ -40,8 +40,8 @@ api.interceptors.request.use((config) => {
     return config;
 });
 
-export const obtenerDashboardRequisiciones = () =>
-    api.get("/compras/dashboard");
+export const obtenerDashboardRequisiciones = (page = 1, pageSize = 20) =>
+    api.get(`/compras/dashboard?page=${page}&pageSize=${pageSize}`);
 
 export const obtenerMetricasDashboard = async () => {
     const { data } = await api.get("/compras/dashboard/metricas");
@@ -65,6 +65,25 @@ export const obtenerProductosDisponiblesOC = (id) =>
 
 export const crearOrdenCompra = (data) =>
     api.post("/compras/ordenes-compra", data);
+
+export const obtenerPendientesAprobacion = () =>
+    api.get("/compras/pendientes-aprobacion");
+
+export const procesarAprobacion = (data) =>
+    api.post("/compras/aprobar-requisicion", data);
+
+export const verDocumentoRequisicion = (idDocumento) =>
+    api.get(`/compras/documentos/${idDocumento}/ver`,
+        {
+            responseType: "blob"
+        }
+    );
+
+export const aprobarRequisicion = (data) =>
+    api.post("/compras/aprobar-requisicion", data);  
+
+export const obtenerDetalleOrdenCompra = (idOrdenCompra) =>
+    api.get(`/compras/ordenes-compra/detalle/${idOrdenCompra}`);
 
 export default api;
 //import axios from "axios";

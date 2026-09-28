@@ -18,7 +18,8 @@ import {
    FaUserSlash,
    FaKey,
    FaShoppingCart,
-   FaClipboardList
+   FaClipboardList,
+   FaClipboardCheck
 } from "react-icons/fa";
 
 function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobileOpen}){
@@ -388,6 +389,31 @@ function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobileOpen}){
 
                                 {!collapsed &&
                                     "Dashboard"
+                                }
+
+                            </NavLink>
+
+                        </li>
+
+                    )}
+                    
+                    {tienePermiso(
+                        "/compras/aprobaciones"
+                    ) && (
+
+                        <li>
+
+                            <NavLink
+                                to="/compras/aprobaciones"
+                                className="menu-link"
+                            >
+
+                                <FaClipboardCheck
+                                    className="icon"
+                                />
+
+                                {!collapsed &&
+                                    "Aprobaciones"
                                 }
 
                             </NavLink>

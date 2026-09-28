@@ -17,6 +17,7 @@ function DashboardCompras() {
     const [filtroMes, setFiltroMes] = useState("Todos");
     const [filtroAnio, setFiltroAnio] = useState("Todos");
     const navigate = useNavigate();
+    const [total, setTotal] = useState(0);
     
 
     useEffect(() => {
@@ -77,22 +78,14 @@ function DashboardCompras() {
 
     };
 
-
     const cargar = async () => {
-
         try {
-
-            const { data } =
-                await obtenerDashboardRequisiciones();
-
-            setRequisiciones(data);
-
+            const { data } = await obtenerDashboardRequisiciones();
+            setRequisiciones(data.data);
+            setTotal(data.total);
         } catch (error) {
-
             console.error(error);
-
         }
-
     };
 
     const [metricas, setMetricas] = useState({
@@ -107,40 +100,54 @@ function DashboardCompras() {
 
     const obtenerEstado = (r) => {
 
-        if (r.eliminado === 1 || r.cuantos_Rechazados === 2)
+        // Cancelada / eliminada
+        if (r.eliminado === 1) {
             return {
                 texto: "Cancelada",
                 color: "danger"
             };
+        }
 
-        if (r.entregado === 1)
+        // Rechazada
+        if (r.estatusAprobacion === 3) {
+            return {
+                texto: "Rechazada",
+                color: "danger"
+            };
+        }
+
+        // Entregada
+        if (r.entregado === 1) {
             return {
                 texto: "Entregada",
                 color: "secondary"
             };
+        }
 
+        // Aprobada y ya tiene Orden de Compra
         if (
-            r.cuantos_Aprobados === 2 &&
+            r.estatusAprobacion === 2 &&
             r.oc
-        )
+        ) {
             return {
                 texto: "Con O.C.",
                 color: "primary"
             };
+        }
 
-        if (
-            r.cuantos_Aprobados === 2
-        )
+        // Aprobada
+        if (r.estatusAprobacion === 2) {
             return {
                 texto: "Aprobada",
                 color: "success"
             };
+        }
 
+        // Pendiente de aprobación
         return {
             texto: "Pendiente",
             color: "warning"
         };
-
     };
 
     const requisicionesFiltradas = requisiciones.filter(r => {
@@ -224,7 +231,7 @@ function DashboardCompras() {
 
             <h2>Dashboard Compras</h2>
 
-            <p>Total: {requisiciones.length}</p>
+            <p>Total: {total}</p>
             {/****/}
             <div className="mt-4 d-flex justify-content-end gap-2 flex-wrap">
 
@@ -291,6 +298,7 @@ function DashboardCompras() {
                                 <option value="Urgente">Urgente</option>
                                 <option value="No urgente">No urgente</option>
                                 <option value="Aprobada">Aprobada</option>
+                                <option value="Rechazada">Rechazada</option>
                                 <option value="Con O.C.">Con O.C.</option>
                                 <option value="Entregada">Entregada</option>
                                 <option value="Cancelada">Cancelada</option>
