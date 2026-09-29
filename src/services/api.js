@@ -85,6 +85,9 @@ export const aprobarRequisicion = (data) =>
 export const obtenerDetalleOrdenCompra = (idOrdenCompra) =>
     api.get(`/compras/ordenes-compra/detalle/${idOrdenCompra}`);
 
+export const registrarRecepcion = (dto) =>
+    api.post("/compras/ordenes-compra/recepcion", dto);
+
 export default api;
 //import axios from "axios";
 //
