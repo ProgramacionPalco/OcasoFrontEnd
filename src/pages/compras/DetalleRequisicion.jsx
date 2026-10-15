@@ -5,6 +5,7 @@ import GeneralTab from "./components/GeneralTab";
 import ProductosTab from "./components/ProductosTab";
 import AprobacionTab from "./components/AprobacionTab";
 import Workflow from "./components/Workflow";
+import DocumentosTab from "./components/DocumentosTab";
 
 function DetalleRequisicion() {
 
@@ -177,22 +178,33 @@ function DetalleRequisicion() {
                 </li>
 
             </ul>
-            {
-                tab === "general" &&
-                <GeneralTab detalle={detalle} />
-            }
-            {
-                tab === "productos" &&
-                <ProductosTab
-                    productos={detalle.productos}
-                />
-            }
-            {
-                tab === "aprobacion" &&
-                <AprobacionTab
-                    aprobacion={detalle.aprobacion}
-                />
-            }
+                {
+                    tab === "general" &&
+                    <GeneralTab
+                        detalle={detalle}
+                    />
+                }
+
+                {
+                    tab === "productos" &&
+                    <ProductosTab
+                        productos={detalle.productos}
+                    />
+                }
+
+                {
+                    tab === "documentos" &&
+                    <DocumentosTab
+                        documentos={detalle.documentos}
+                    />
+                }
+
+                {
+                    tab === "aprobacion" &&
+                    <AprobacionTab
+                        aprobacion={detalle.aprobacion}
+                    />
+                }
 
         </div>
 

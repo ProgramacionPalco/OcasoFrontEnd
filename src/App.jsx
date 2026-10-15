@@ -29,6 +29,12 @@ import NuevaOrdenCompra from "./pages/compras/NuevaOrdenCompra";
 import ProspectosSeguimiento from "./pages/prospectos/ProspectosSeguimiento";
 import DashboardVentas from "./pages/ventas/DashboardVentas";
 
+import Aprobaciones from "./pages/compras/Aprobaciones";
+import DetalleAprobacion from "./pages/compras/DetalleAprobacion";
+import DetalleOrdenCompra from "./pages/compras/DetalleOrdenCompra";
+
+
+
 import Usuarios from "./pages/admin/Usuarios";
 import NuevoUsuario from "./pages/admin/NuevoUsuario";
 

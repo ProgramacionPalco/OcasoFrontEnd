@@ -450,12 +450,14 @@ export default function NuevaRequisicion() {
             //);
 
             documentos.forEach(doc => {
-
                 formData.append(
                     "Archivos",
                     doc.archivo
                 );
-
+                formData.append(
+                    "ComentariosDocumentos",
+                    doc.comentario || ""
+                );
             });
 
             const response = await api.post(
@@ -1105,79 +1107,73 @@ export default function NuevaRequisicion() {
                         </h5>
                     </div>
                     <div className="card-body">
+
                         <input
                             type="file"
-                            className="
-                            form-control
-                            mb-4
-                            "
-                            onChange={
-                                agregarDocumento
-                            }
+                            className="form-control mb-4"
+                            onChange={agregarDocumento}
                         />
-                        <div className="table-responsive-custom">
-                            <table className="table table-hover">
-                                <thead className="table-dark">
-                                    <tr>
-                                        <th>
-                                            Archivo
-                                        </th>
-                                        <th>
-                                            Comentario
-                                        </th>
-                                        <th width="100">
-                                            Acción
-                                        </th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {
-                                        documentos.map((d,index)=>(
-                                            <tr key={index}>
-                                                <td>
-                                                    {
-                                                        d.archivo?.name
-                                                    }
-                                                </td>
-                                                <td>
-                                                    <input
-                                                        className="
-                                                        form-control
-                                                        "
-                                                        value={
-                                                            d.comentario
-                                                        }
-                                                        onChange={(e)=>
-                                                            actualizarComentario(
-                                                                index,
-                                                                e.target.value
-                                                            )
-                                                        }
-                                                    />
-                                                </td>
-                                                <td>
-                                                    <button
-                                                        onClick={()=>
-                                                            eliminarDocumento(
-                                                                index
-                                                            )
-                                                        }
-                                                        className="
-                                                        btn
-                                                        btn-danger
-                                                        btn-sm
-                                                        "
-                                                    >
-                                                        Eliminar
-                                                    </button>
-                                                </td>
-                                            </tr>
-                                        ))
-                                    }
-                                </tbody>
-                            </table>
+
+                        <div className="documentos-lista">
+
+                            {documentos.map((d, index) => (
+
+                                <div
+                                    className="documento-item"
+                                    key={index}
+                                >
+
+                                    <div className="documento-archivo">
+
+                                        <strong>Archivo</strong>
+
+                                        <span>
+                                            {d.archivo?.name}
+                                        </span>
+
+                                    </div>
+
+                                    <div className="documento-comentario">
+
+                                        <strong>Comentario</strong>
+
+                                        <input
+                                            type="text"
+                                            className="form-control"
+                                            value={d.comentario}
+                                            onChange={(e) =>
+                                                actualizarComentario(
+                                                    index,
+                                                    e.target.value
+                                                )
+                                            }
+                                        />
+
+                                    </div>
+
+                                    <div className="documento-accion">
+
+                                        <strong>Acción</strong>
+
+                                        <button
+                                            type="button"
+                                            className="btn btn-danger btn-sm"
+                                            onClick={() =>
+                                                eliminarDocumento(index)
+                                            }
+                                        >
+                                            Eliminar
+                                        </button>
+
+                                    </div>
+
+                                </div>
+
+                            ))}
+
                         </div>
-                    </div>
+
+                    </div>        
                 </div>
                 <div className="row g-2 mt-4 mb-5">
 

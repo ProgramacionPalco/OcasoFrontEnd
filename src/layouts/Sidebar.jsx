@@ -469,6 +469,31 @@ function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobileOpen}){
                         </li>
 
                     )}
+                    
+                    {tienePermiso(
+                        "/compras/aprobaciones"
+                    ) && (
+
+                        <li>
+
+                            <NavLink
+                                to="/compras/aprobaciones"
+                                className="menu-link"
+                            >
+
+                                <FaClipboardCheck
+                                    className="icon"
+                                />
+
+                                {!collapsed &&
+                                    "Aprobaciones"
+                                }
+
+                            </NavLink>
+
+                        </li>
+
+                    )}
 
                     {tienePermiso(
                         "/compras/pendientes"

@@ -72,6 +72,11 @@ function AdministrarOrdenesCompra() {
                                         <td>
                                             <button
                                                 className="btn btn-outline-primary btn-sm"
+                                                onClick={() =>
+                                                    navigate(
+                                                        `/compras/orden-compra/detalle/${x.id}`
+                                                    )
+                                                }
                                             >
                                                 Abrir
                                             </button>

@@ -673,3 +673,74 @@ Tablas
     }
 
 }
+
+.documento-item {
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) minmax(180px, 1fr) auto;
+    gap: 15px;
+    align-items: center;
+    padding: 12px 8px;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.documento-item strong {
+    display: none;
+}
+
+.documento-archivo {
+    min-width: 0;
+}
+
+.documento-archivo span {
+    overflow-wrap: anywhere;
+}
+
+.documento-comentario input {
+    width: 100%;
+}
+
+
+/* =========================
+   MÓVIL
+========================= */
+
+@media (max-width: 768px) {
+
+    .documento-item {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+
+        gap: 10px;
+        padding: 15px;
+        margin-bottom: 15px;
+
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+
+        background: #fff;
+    }
+
+    .documento-item strong {
+        display: block;
+        margin-bottom: 5px;
+        font-size: 13px;
+    }
+
+    .documento-archivo,
+    .documento-comentario,
+    .documento-accion {
+        width: 100%;
+        min-width: 0;
+    }
+
+    .documento-archivo span {
+        display: block;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+    }
+
+    .documento-accion button {
+        width: 100%;
+    }
+}
