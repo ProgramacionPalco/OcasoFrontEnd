@@ -61,6 +61,7 @@
   display:flex;
   justify-content:center;
   align-items:center;
+   z-index: 9999;
 }
 
 .modal-box{
@@ -69,6 +70,28 @@
   border-radius:10px;
   width:350px;
   box-shadow:0 4px 20px rgba(0,0,0,0.2);
+}
+
+.modal-box-prospectos {
+  background: white;
+  padding: 25px;
+  border-radius: 10px;
+  width: 860px;
+  max-width: 95%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-sizing: border-box;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+}
+
+/* Vista móvil */
+@media (max-width: 768px) {
+  .modal-box-prospectos {
+    width: 100%;
+    max-width: 90%;
+    padding: 15px;
+    border-radius: 8px;
+  }
 }
 
 .modal-box input{
@@ -98,6 +121,11 @@
   padding:30px;
 }
 
+.modal-box-prospectos{
+   max-height: 90vh;
+  overflow-y: auto;
+}
+
 .modal-header{
   margin-bottom:20px;
 }
@@ -113,6 +141,38 @@
   gap:16px;
 }
 
+.form-grid-prospectos {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 16px;
+}
+
+/* Vista móvil */
+@media (max-width: 768px) {
+  .form-grid-prospectos {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .form-group.span-2-prospectos {
+    grid-column: 1 / -1;
+  }
+
+  .form-group.span-3-prospectos {
+    grid-column: 1 / -1;
+  }
+
+  .form-grid-prospectos {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+  }
+
+  .form-grid-prospectos .form-group {
+    grid-column: 1 / -1;
+  }
+
+}
+
 .form-group{
   display:flex;
   flex-direction:column;
@@ -120,6 +180,22 @@
 
 .form-group.full{
   grid-column:span 2;
+}
+
+.form-group.full-prospectos{
+  grid-column: 1 / -1;
+}
+
+.form-group.span-2-prospectos{
+  grid-column:span 2;
+}
+
+.form-group.span-3-prospectos{
+  grid-column:span 3;
+}
+
+.form-group.span-1-prospectos{
+  grid-column:span 1;
 }
 
 .form-group label{
@@ -144,13 +220,37 @@
   margin-top:25px;
 }
 
+.modal-footer-prospectos {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 12px;
+  margin-top: 25px;
+  box-sizing: border-box;
+}
+
+.modal-footer-prospectos button {
+  width: auto;
+  white-space: nowrap;
+  padding: 10px 20px;
+}
+
 .btn-secondary{
   background:#e0e0e0;
 }
 
-.table-responsive-custom{
-    overflow-x:auto;
-    -webkit-overflow-scrolling:touch;
+.table-responsive-custom {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  box-sizing: border-box;
+}
+
+.table-responsive-custom .MuiDataGrid-root {
+  width: 100%;
+  min-width: 0;
 }
 
 @media (max-width: 768px){
@@ -262,4 +362,8 @@
 
     padding:.7rem 1rem;
 
+}
+
+.swal2-container {
+  z-index: 10000 !important;
 }

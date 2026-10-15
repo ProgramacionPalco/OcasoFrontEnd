@@ -5,6 +5,7 @@ import api from "../services/api";
 import {
   FaTachometerAlt,
   FaUsers,
+  FaUserPlus,
   FaCogs,
   FaChevronDown,
   FaFileAlt,
@@ -19,7 +20,8 @@ import {
    FaKey,
    FaShoppingCart,
    FaClipboardList,
-   FaClipboardCheck
+   FaChartLine,
+   FaFileInvoiceDollar
 } from "react-icons/fa";
 
 function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobileOpen}){
@@ -31,6 +33,7 @@ function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobileOpen}){
   const [adminOpen, setAdminOpen] = useState(false);
   const [calidadOpen, setCalidadOpen] = useState(false);
   const [comprasOpen, setComprasOpen] = useState(false);
+  const [ventasOpen, setVentasOpen] = useState(false);
 
   const [menus, setMenus] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -248,6 +251,76 @@ function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobileOpen}){
           </li>
         )}
 
+        {tienePermiso("/ventas") && (
+
+          <li className="menu-group">
+
+            <div
+              className="menu-title"
+              onClick={() => !collapsed && setVentasOpen(!ventasOpen)}
+            >
+
+              <div className="menu-title-left">
+
+                <FaChartLine className="icon" />
+
+                {!collapsed && <span>Ventas</span>}
+
+              </div>
+
+              {!collapsed && (
+                <FaChevronDown
+                  className={`arrow ${ventasOpen ? "open" : ""}`}
+                />
+              )}
+
+            </div>
+
+            {!collapsed && ventasOpen && (
+
+              <ul className="submenu">
+
+                  <ul className="submenu">
+                      {tienePermiso("/ventas/DashboardVentas") && (
+                        <li>
+                          <NavLink to="/ventas/DashboardVentas" end className="menu-link">
+                            <FaTachometerAlt className="icon" />
+                            {!collapsed && "Dashboard"}
+                          </NavLink>
+                        </li>
+                      )}
+
+                     {tienePermiso("/prospectos") && (
+                        <li>
+                          <NavLink to="/prospectos" end className="menu-link">
+                            <FaUserPlus className="icon" />
+                            {!collapsed && "Prospectos"}
+                          </NavLink>
+                        </li>
+                      )}
+                      
+                       {tienePermiso("/ventas/cotizador") && (
+                        <li>
+                          <NavLink to="/cotizador" end className="menu-link">
+                            <FaFileInvoiceDollar className="icon" />
+                            {!collapsed && "Cotizador"}
+                          </NavLink>
+                        </li>
+                      )}
+
+                  </ul>
+
+              </ul>
+
+            )}
+
+          </li>
+
+        )}
+
+      
+
+        
         {tienePermiso("/clientes/inactivos") && (
           <li>
             <NavLink to="/clientes/inactivos" className="menu-link">
@@ -591,7 +664,23 @@ function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobileOpen}){
                       <NavLink to="/catalogos/ventas" className="menu-link">
 
                         <FaUserTag className="icon" />
-                        {!collapsed && "Ejecutivos de ventas"}
+                        {!collapsed && "Ejecutivos de Altas"}
+
+                      </NavLink>
+
+                    </li>
+
+                  )}
+
+                  {/* se agrego catalogo de ventas para prospectos */}
+                  {tienePermiso("/catalogos/ejecutivosVentasProspectos") && (
+
+                    <li>
+
+                      <NavLink to="/catalogos/ventasProspectos" className="menu-link">
+
+                        <FaUserTag className="icon" />
+                        {!collapsed && "Ejecutivos de Ventas"}
 
                       </NavLink>
 
