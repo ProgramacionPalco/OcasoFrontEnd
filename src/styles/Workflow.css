@@ -188,3 +188,39 @@
     font-weight:600;
 
 }
+
+@media (max-width: 768px) {
+
+  .workflow-card {
+    width: 100%;
+    max-width: 100%;
+    padding: 15px;
+    box-sizing: border-box;
+    overflow: hidden;
+  }
+
+  .workflow {
+    flex-direction: column;
+    align-items: center;
+    gap: 25px;
+    width: 100%;
+  }
+
+  .workflow-step {
+    flex: none;
+    width: 100%;
+    min-width: 0;
+    text-align: center;
+  }
+
+  .workflow::before {
+    left: 50%;
+    right: auto;
+    top: 30px;
+    bottom: 30px;
+    width: 4px;
+    height: auto;
+    transform: translateX(-50%);
+  }
+
+}
