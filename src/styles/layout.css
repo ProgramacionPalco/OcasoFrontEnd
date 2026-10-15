@@ -744,3 +744,8 @@ Tablas
         width: 100%;
     }
 }
+
+.workflow-icon.partial {
+    background-color: #ffc107;
+    color: white;
+}

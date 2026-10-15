@@ -89,80 +89,53 @@
 }
 
 /* Línea gris de fondo */
-.workflow::before{
 
-    content:"";
-
-    position:absolute;
-
-    left:11%;
-
-    right:11%;
-
-    top:30px;
-
-    height:4px;
-
-    background:#d9dee5;
-
-    z-index:0;
-
-}
 
 /* Barra de progreso */
-.workflow-progress{
-
-    position:absolute;
-
-    left:11%;
-
-    top:30px;
-
-    height:4px;
-
-    background:#198754;
-
-    z-index:1;
-
-    transition:.4s ease;
-
+.workflow {
+    position: relative;
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
 }
 
-.workflow-step{
+/* Línea solamente entre el primer y último círculo */
+.workflow-line {
+    position: absolute;
 
-    flex:1;
+    top: 27px;
 
-    position:relative;
+    /* 5 pasos: centro del primer y último elemento */
+    left: 10%;
+    right: 10%;
 
-    text-align:center;
+    height: 3px;
+    background: #198754;
 
-    z-index:2;
-
+    z-index: 0;
 }
 
-.workflow-circle{
+.workflow-step {
+    position: relative;
+    width: 20%;
+    text-align: center;
+    z-index: 1;
+}
 
-    width:60px;
+.workflow-circle {
+    position: relative;
+    z-index: 2;
 
-    height:60px;
+    width: 54px;
+    height: 54px;
 
-    margin:auto;
+    margin: 0 auto;
 
-    border-radius:50%;
+    border-radius: 50%;
 
-    display:flex;
-
-    justify-content:center;
-
-    align-items:center;
-
-    font-size:24px;
-
-    color:white;
-
-    position:relative;
-
-    z-index:3;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .workflow-user{

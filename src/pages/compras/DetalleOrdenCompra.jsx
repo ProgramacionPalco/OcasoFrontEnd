@@ -2,8 +2,10 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
     obtenerDetalleOrdenCompra,
-    registrarRecepcion
+    registrarRecepcion,
+    registrarEntrega
 } from "../../services/api";
+
 
 function DetalleOrdenCompra() {
 
@@ -20,6 +22,10 @@ function DetalleOrdenCompra() {
         useState({});
     const [guardandoRecepcion, setGuardandoRecepcion] =
         useState(false);
+
+    const [mostrarEntrega, setMostrarEntrega] = useState(false);
+    const [observacionesEntrega, setObservacionesEntrega] = useState("");
+    const [guardandoEntrega, setGuardandoEntrega] = useState(false);    
 
     useEffect(() => {
         cargar();
@@ -107,6 +113,53 @@ function DetalleOrdenCompra() {
 
             setGuardandoRecepcion(false);
 
+        }
+    };
+
+    const guardarEntrega = async () => {
+
+        if (!window.confirm(
+            "¿Confirmas que la requisición fue entregada?"
+        )) {
+            return;
+        }
+
+        try {
+
+            setGuardandoEntrega(true);
+
+            const dto = {
+                idRequisicion: Number(orden.idRequisicion),
+                observaciones: observacionesEntrega
+            };
+
+            const { data } = await registrarEntrega(dto);
+
+            alert(
+                data.message ||
+                "Requisición entregada correctamente."
+            );
+
+            setMostrarEntrega(false);
+            setObservacionesEntrega("");
+
+            // Recargar información
+            await cargar();
+
+        }
+        catch (error) {
+
+            console.error(error);
+
+            alert(
+                error.response?.data?.message ||
+                "No fue posible registrar la entrega."
+            );
+
+        }
+        finally {
+
+            setGuardandoEntrega(false);
         }
     };
 
@@ -201,14 +254,47 @@ function DetalleOrdenCompra() {
 
                         <div className="d-flex gap-2">
 
-                            <button
-                                className="btn btn-success"
-                                onClick={() =>
-                                    setMostrarRecepcion(true)
-                                }
-                            >
-                                Registrar recepción
-                            </button>
+                            {(orden.productos ?? []).some(
+                                producto => producto.cantidadPendiente > 0
+                            ) ? (
+
+                                <button
+                                    className="btn btn-success"
+                                    onClick={() => setMostrarRecepcion(true)}
+                                >
+                                    Registrar recepción
+                                </button>
+
+                            ) : (
+
+                                <span className="badge bg-success fs-6">
+                                    Recepción completa
+                                </span>
+
+                            )}
+
+                            {(orden.productos ?? []).length > 0 &&
+                                (orden.productos ?? []).every(
+                                    producto => producto.cantidadPendiente === 0
+                                ) && (
+
+                                orden.entregado === 1 ? (
+
+                                    <span className="badge bg-success fs-6">
+                                        Entregada
+                                    </span>
+
+                                ) : (
+
+                                    <button
+                                        className="btn btn-primary"
+                                        onClick={() => setMostrarEntrega(true)}
+                                    >
+                                        Confirmar entrega
+                                    </button>
+
+                                )
+                            )}
 
                             <button
                                 className="btn btn-outline-secondary"
@@ -465,42 +551,44 @@ function DetalleOrdenCompra() {
 
                                 <tbody>
 
-                                    {(orden.productos ?? []).map(producto => (
+                                    {(orden.productos ?? [])
+                                        .filter(producto => producto.cantidadPendiente > 0)
+                                        .map(producto => (
 
-                                        <tr key={producto.idOrdenCompraDetalle}>
+                                            <tr key={producto.idOrdenCompraDetalle}>
 
-                                            <td>
-                                                {producto.concepto}
-                                            </td>
+                                                <td>
+                                                    {producto.concepto}
+                                                </td>
 
-                                            <td>
-                                                {producto.cantidadPendiente}
-                                            </td>
+                                                <td>
+                                                    {producto.cantidadPendiente}
+                                                </td>
 
-                                            <td>
-                                                <input
-                                                    type="number"
-                                                    min="0"
-                                                    max={producto.cantidadPendiente}
-                                                    step="1"
-                                                    className="form-control"
-                                                    value={
-                                                        cantidadesRecibidas[
-                                                            producto.idOrdenCompraDetalle
-                                                        ] ?? ""
-                                                    }
-                                                    onChange={(e) =>
-                                                        cambiarCantidadRecibida(
-                                                            producto.idOrdenCompraDetalle,
-                                                            e.target.value
-                                                        )
-                                                    }
-                                                />
-                                            </td>
+                                                <td>
+                                                    <input
+                                                        type="number"
+                                                        min="0"
+                                                        max={producto.cantidadPendiente}
+                                                        step="1"
+                                                        className="form-control"
+                                                        value={
+                                                            cantidadesRecibidas[
+                                                                producto.idOrdenCompraDetalle
+                                                            ] ?? ""
+                                                        }
+                                                        onChange={(e) =>
+                                                            cambiarCantidadRecibida(
+                                                                producto.idOrdenCompraDetalle,
+                                                                e.target.value
+                                                            )
+                                                        }
+                                                    />
+                                                </td>
 
-                                        </tr>
+                                            </tr>
 
-                                    ))}
+                                        ))}
 
                                 </tbody>
 
@@ -543,6 +631,70 @@ function DetalleOrdenCompra() {
                                     : "Guardar recepción"
                                 }
 
+                            </button>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            )}
+            {/* ENTREGA */}
+            {mostrarEntrega && (
+
+                <div className="card border-primary shadow-sm mt-4">
+
+                    <div className="card-body">
+
+                        <div className="d-flex justify-content-between mb-3">
+
+                            <h4 className="mb-0">
+                                Confirmar entrega
+                            </h4>
+
+                            <button
+                                className="btn btn-sm btn-outline-secondary"
+                                onClick={() => setMostrarEntrega(false)}
+                            >
+                                Cancelar
+                            </button>
+
+                        </div>
+
+                        <p className="text-muted">
+                            Confirma que los productos fueron entregados
+                            al solicitante.
+                        </p>
+
+                        <div className="mb-3">
+
+                            <label className="form-label fw-bold">
+                                Observaciones
+                            </label>
+
+                            <textarea
+                                className="form-control"
+                                rows="3"
+                                value={observacionesEntrega}
+                                onChange={(e) =>
+                                    setObservacionesEntrega(e.target.value)
+                                }
+                                placeholder="Observaciones de la entrega..."
+                            />
+
+                        </div>
+
+                        <div className="text-end">
+
+                            <button
+                                className="btn btn-primary"
+                                disabled={guardandoEntrega}
+                                onClick={guardarEntrega}
+                            >
+                                {guardandoEntrega
+                                    ? "Guardando..."
+                                    : "Confirmar entrega"}
                             </button>
 
                         </div>

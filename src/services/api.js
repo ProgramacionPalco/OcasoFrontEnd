@@ -43,9 +43,15 @@ api.interceptors.request.use((config) => {
 export const obtenerDashboardRequisiciones = (page = 1, pageSize = 20) =>
     api.get(`/compras/dashboard?page=${page}&pageSize=${pageSize}`);
 
-export const obtenerMetricasDashboard = async () => {
-    const { data } = await api.get("/compras/dashboard/metricas");
-    return data;
+export const obtenerMetricasDashboard = async (params = {}) => {
+    const response = await api.get(
+        "/compras/dashboard/metricas",
+        { params }
+    );
+    return response.data;
+};
+export const obtenerDepartamentos = () => {
+    return api.get("/compras/catalogos/departamentos");
 };
 
 export const obtenerDetalleRequisicion = (id) =>
@@ -87,6 +93,31 @@ export const obtenerDetalleOrdenCompra = (idOrdenCompra) =>
 
 export const registrarRecepcion = (dto) =>
     api.post("/compras/ordenes-compra/recepcion", dto);
+
+export const registrarEntrega = (dto) =>
+    api.post("/compras/registrar-entrega", dto);
+
+export const obtenerRequisicionesOrdenCompra = (estado) =>
+    api.get(`/compras/ordenes-compra?estado=${estado}`);
+
+export const obtenerPendientesRecepcion = () =>
+    api.get("/compras/recepciones/pendientes");
+
+export const obtenerMisRequisiciones = () =>
+    api.get("/compras/mis-requisiciones");
+
+export const obtenerControlRequisiciones = (
+    pagina = 1,
+    tamanoPagina = 20,
+    filtros = {}
+) =>
+    api.get("/compras/control-requisiciones", {
+        params: {
+            pagina,
+            tamanoPagina,
+            ...filtros
+        }
+    });
 
 export default api;
 //import axios from "axios";

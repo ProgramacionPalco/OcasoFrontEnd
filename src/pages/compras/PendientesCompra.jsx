@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import DataTable from "react-data-table-component";
-import { obtenerPendientesCompra } from "../../services/api";
+import { obtenerRequisicionesOrdenCompra } from "../../services/api";
 
 function PendientesCompra() {
 
@@ -10,35 +10,29 @@ function PendientesCompra() {
     const [requisiciones, setRequisiciones] = useState([]);
     const [loading, setLoading] = useState(true);
     const [busqueda, setBusqueda] = useState("");
+    const [filtroEstado, setFiltroEstado] = useState("por-generar");
 
     useEffect(() => {
         cargar();
-    }, []);
+    }, [filtroEstado]);
 
 
     // ==========================================
     // CARGAR REQUISICIONES
     // ==========================================
     const cargar = async () => {
-
         try {
-
-            const { data } = await obtenerPendientesCompra();
-
+            setLoading(true);
+            const { data } =
+                await obtenerRequisicionesOrdenCompra(filtroEstado);
             setRequisiciones(data);
-
         }
         catch (error) {
-
             console.error(error);
-
         }
         finally {
-
             setLoading(false);
-
         }
-
     };
 
 
@@ -129,21 +123,33 @@ function PendientesCompra() {
         },
 
         {
-            name: "",
-            cell: row => (
+            name: "Acciones",
+            cell: row => {
 
-                <button
-                    className="btn btn-success btn-sm"
-                    onClick={() =>
-                        navigate(
-                            `/compras/orden-compra/${row.id}`
-                        )
-                    }
-                >
-                    Administrar OC
-                </button>
+                if (filtroEstado === "por-generar") {
+                    return (
+                        <button
+                            className="btn btn-success btn-sm"
+                            onClick={() =>
+                                navigate(`/compras/orden-compra/${row.id}`)
+                            }
+                        >
+                            Administrar OC
+                        </button>
+                    );
+                }
 
-            ),
+                return (
+                    <button
+                        className="btn btn-outline-primary btn-sm"
+                        onClick={() =>
+                            navigate(`/compras/orden-compra/${row.id}`)
+                        }
+                    >
+                        Ver órdenes
+                    </button>
+                );
+            },
             width: "170px"
         }
 
@@ -158,9 +164,44 @@ function PendientesCompra() {
 
                 <div className="card-body">
 
-                    <h3 className="mb-4">
-                        Pendientes de compra
-                    </h3>
+                    <h3>Órdenes de compra</h3>
+                    {/*Filtro*/}
+                    <div className="d-flex gap-2 mb-4">
+
+                        <button
+                            className={`btn ${
+                                filtroEstado === "por-generar"
+                                    ? "btn-primary"
+                                    : "btn-outline-primary"
+                            }`}
+                            onClick={() => setFiltroEstado("por-generar")}
+                        >
+                            Por generar
+                        </button>
+
+                        <button
+                            className={`btn ${
+                                filtroEstado === "proceso"
+                                    ? "btn-primary"
+                                    : "btn-outline-primary"
+                            }`}
+                            onClick={() => setFiltroEstado("proceso")}
+                        >
+                            En proceso
+                        </button>
+
+                        <button
+                            className={`btn ${
+                                filtroEstado === "completadas"
+                                    ? "btn-primary"
+                                    : "btn-outline-primary"
+                            }`}
+                            onClick={() => setFiltroEstado("completadas")}
+                        >
+                            Completadas
+                        </button>
+
+                    </div>
 
 
                     {/* BUSCADOR */}

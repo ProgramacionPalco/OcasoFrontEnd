@@ -32,7 +32,9 @@ import DashboardVentas from "./pages/ventas/DashboardVentas";
 import Aprobaciones from "./pages/compras/Aprobaciones";
 import DetalleAprobacion from "./pages/compras/DetalleAprobacion";
 import DetalleOrdenCompra from "./pages/compras/DetalleOrdenCompra";
-
+import Recepciones from "./pages/compras/Recepciones";
+import ControlRequisiciones from "./pages/compras/ControlRequisiciones";
+import ImprimirRequisicion from "./pages/compras/ImprimirRequisicion";
 
 
 import Usuarios from "./pages/admin/Usuarios";
@@ -83,52 +85,27 @@ function App() {
 
               <Route path="/clientes/:id" element={<DetalleCliente />} />
 
-              <Route
-                path="/clientes/inactivos"
-                element={<ClientesInactivos />}
-              />
+              <Route path="/clientes/inactivos" element={<ClientesInactivos />} />
 
-              <Route
-                path="/reportes/clientes-documentos"
-                element={<ReporteClientesDocumentos />}
-              />
+              <Route path="/reportes/clientes-documentos" element={<ReporteClientesDocumentos />} />
 
-              <Route
-                path="/reportes/movimientos"
-                element={<ReporteMovimientos />}
-              />
+              <Route path="/reportes/movimientos" element={<ReporteMovimientos />} />
 
               <Route path="/catalogos" element={<Catalogos />} />
 
-              <Route
-                path="/catalogos/documentos"
-                element={<CatalogoDocumentos />}
-              />
+              <Route path="/catalogos/documentos" element={<CatalogoDocumentos />} />
 
-              <Route
-                path="/catalogos/empresas"
-                element={<CatalogoEmpresas />}
-              />
+              <Route path="/catalogos/empresas" element={<CatalogoEmpresas />} />
 
-              <Route
-                path="/catalogos/ejecutivos"
-                element={<CatalogoEjecutivos />}
-              />
+              <Route path="/catalogos/ejecutivos" element={<CatalogoEjecutivos />} />
 
-              <Route
-                path="/catalogos/ventas"
-                element={<CatalogoEjecutivosVentas />}
-              />
+              <Route path="/catalogos/ventas" element={<CatalogoEjecutivosVentas />} />
 
-              <Route
-                path="/catalogos/ventasProspectos"
-                element={<CatalogoEjecutivosVentasProspectos />}
-              />
+              <Route path="/catalogos/ventasProspectos" element={<CatalogoEjecutivosVentasProspectos />} />
 
-              <Route
-                path="/catalogos/reasignar-clientes"
-                element={<ReasignarClientes />}
-              />
+              <Route path="/ventas/DashboardVentas" element={<DashboardVentas />} />
+
+              <Route path="/catalogos/reasignar-clientes" element={<ReasignarClientes />} />
 
               <Route path="/admin/usuarios" element={<Usuarios />} />
 
@@ -138,36 +115,32 @@ function App() {
 
               <Route path="/compras/nueva" element={<NuevaRequisicion />} />
 
-              <Route
-                path="/compras/mis-requisiciones"
-                element={<MisRequisiciones />}
-              />
+              <Route path="/compras/mis-requisiciones" element={<MisRequisiciones />} />
 
-              <Route
-                path="/compras/detalle/:id"
-                element={<DetalleRequisicion />}
-              />
+              <Route path="/compras/detalle/:id" element={<DetalleRequisicion />} />
 
-              <Route
-                path="/compras/pendientes"
-                element={<PendientesCompra />}
-              />
+              <Route path="/compras/pendientes" element={<PendientesCompra />} />
 
-              <Route
-                path="/compras/orden-compra/:id"
-                element={<AdministrarOrdenesCompra />}
-              />
+              <Route path="/compras/aprobaciones" element={<Aprobaciones />} />
 
-              <Route
-                path="/compras/ordenes-compra/:idRequisicion/nueva"
-                element={<NuevaOrdenCompra />}
-              />
+              <Route path="/compras/orden-compra/:id" element={<AdministrarOrdenesCompra />} />
+
+              <Route path="/compras/ordenes-compra/:idRequisicion/nueva" element={<NuevaOrdenCompra />} />
 
               <Route path="/prospectos/prospectoSeguimiento/:idProspecto" element={<ProspectosSeguimiento />} />
 
-              <Route path="/ventas/DashboardVentas" element={<DashboardVentas />} />
+              <Route path="/compras/aprobaciones/:id" element={<DetalleAprobacion />} />
+
+              <Route path="/compras/orden-compra/detalle/:idOrdenCompra" element={<DetalleOrdenCompra />} />
+
+              <Route path="/compras/recepciones" element={<Recepciones />}/>
+
+              <Route path="/compras/control-requisiciones" element={<ControlRequisiciones />} />
 
             </Route>
+            
+              <Route path="/compras/requisicion/:id/imprimir" element={<ImprimirRequisicion />} />
+
           </Route>
         </Routes>
       </BrowserRouter>

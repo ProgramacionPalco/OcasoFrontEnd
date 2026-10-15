@@ -11,6 +11,7 @@ import {
 function Workflow({ detalle }) {
 
     const workflow = detalle.workflow;
+
     const pasos = [
 
         {
@@ -39,7 +40,8 @@ function Workflow({ detalle }) {
             nombre: "Recepción",
             icono: <FaBoxes size={20} />,
             fecha: workflow.fechaRecepcion,
-            responsable: workflow.responsableRecepcion
+            responsable: workflow.responsableRecepcion,
+            estatusRecepcion: workflow.estatusRecepcion
         },
 
         {
@@ -59,11 +61,45 @@ function Workflow({ detalle }) {
     }, -1);
 
     const pasosConEstado = pasos.map((paso, indice) => {
+
         let estado = "pendiente";
-        if (indice <= ultimoCompletado)
-            estado = "completado";
-        else if (indice === ultimoCompletado + 1)
-            estado = "actual";
+
+        // RECEPCIÓN
+        if (paso.nombre === "Recepción") {
+
+            if (workflow.estatusRecepcion === 3) {
+                estado = "completado";
+            }
+            else if (workflow.estatusRecepcion === 2) {
+                estado = "parcial";
+            }
+            else {
+                estado = "pendiente";
+            }
+        }
+
+        // ENTREGA
+        else if (paso.nombre === "Entregada") {
+
+            if (workflow.entregada === true) {
+                estado = "completado";
+            }
+            else {
+                estado = "pendiente";
+            }
+        }
+
+        // SOLICITUD, APROBACIÓN Y OC
+        else {
+
+            if (paso.fecha) {
+                estado = "completado";
+            }
+            else {
+                estado = "pendiente";
+            }
+        }
+
         return {
             ...paso,
             estado
@@ -75,19 +111,16 @@ function Workflow({ detalle }) {
 
     const porcentaje =
         ((completados - 1) / (pasosConEstado.length - 1)) * 100;
-console.log(pasosConEstado);
+        console.log(pasosConEstado);
     return (
 
         <div className="workflow-card">
 
             <div className="workflow">
-                <div
-                 className="workflow-progress"
-                style={{ width: `${Math.max(0, porcentaje)}%` }}
-            ></div>
-                {
 
-                    pasosConEstado.map((paso, index) => (
+                <div className="workflow-line"></div>
+
+                    {pasosConEstado.map((paso, index) => (
 
                         <div
                             key={index}
@@ -100,7 +133,7 @@ console.log(pasosConEstado);
                                     backgroundColor:
                                         paso.estado === "completado"
                                             ? "#198754"
-                                            : paso.estado === "actual"
+                                            : paso.estado === "parcial"
                                                 ? "#ffc107"
                                                 : "#adb5bd"
                                 }}
@@ -121,6 +154,17 @@ console.log(pasosConEstado);
                                         ? new Date(paso.fecha).toLocaleDateString("es-MX")
                                         : "--"
                                 }
+                                {paso.estado === "parcial" && (
+                                    <div
+                                        style={{
+                                            color: "#b58100",
+                                            fontWeight: "600",
+                                            fontSize: "12px"
+                                        }}
+                                    >
+                                        Recepción parcial
+                                    </div>
+                                )}
 
                             </div>
 

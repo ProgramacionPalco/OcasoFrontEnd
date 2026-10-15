@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { obtenerDetalleRequisicion } from "../../services/api";
+import { obtenerDetalleRequisicion} from "../../services/api";
 import GeneralTab from "./components/GeneralTab";
 import ProductosTab from "./components/ProductosTab";
 import AprobacionTab from "./components/AprobacionTab";
@@ -12,11 +12,10 @@ function DetalleRequisicion() {
     const { id } = useParams();
     const [detalle, setDetalle] = useState(null);
     const [tab, setTab] = useState("general");
+    const { idOrdenCompra } = useParams();
 
     useEffect(() => {
-
         cargar();
-
     }, []);
 
     const cargar = async () => {
@@ -61,7 +60,6 @@ function DetalleRequisicion() {
                     <Workflow
                         detalle={detalle}
                     />
-
                     <h4 className="fw-bold">
 
                         {detalle.general.descripcion}

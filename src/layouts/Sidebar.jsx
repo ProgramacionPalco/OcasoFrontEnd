@@ -21,7 +21,8 @@ import {
    FaShoppingCart,
    FaClipboardList,
    FaChartLine,
-   FaFileInvoiceDollar
+   FaFileInvoiceDollar,
+   FaClipboardCheck 
 } from "react-icons/fa";
 
 function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobileOpen}){
