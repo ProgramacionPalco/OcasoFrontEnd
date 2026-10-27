@@ -18,8 +18,10 @@ ChartJS.register(
   Tooltip,
   Legend
 );
+import { useEffect, useState } from "react";
 
-export default function GraficaClientes() {
+export default function GraficaClientes({clientesAnuales}) {
+
   const data = {
     labels: [
       "Enero",
@@ -37,8 +39,21 @@ export default function GraficaClientes() {
     ],
     datasets: [
       {
-        label: "Prospectos registrados",
-        data: [12, 19, 8, 15, 22, 30, 18, 25, 28, 35, 20, 16],
+        label: "Clientes registrados",
+        data: [
+          Number(clientesAnuales?.enero ?? 0),
+          Number(clientesAnuales?.febrero ?? 0),
+          Number(clientesAnuales?.marzo ?? 0),
+          Number(clientesAnuales?.abril ?? 0),
+          Number(clientesAnuales?.mayo ?? 0),
+          Number(clientesAnuales?.junio ?? 0),
+          Number(clientesAnuales?.julio ?? 0),
+          Number(clientesAnuales?.agosto ?? 0),
+          Number(clientesAnuales?.septiembre ?? 0),
+          Number(clientesAnuales?.octubre ?? 0),
+          Number(clientesAnuales?.noviembre ?? 0),
+          Number(clientesAnuales?.diciembre ?? 0),
+        ],
         backgroundColor: "#198754",
         borderRadius: 5,
       },
