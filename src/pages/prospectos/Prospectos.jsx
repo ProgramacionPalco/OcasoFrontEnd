@@ -500,7 +500,7 @@ function Prospectos() {
                       autoHeight
                       initialState={{
                         pagination: {
-                          paginationModel: { pageSize: 30 },
+                          paginationModel: { pageSize: 10 },
                         },
                       }}
                       sx={{
