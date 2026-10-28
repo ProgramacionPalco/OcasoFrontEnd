@@ -11,6 +11,35 @@ import makeAnimated from "react-select/animated";
 
 import Swal from "sweetalert2";
 
+const formProspectoInicial = {
+  /* idServicio: "", */
+  nombre: "",
+  idTipoEmpresa: "",
+  /* contacto: "",
+  correo: "",
+  telefono: "",
+  ext: "", */
+  tipoContacto: "",
+  fechaContacto: "",
+  /* idAduanas: "", */
+  aduanas: "",
+  rutasOperacion: "",
+  volumenEstimadoMensual: "",
+  mercanciasProductos: "",
+  asuntoCorreo: "",
+  nivelUrgencia: "",
+  comentarios: "",
+  idEjecutivo: "",
+  tipoOperacion: "",
+};
+
+const nuevoContactoInicial = {
+  contacto: "",
+  correo: "",
+  telefono: "",
+  extension: "",
+};
+
 function Prospectos() {
   /* import del select para seleccion multiple */
   const animatedComponents = makeAnimated();
@@ -37,27 +66,7 @@ function Prospectos() {
   const [isMobile, setIsMobile] = useState(false);
 
   /* formularios */
-  const [formProspecto, setFormProspecto] = useState({
-    /* idServicio: "", */
-    nombre: "",
-    idTipoEmpresa: "",
-    /* contacto: "",
-    correo: "",
-    telefono: "",
-    ext: "", */
-    tipoContacto: "",
-    fechaContacto: "",
-    /* idAduanas: "", */
-    aduanas: "",
-    rutasOperacion: "",
-    volumenEstimadoMensual: "",
-    mercanciasProductos: "",
-    asuntoCorreo: "",
-    nivelUrgencia: "",
-    comentarios: "",
-    idEjecutivo: "",
-    tipoOperacion: "",
-  });
+  const [formProspecto, setFormProspecto] = useState(formProspectoInicial);
 
   const [formEstatus, setFormEstatus] = useState({
     id: "",
@@ -72,16 +81,20 @@ function Prospectos() {
 
   const [formContactos, setFormContactos] = useState([]);
 
-  const [nuevoContacto, setNuevoContacto] = useState({
-    contacto: "",
-    correo: "",
-    telefono: "",
-    extension: "",
-  });
+  const [nuevoContacto, setNuevoContacto] = useState(nuevoContactoInicial);
 
   const [formServicios, setFormServicios] = useState([]);
 
   const navigate = useNavigate();
+
+  const cerrarModalNuevoProspecto = () => {
+    setFormProspecto(formProspectoInicial);
+    setFormServicios([]);
+    setFormContactos([]);
+    setNuevoContacto(nuevoContactoInicial);
+    setSeccionContacto(false);
+    setModalNuevoProspecto(false);
+  };
 
   const validarProspecto = async () => {
     const camposVacios = [];
@@ -1187,7 +1200,7 @@ function Prospectos() {
                         allowOutsideClick: false,
                       });
 
-                      setModalNuevoProspecto(false);
+                      cerrarModalNuevoProspecto();
                       await obtenerProspectos();
                     } else {
                       /* alert(resultado); */
@@ -1207,7 +1220,7 @@ function Prospectos() {
 
                 <button
                   className="btn btn-secondary"
-                  onClick={() => setModalNuevoProspecto(false)}
+                  onClick={cerrarModalNuevoProspecto}
                 >
                   Cancelar
                 </button>

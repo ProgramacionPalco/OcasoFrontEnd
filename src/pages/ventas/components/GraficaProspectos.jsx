@@ -19,7 +19,7 @@ ChartJS.register(
   Legend
 );
 
-export default function GraficaProspectos() {
+export default function GraficaProspectos({prospectosAnuales}) {
   const data = {
     labels: [
       "Enero",
@@ -38,7 +38,20 @@ export default function GraficaProspectos() {
     datasets: [
       {
         label: "Prospectos registrados",
-        data: [12, 19, 8, 15, 22, 30, 18, 25, 28, 35, 20, 16],
+        data: [
+          Number(prospectosAnuales?.enero ?? 0),
+          Number(prospectosAnuales?.febrero ?? 0),
+          Number(prospectosAnuales?.marzo ?? 0),
+          Number(prospectosAnuales?.abril ?? 0),
+          Number(prospectosAnuales?.mayo ?? 0),
+          Number(prospectosAnuales?.junio ?? 0),
+          Number(prospectosAnuales?.julio ?? 0),
+          Number(prospectosAnuales?.agosto ?? 0),
+          Number(prospectosAnuales?.septiembre ?? 0),
+          Number(prospectosAnuales?.octubre ?? 0),
+          Number(prospectosAnuales?.noviembre ?? 0),
+          Number(prospectosAnuales?.diciembre ?? 0),
+        ],
         backgroundColor: "#0D6EFD",
         borderRadius: 5,
       },

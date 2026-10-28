@@ -15,10 +15,14 @@ function DashboardVentas() {
   const [clientes, setClientes] = useState([]);
   const [prospectos, setProspectos] = useState([]);
   const [clientesAnuales, setClientesAnuales] = useState([]);
+  const [prospectosAnuales, setProspectosAnuales] = useState([]);
+  const [estatusHistorial, setEstatusHistorial] = useState([]);
 
   /* variables */
   const [modalClientes, setModalClientes] = useState(false);
   const [modalProspectos, setModalProspectos] = useState(false);
+  const [modalProspectosHistorial, setModalProspectosHistorial] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
 
   const [mes, setMes] = useState(new Date().getMonth() + 1);
   const [año, setAño] = useState(new Date().getFullYear());
@@ -79,9 +83,42 @@ function DashboardVentas() {
       );
       setClientesAnuales(res.data);
     } catch (error) {
-      console.error("Error cargando ventas", error);
+      console.error("Error cargando ventas anuales", error);
       console.error("Mensaje:", error.message);
       console.error("Respuesta API:", error.response?.data);
+    }
+  };
+
+  const ObtenerProspectosAnuales = async () => {
+    try {
+      const payload = {
+        mes: mes,
+        anio: año,
+      };
+
+      const res = await api.post(
+        "/dashboardVentas/ObtenerProspectosAnuales",
+        payload,
+      );
+      setProspectosAnuales(res.data);
+    } catch (error) {
+      console.error("Error cargando prospectos anuales", error);
+      console.error("Mensaje:", error.message);
+      console.error("Respuesta API:", error.response?.data);
+    }
+  };
+
+   const obtenerEstatusHistorial = async (id) => {
+    try {
+      const res = await api.post(
+        `/dashboardVentas/obtenerEstatusHistorialDashboard/?idProspecto=${id}`,
+      );
+
+      setEstatusHistorial(res.data);
+    } catch (error) {
+      console.error("Status:", error.response?.status);
+      console.error("Error API:", error.response?.data);
+      console.error("Errors:", error.response?.data?.errors);
     }
   };
 
@@ -89,7 +126,35 @@ function DashboardVentas() {
     ObtenerVentasPorMes();
     ObtenerProspectosPorMes();
     ObtenerClientesAnuales();
+    ObtenerProspectosAnuales();
   }, []);
+
+    useEffect(() => {
+      const handleResize = () => {
+        setIsMobile(window.innerWidth < 991);
+      };
+  
+      handleResize();
+      window.addEventListener("resize", handleResize);
+      return () => window.removeEventListener("resize", handleResize);
+    }, []);
+
+  const formatearFecha = (value) =>
+    value
+      ? new Date(value).toLocaleString("es-MX", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
+      })
+      : "Sin fecha";
+
+  const abrirHistorial = async (id) => {
+    await obtenerEstatusHistorial(id);
+    setModalProspectosHistorial(true);
+  };
 
   const columnsClientes = [
     { field: "id", headerName: "id", width: 60, minWidth: 50 },
@@ -101,13 +166,13 @@ function DashboardVentas() {
       valueFormatter: (value) =>
         value
           ? new Date(value).toLocaleString("es-MX", {
-              day: "2-digit",
-              month: "2-digit",
-              year: "numeric",
-              hour: "2-digit",
-              minute: "2-digit",
-              hour12: false,
-            })
+            day: "2-digit",
+            month: "2-digit",
+            year: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: false,
+          })
           : "",
     },
     {
@@ -119,7 +184,7 @@ function DashboardVentas() {
     { field: "rfc", headerName: "Rfc", width: 140, minWidth: 120 },
   ];
 
-   const columnsProspectos = [
+  const columnsProspectos = [
     { field: "id", headerName: "id", width: 60, minWidth: 50 },
     {
       field: "fechaRegistro",
@@ -129,13 +194,13 @@ function DashboardVentas() {
       valueFormatter: (value) =>
         value
           ? new Date(value).toLocaleString("es-MX", {
-              day: "2-digit",
-              month: "2-digit",
-              year: "numeric",
-              hour: "2-digit",
-              minute: "2-digit",
-              hour12: false,
-            })
+            day: "2-digit",
+            month: "2-digit",
+            year: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: false,
+          })
           : "",
     },
     {
@@ -146,6 +211,52 @@ function DashboardVentas() {
     },
     { field: "ejecutivo", headerName: "Ejecutivo", width: 160, minWidth: 150 },
     { field: "estatus", headerName: "Estatus", width: 160, minWidth: 150 },
+  ];
+
+  const columnsProspectosDetalles = [
+    { field: "id", headerName: "id", width: 60, minWidth: 50 },
+    {
+      field: "fechaRegistro",
+      headerName: "Fecha registro",
+      width: 140,
+      minWidth: 120,
+      valueFormatter: (value) =>
+        value
+          ? new Date(value).toLocaleString("es-MX", {
+            day: "2-digit",
+            month: "2-digit",
+            year: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: false,
+          })
+          : "",
+    },
+    {
+      field: "nombre",
+      headerName: "Nombre",
+      flex: 1,
+      minWidth: 200,
+    },
+    { field: "ejecutivo", headerName: "Ejecutivo", width: 160, minWidth: 150 },
+    { field: "estatus", headerName: "Estatus", width: 160, minWidth: 150 },
+    {
+      field: "historial",
+      headerName: "Historial",
+      width: 200,
+      minWidth: 180,
+      sortable: false,
+      filterable: false,
+      renderCell: (params) => (
+        <button
+          type="button"
+          className="btn btn-outline-primary btn-sm"
+          onClick={() => abrirHistorial(params.row.id)}
+        >
+          Historial prospección
+        </button>
+      ),
+    },
   ];
 
   return (
@@ -184,7 +295,7 @@ function DashboardVentas() {
               fullWidth
               label="Seleccione año"
               value={año}
-              onChange={(e) => setAnio(Number(e.target.value))}
+              onChange={(e) => setAño(Number(e.target.value))}
             >
               {años.map((a) => (
                 <MenuItem key={a} value={a}>
@@ -276,8 +387,104 @@ function DashboardVentas() {
           </div>
 
           <div className="col-md-6 my-2">
-            <GraficaProspectos />
+            <GraficaProspectos prospectosAnuales={prospectosAnuales} />
           </div>
+
+          <div className="col-md-12 my-2">
+            {!isMobile ? (
+            <div className="form-grid-prospectos">
+              <DataGrid
+                rows={prospectos}
+                columns={columnsProspectosDetalles}
+                pageSizeOptions={[5, 10, 25, 50]}
+                disableRowSelectionOnClick
+                initialState={{
+                  pagination: {
+                    paginationModel: { pageSize: 10 },
+                  },
+                }}
+                sx={{
+                  backgroundColor: "#fff",
+                  borderRadius: "10px",
+                  border: "1px solid #e5e7eb",
+
+                  "& .MuiDataGrid-columnHeaders": {
+                    backgroundColor: "#1f2937",
+                    color: "#fff",
+                    fontWeight: "bold",
+                  },
+
+                  "& .MuiDataGrid-columnHeaderTitle": {
+                    fontWeight: "bold",
+                    color: "#fff",
+                  },
+
+                  "& .MuiDataGrid-columnHeader": {
+                    backgroundColor: "#1f2937",
+                    color: "#fff",
+                  },
+
+                  "& .MuiDataGrid-cell": {
+                    borderColor: "#f1f5f9",
+                  },
+
+                  "& .MuiDataGrid-row:hover": {
+                    backgroundColor: "#f8fafc",
+                  },
+                }}
+              />
+            </div>
+            ) : (
+              /* CARDS PARA MÓVIL */
+              <div className="row g-3">
+                {prospectos.map((prospecto) => (
+                  <div className="col-12" key={prospecto.id}>
+                    <div className="card shadow-sm border-0 rounded-3">
+                      <div className="card-body">
+                        <div className="d-flex justify-content-between align-items-start mb-3">
+                          <div>
+                            <h6 className="fw-bold mb-1">{prospecto.nombre}</h6>
+                            <small className="text-muted">#{prospecto.id}</small>
+                          </div>
+
+                          <span className="badge bg-primary">
+                            {prospecto.estatus}
+                          </span>
+                        </div>
+
+                        <hr />
+
+                        <div className="row g-2 mb-3">
+                          <div className="col-6">
+                            <small className="text-muted d-block">Ejecutivo</small>
+                            <small className="fw-medium">
+                              {prospecto.ejecutivo || "Sin asignar"}
+                            </small>
+                          </div>
+
+                          <div className="col-6">
+                            <small className="text-muted d-block">
+                              Fecha registro
+                            </small>
+                            <small>{formatearFecha(prospecto.fechaRegistro)}</small>
+                          </div>
+                        </div>
+
+                        <button
+                          type="button"
+                          className="btn btn-outline-primary w-100"
+                          onClick={() => abrirHistorial(prospecto.id)}
+                        >
+                          Historial prospección
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
         </div>
       </div>
 
@@ -289,6 +496,7 @@ function DashboardVentas() {
               <h2>Nuevos clientes registrados</h2>
             </div>
 
+            {!isMobile ? (
             <div className="form-grid-prospectos">
               <DataGrid
                 rows={clientes}
@@ -331,6 +539,37 @@ function DashboardVentas() {
                 }}
               />
             </div>
+            ) : (
+              /* CARDS PARA MÓVIL */
+              <div className="row g-3" style={{ maxHeight: "60vh", overflowY: "auto" }}>
+                {clientes.map((cliente) => (
+                  <div className="col-12" key={cliente.id}>
+                    <div className="card shadow-sm border-0 rounded-3">
+                      <div className="card-body">
+                        <h6 className="fw-bold mb-1">{cliente.razonSocial}</h6>
+                        <small className="text-muted">#{cliente.id}</small>
+
+                        <hr />
+
+                        <div className="row g-2">
+                          <div className="col-6">
+                            <small className="text-muted d-block">RFC</small>
+                            <small className="fw-medium">{cliente.rfc}</small>
+                          </div>
+
+                          <div className="col-6">
+                            <small className="text-muted d-block">
+                              Fecha registro
+                            </small>
+                            <small>{formatearFecha(cliente.fecha)}</small>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
 
             <div className="my-3">
               <div className="row justify-content-end">
@@ -352,12 +591,13 @@ function DashboardVentas() {
 
       {/* MODAL PROSPECTOS */}
       {modalProspectos && (
-       <div className="modal-overlay">
+        <div className="modal-overlay">
           <div className="modal-box-prospectos modal-prospectos">
             <div className="modal-header">
               <h2>Nuevos prospectos registrados</h2>
             </div>
 
+            {!isMobile ? (
             <div className="form-grid-prospectos">
               <DataGrid
                 rows={prospectos}
@@ -400,6 +640,47 @@ function DashboardVentas() {
                 }}
               />
             </div>
+            ) : (
+              /* CARDS PARA MÓVIL */
+              <div className="row g-3" style={{ maxHeight: "60vh", overflowY: "auto" }}>
+                {prospectos.map((prospecto) => (
+                  <div className="col-12" key={prospecto.id}>
+                    <div className="card shadow-sm border-0 rounded-3">
+                      <div className="card-body">
+                        <div className="d-flex justify-content-between align-items-start">
+                          <div>
+                            <h6 className="fw-bold mb-1">{prospecto.nombre}</h6>
+                            <small className="text-muted">#{prospecto.id}</small>
+                          </div>
+
+                          <span className="badge bg-primary">
+                            {prospecto.estatus}
+                          </span>
+                        </div>
+
+                        <hr />
+
+                        <div className="row g-2">
+                          <div className="col-6">
+                            <small className="text-muted d-block">Ejecutivo</small>
+                            <small className="fw-medium">
+                              {prospecto.ejecutivo || "Sin asignar"}
+                            </small>
+                          </div>
+
+                          <div className="col-6">
+                            <small className="text-muted d-block">
+                              Fecha registro
+                            </small>
+                            <small>{formatearFecha(prospecto.fechaRegistro)}</small>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
 
             <div className="my-3">
               <div className="row justify-content-end">
@@ -408,6 +689,126 @@ function DashboardVentas() {
                     className="btn btn-secondary"
                     onClick={async () => {
                       setModalProspectos(false);
+                    }}
+                  >
+                    Cancelar
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/*MODAL PROSPECTOS HISTORIAL */}
+      {modalProspectosHistorial && (
+         <div className="modal-overlay">
+          <div className="modal-box-prospectos modal-prospectos">
+            <div className="modal-header">
+              <h2>Historial prospecto</h2>
+            </div>
+
+            <div style={{ maxHeight: "60vh", overflowY: "auto" }}>
+              {estatusHistorial.length === 0 ? (
+                <div className="alert alert-light text-center m-0">
+                  Sin historial registrado
+                </div>
+              ) : (
+                <ul className="list-unstyled m-0 ps-3 border-start border-2 border-primary">
+                  {[...estatusHistorial]
+                    .sort(
+                      (a, b) =>
+                        new Date(a.fechaCambioEstatus) -
+                        new Date(b.fechaCambioEstatus),
+                    )
+                    .map((h) => (
+                      <li key={h.id} className="position-relative mb-3">
+                        <span
+                          className="position-absolute bg-primary rounded-circle"
+                          style={{
+                            width: 12,
+                            height: 12,
+                            left: -23,
+                            top: 16,
+                          }}
+                        ></span>
+
+                        <div className="card shadow-sm">
+                          <div className="card-body p-3">
+                            <div className="d-flex flex-column flex-md-row justify-content-between gap-1 mb-2">
+                              <div>
+                                <span className="badge bg-primary me-2">
+                                  {h.descripcionEstatus || "Sin estatus"}
+                                </span>
+                                {h.descripcionSubEstatus && (
+                                  <span className="badge bg-secondary">
+                                    {h.descripcionSubEstatus}
+                                  </span>
+                                )}
+                              </div>
+                              <small className="text-muted">
+                                {h.fechaCambioEstatus
+                                  ? new Date(
+                                      h.fechaCambioEstatus,
+                                    ).toLocaleString("es-MX", {
+                                      day: "2-digit",
+                                      month: "2-digit",
+                                      year: "numeric",
+                                      hour: "2-digit",
+                                      minute: "2-digit",
+                                      hour12: false,
+                                    })
+                                  : "--"}
+                              </small>
+                            </div>
+
+                            {h.comentarios?.length > 0 ? (
+                              <div className="d-flex flex-column gap-2">
+                                {h.comentarios.map((c, i) => (
+                                  <div
+                                    key={c.id ?? i}
+                                    className="bg-light rounded p-2 small"
+                                  >
+                                    <div className="text-break">
+                                      {c.comentario}
+                                    </div>
+                                    {c.fechaComentario && (
+                                      <div className="text-muted mt-1">
+                                        {new Date(
+                                          c.fechaComentario,
+                                        ).toLocaleString("es-MX", {
+                                          day: "2-digit",
+                                          month: "2-digit",
+                                          year: "numeric",
+                                          hour: "2-digit",
+                                          minute: "2-digit",
+                                          hour12: false,
+                                        })}
+                                      </div>
+                                    )}
+                                  </div>
+                                ))}
+                              </div>
+                            ) : (
+                              <small className="text-muted fst-italic">
+                                Sin comentarios
+                              </small>
+                            )}
+                          </div>
+                        </div>
+                      </li>
+                    ))}
+                </ul>
+              )}
+            </div>
+
+            <div className="my-3">
+              <div className="row justify-content-end">
+                <div className="col-md-2 col-6">
+                  <button
+                    className="btn btn-secondary"
+                    onClick={async () => {
+                      setModalProspectosHistorial(false);
                     }}
                   >
                     Cancelar
