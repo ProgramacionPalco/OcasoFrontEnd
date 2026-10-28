@@ -749,3 +749,24 @@ Tablas
     background-color: #ffc107;
     color: white;
 }
+
+@media (max-width: 991px) {
+  .header { gap: 8px; }
+  .fecha { display: none; }
+  .header-left { min-width: 0; }
+  .header-left h5 { font-size: 16px; white-space: nowrap; }
+  .header-right { min-width: 0; gap: 8px !important; }
+  .usuario { min-width: 0; }
+  .usuario span {
+    max-width: 100px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .header-right .btn { white-space: nowrap; margin-left: 0 !important; }
+  .mobile-menu-btn { display: block; margin-right: 8px; }
+}
+
+@media (max-width: 480px) {
+  .usuario span { display: none; } /* solo el icono */
+}
