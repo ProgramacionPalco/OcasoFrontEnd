@@ -80,13 +80,13 @@ export default function GraficaClientes({clientesAnuales}) {
   };
 
   return (
-    <div className="card shadow-sm border-0">
-      <div className="card-body">
-        <h5 className="fw-semibold mb-3">
+    <div className="card shadow-sm border-0 h-100">
+      <div className="card-body p-3">
+        <h6 className="fw-semibold mb-2">
           Clientes registrados anualmente
-        </h5>
+        </h6>
 
-        <div style={{ height: "350px" }}>
+        <div style={{ height: "260px" }}>
           <Bar data={data} options={options} />
         </div>
       </div>

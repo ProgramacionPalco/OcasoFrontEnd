@@ -4,7 +4,16 @@ import api from "../../../services/api";
 
 import Select from "react-select";
 import makeAnimated from "react-select/animated";
-import { FaAddressBook } from "react-icons/fa";
+import {
+  FaAddressBook,
+  FaUserTie,
+  FaUserPlus,
+  FaLink,
+  FaExchangeAlt,
+  FaSyncAlt,
+  FaTimes,
+  FaSave,
+} from "react-icons/fa";
 
 import { DataGrid } from "@mui/x-data-grid";
 import { Button } from "@mui/material";
@@ -45,10 +54,15 @@ function IntermedioTab({
     idEstatus: "",
   });
   const [clientes, setClientes] = useState([]);
+  const [clientesRegistrados, setClientesRegistrados] = useState([]);
+  const [clienteALigar, setClienteALigar] = useState(null);
+  const [cargandoClientes, setCargandoClientes] = useState(false);
+  const [ligando, setLigando] = useState(false);
 
   /* modales */
   const [modalEstatus, setModalEstatus] = useState(false);
   const [modalEjecutivos, setModalEjecutivos] = useState(false);
+  const [modalLigarCliente, setModalLigarCliente] = useState(false);
 
   /* variables */
   const [loading, setLoading] = useState(true);
@@ -196,11 +210,91 @@ function IntermedioTab({
     }
   };
 
-  const registrarEstatusHistorial = async () => {
+  const obtenerClientesRegistrados = async () => {
+    setCargandoClientes(true);
+    try {
+      const res = await api.get("/altas/clientes");
+      setClientesRegistrados(res.data ?? []);
+    } catch (error) {
+      console.error("Error cargando clientes registrados", error);
+    } finally {
+      setCargandoClientes(false);
+    }
+  };
+
+  const ligarClienteProspecto = async () => {
+    try {
+      const res = await api.post(
+        `/ventas/registrarClienteProspecto?idProspecto=${prospecto.id}&idCliente=${clienteALigar.value}`,
+      );
+      return res.data;
+    } catch (error) {
+      console.log(error.response?.data);
+      return error.response?.data;
+    }
+  };
+
+  const abrirModalLigarCliente = async () => {
+    setClienteALigar(null);
+    setModalLigarCliente(true);
+    await obtenerClientesRegistrados();
+  };
+
+  /* pasa el prospecto a estatus 12 (igual que al registrar cliente nuevo) */
+  const actualizarEstatusProspectoAltas = async () => {
+    try {
+      const res = await api.post("/ventas/actualizarEstatusProspectos", {
+        id: prospecto.id,
+        idEstatus: 12,
+      });
+      return res.data;
+    } catch (error) {
+      console.log(error.response?.data);
+      return error.response?.data;
+    }
+  };
+
+  /* copia los contactos de prospección al cliente ligado */
+  const enviarContactosACliente = async (clienteId) => {
+    let enviados = 0;
+
+    for (const contacto of formContactos) {
+      try {
+        await api.post(`/altas/clientes/${clienteId}/contactos`, {
+          nombreContacto: contacto.contacto ?? "",
+          correoContacto: contacto.correo ?? "",
+          telefonoContacto: contacto.telefono ?? "",
+          ext: contacto.extension ?? "",
+          area: "",
+          puesto: "",
+          numeroOficina: "",
+        });
+        enviados++;
+      } catch (error) {
+        console.error("Error enviando contacto al cliente", error);
+      }
+    }
+
+    return enviados;
+  };
+
+  const historialContactosProspecto = async (clienteId, texto) => {
+    try {
+      const res = await api.post(
+        `/altas/clientes/historialContactosProspecto?clienteId=${clienteId}&texto=${encodeURIComponent(texto)}`,
+      );
+      return res.data;
+    } catch (error) {
+      console.log(error.response?.data);
+      return error.response?.data;
+    }
+  };
+
+  const registrarEstatusHistorial = async (idEstatus = 11) => {
     try {
       const estatusHistorialObj = {
         idProspecto: prospecto.id,
-        idEstatus: 11,
+        idEstatus,
       };
 
       const res = await api.post(
@@ -218,6 +312,34 @@ function IntermedioTab({
   const ejecutivoAltas = ejecutivos.find(
     (e) => Number(e.id) === Number(prospecto.idEjecutivoAltas),
   );
+
+  const tieneEjecutivoAltas =
+    prospecto.idEjecutivoAltas != null && prospecto.idEjecutivoAltas !== "";
+
+  const nombreEjecutivoAltas = ejecutivoAltas
+    ? [
+        ejecutivoAltas.nombre,
+        ejecutivoAltas.apellidoPaterno,
+        ejecutivoAltas.apellidoMaterno,
+      ]
+        .filter(Boolean)
+        .join(" ")
+    : "";
+
+  const inicialesEjecutivo = nombreEjecutivoAltas
+    .split(" ")
+    .slice(0, 2)
+    .map((p) => p[0]?.toUpperCase())
+    .join("");
+
+  // clientes que aún no están ligados a este prospecto
+  const idsClientesLigados = new Set(clientes.map((c) => Number(c.id)));
+  const opcionesClientes = clientesRegistrados
+    .filter((c) => !idsClientesLigados.has(Number(c.id)))
+    .map((c) => ({
+      value: c.id,
+      label: `${c.razonSocial ?? "Sin razón social"} — ${c.rfc ?? "Sin RFC"}`,
+    }));
 
   const columnsContactos = [
     { field: "contacto", headerName: "Contacto", flex: 1, minWidth: 120 },
@@ -343,11 +465,11 @@ function IntermedioTab({
           <div className="card shadow-sm">
             <div className="card-body">
               <div className="row">
-                <h3>Prospecto intermedio</h3>
+                <div className="col-12 d-flex flex-column flex-sm-row align-items-sm-center justify-content-between gap-2 mb-3">
+                  <h3 className="mb-0">Prospecto intermedio</h3>
 
-                <div className="col-md-6 d-flex justify-content-end">
                   <button
-                    className="btn btn-success btn-sm mb-3 mb-sm-0"
+                    className="btn btn-success btn-sm d-inline-flex align-items-center gap-2 align-self-start align-self-sm-auto"
                     onClick={async () => {
                       await obtenerEstatus();
 
@@ -366,161 +488,200 @@ function IntermedioTab({
                       setModalEstatus(true);
                     }}
                   >
-                    Actualizar estatus prospecto
+                    <FaSyncAlt /> Actualizar estatus prospecto
                   </button>
                 </div>
 
-                <div className="col-md-6 d-flex justify-content-end">
-                  <button
-                    className="btn btn-primary btn-sm"
-                    onClick={async () => {
-                      setSeccionContacto(true);
-                    }}
+                {/* tarjeta contactos */}
+                <div className="col-12">
+                  <div
+                    className="card border-0 shadow-sm mb-3"
+                    style={{ borderLeft: "4px solid #0d6efd" }}
                   >
-                    Agregar contacto a prospecto
-                  </button>
+                    <div className="card-body d-flex flex-column flex-lg-row align-items-lg-center gap-3">
+                      <div
+                        className="d-flex align-items-center gap-3 flex-grow-1"
+                        style={{ minWidth: 0 }}
+                      >
+                        <div
+                          className="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0 bg-primary bg-opacity-10 text-primary"
+                          style={{ width: 52, height: 52 }}
+                        >
+                          <FaAddressBook size={22} />
+                        </div>
+
+                        <div style={{ minWidth: 0 }}>
+                          <small className="text-muted text-uppercase fw-semibold d-block">
+                            Contactos del prospecto
+                          </small>
+                          <h5 className="fw-bold mb-0">
+                            {formContactos.length}{" "}
+                            {formContactos.length === 1
+                              ? "contacto registrado"
+                              : "contactos registrados"}
+                          </h5>
+                        </div>
+                      </div>
+
+                      <div className="d-flex flex-wrap gap-2 justify-content-lg-end">
+                        <button
+                          className={`btn btn-sm d-inline-flex align-items-center gap-2 ${
+                            seccionContacto
+                              ? "btn-outline-secondary"
+                              : "btn-primary"
+                          }`}
+                          onClick={() => setSeccionContacto(!seccionContacto)}
+                        >
+                          {seccionContacto ? (
+                            <>
+                              <FaTimes /> Cerrar formulario
+                            </>
+                          ) : (
+                            <>
+                              <FaUserPlus /> Agregar contacto
+                            </>
+                          )}
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* seccion de contactos */}
+                    {seccionContacto && (
+                      <div className="row px-3 pb-3 mx-0 border-top pt-3">
+                        <div className="col-md-6">
+                          <div className="form-group span-2-prospectos">
+                            <label>Contacto</label>
+                            <input
+                              autoComplete="off"
+                              value={nuevoContacto.contacto}
+                              onChange={(e) =>
+                                setNuevoContacto({
+                                  ...nuevoContacto,
+                                  contacto: e.target.value,
+                                })
+                              }
+                            />
+                          </div>
+                        </div>
+                        <div className="col-md-6">
+                          <div className="form-group span-2-prospectos">
+                            <label>Correo</label>
+                            <input
+                              type="email"
+                              autoComplete="off"
+                              value={nuevoContacto.correo}
+                              onChange={(e) =>
+                                setNuevoContacto({
+                                  ...nuevoContacto,
+                                  correo: e.target.value,
+                                })
+                              }
+                            />
+                          </div>
+                        </div>
+                        <div className="col-md-6">
+                          <div className="form-group span-2-prospectos">
+                            <label>telefono</label>
+
+                            <input
+                              autoComplete="off"
+                              value={nuevoContacto.telefono}
+                              onChange={(e) =>
+                                setNuevoContacto({
+                                  ...nuevoContacto,
+                                  telefono: e.target.value,
+                                })
+                              }
+                            />
+                          </div>
+                        </div>
+                        <div className="col-md-6">
+                          <div className="form-group span-2-prospectos">
+                            <label>Ext</label>
+
+                            <input
+                              autoComplete="off"
+                              value={nuevoContacto.extension}
+                              onChange={(e) =>
+                                setNuevoContacto({
+                                  ...nuevoContacto,
+                                  extension: e.target.value,
+                                })
+                              }
+                            />
+                          </div>
+                        </div>
+                        <div className="col-12 mt-3 d-flex flex-wrap gap-2 justify-content-end">
+                          <button
+                            className="btn btn-outline-secondary btn-sm d-inline-flex align-items-center gap-2"
+                            onClick={() => setSeccionContacto(false)}
+                          >
+                            <FaTimes /> Cancelar
+                          </button>
+
+                          <button
+                            className="btn btn-success btn-sm d-inline-flex align-items-center gap-2"
+                            onClick={async () => {
+                              if (!(await validarContacto())) return;
+
+                              const nuevo = agregarContacto();
+
+                              const contactos = [
+                                ...formContactosNuevos,
+                                nuevo,
+                              ].map((contacto) => ({
+                                ...contacto,
+                                idProspecto: prospecto.id,
+                              }));
+
+                              const resultado =
+                                await guardarContactos(contactos);
+
+                              if (
+                                resultado ==
+                                "Todos los contactos fueron registrados exitosamente"
+                              ) {
+                                /* alert(resultado); */
+                                await Swal.fire({
+                                  icon: "success",
+                                  html: `${resultado}`,
+                                  confirmButtonText: "Aceptar",
+                                  confirmButtonColor: "#28a745",
+                                  allowOutsideClick: false,
+                                });
+                                await obtenerContactos();
+
+                                setFormContactosNuevos([]); // limpia la lista
+                                setNuevoContacto({
+                                  // limpia los inputs
+                                  contacto: "",
+                                  correo: "",
+                                  telefono: "",
+                                  extension: "",
+                                });
+                              } else {
+                                /* alert(resultado); */
+                                await Swal.fire({
+                                  icon: "warning",
+                                  title: "Aviso",
+                                  html: `${resultado}`,
+                                  confirmButtonText: "Aceptar",
+                                  confirmButtonColor: "#830912",
+                                  allowOutsideClick: false,
+                                });
+                              }
+                            }}
+                          >
+                            <FaSave /> Guardar contacto
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
 
-                {/* seccion de contactos */}
-                {seccionContacto && (
-                  <div className="row">
-                    <div className="col-md-6">
-                      <div className="form-group span-2-prospectos">
-                        <label>Contacto</label>
-                        <input
-                          autoComplete="off"
-                          value={nuevoContacto.contacto}
-                          onChange={(e) =>
-                            setNuevoContacto({
-                              ...nuevoContacto,
-                              contacto: e.target.value,
-                            })
-                          }
-                        />
-                      </div>
-                    </div>
-                    <div className="col-md-6">
-                      <div className="form-group span-2-prospectos">
-                        <label>Correo</label>
-                        <input
-                          type="email"
-                          autoComplete="off"
-                          value={nuevoContacto.correo}
-                          onChange={(e) =>
-                            setNuevoContacto({
-                              ...nuevoContacto,
-                              correo: e.target.value,
-                            })
-                          }
-                        />
-                      </div>
-                    </div>
-                    <div className="col-md-6">
-                      <div className="form-group span-2-prospectos">
-                        <label>telefono</label>
-
-                        <input
-                          autoComplete="off"
-                          value={nuevoContacto.telefono}
-                          onChange={(e) =>
-                            setNuevoContacto({
-                              ...nuevoContacto,
-                              telefono: e.target.value,
-                            })
-                          }
-                        />
-                      </div>
-                    </div>
-                    <div className="col-md-6">
-                      <div className="form-group span-2-prospectos">
-                        <label>Ext</label>
-
-                        <input
-                          autoComplete="off"
-                          value={nuevoContacto.extension}
-                          onChange={(e) =>
-                            setNuevoContacto({
-                              ...nuevoContacto,
-                              extension: e.target.value,
-                            })
-                          }
-                        />
-                      </div>
-                    </div>
-                    <div className="col-md-3 offset-md-6 mt-3">
-                      <div className="form-group span-2-prospectos">
-                        <button
-                          className="btn btn-info btn-sm"
-                          onClick={async () => {
-                            if (!(await validarContacto())) return;
-
-                            const nuevo = agregarContacto();
-
-                            const contactos = [
-                              ...formContactosNuevos,
-                              nuevo,
-                            ].map((contacto) => ({
-                              ...contacto,
-                              idProspecto: prospecto.id,
-                            }));
-
-                            const resultado = await guardarContactos(contactos);
-
-                            if (
-                              resultado ==
-                              "Todos los contactos fueron registrados exitosamente"
-                            ) {
-                              /* alert(resultado); */
-                              await Swal.fire({
-                                icon: "success",
-                                html: `${resultado}`,
-                                confirmButtonText: "Aceptar",
-                                confirmButtonColor: "#28a745",
-                                allowOutsideClick: false,
-                              });
-                              await obtenerContactos();
-
-                              setFormContactosNuevos([]); // limpia la lista
-                              setNuevoContacto({
-                                // limpia los inputs
-                                contacto: "",
-                                correo: "",
-                                telefono: "",
-                                extension: "",
-                              });
-                            } else {
-                              /* alert(resultado); */
-                              await Swal.fire({
-                                icon: "warning",
-                                title: "Aviso",
-                                html: `${resultado}`,
-                                confirmButtonText: "Aceptar",
-                                confirmButtonColor: "#830912",
-                                allowOutsideClick: false,
-                              });
-                            }
-                          }}
-                        >
-                          agregar contacto a prospecto
-                        </button>
-                      </div>
-                    </div>
-
-                    <div className="col-md-3 mt-3">
-                      <div className="form-group full-prospectos">
-                        <button
-                          className="btn btn-secondary btn-sm"
-                          onClick={() => setSeccionContacto(false)}
-                        >
-                          Cerrar contactos
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                <div className="form-group full-prospectos mt-3">
-                  <h5 className="fw-bold m-0">Contactos prospectos</h5>
+                <div className="form-group full-prospectos">
+                  <h5 className="fw-bold mb-2">Contactos prospectos</h5>
 
                   {!isMobile ? (
                     <DataGrid
@@ -634,54 +795,106 @@ function IntermedioTab({
                 <div className="col-12 mt-5">
                   <hr />
                   <h4 className="mb-3">Clientes por prospecto</h4>
-                  <div className="row my-3">
-                    <div className="col-md-4 offset-md-8  mb-3 mb-sm-0 d-flex justify-content-end">
-                      <button
-                        className="btn btn-primary btn-sm"
-                        onClick={async () => {
-                          setFormEjecutivoAltas({
-                            ...formEjecutivoAltas,
-                            id: prospecto.id,
-                            idEstatus: 11,
-                          });
 
-                          setModalEjecutivos(true);
-                        }}
+                  {/* tarjeta ejecutivo de altas */}
+                  <div
+                    className={`card border-0 shadow-sm mb-3 ${
+                      tieneEjecutivoAltas ? "" : "bg-light"
+                    }`}
+                    style={{
+                      borderLeft: `4px solid ${
+                        tieneEjecutivoAltas ? "#198754" : "#adb5bd"
+                      }`,
+                    }}
+                  >
+                    <div className="card-body d-flex flex-column flex-lg-row align-items-lg-center gap-3">
+                      {/* datos del ejecutivo */}
+                      <div
+                        className="d-flex align-items-center gap-3 flex-grow-1"
+                        style={{ minWidth: 0 }}
                       >
-                        Asignar ejecutivo altas
-                      </button>
-                    </div>
+                        <div
+                          className={`rounded-circle d-flex align-items-center justify-content-center fw-bold flex-shrink-0 ${
+                            tieneEjecutivoAltas
+                              ? "bg-success bg-opacity-10 text-success"
+                              : "bg-secondary bg-opacity-10 text-secondary"
+                          }`}
+                          style={{ width: 52, height: 52, fontSize: 18 }}
+                        >
+                          {tieneEjecutivoAltas && inicialesEjecutivo ? (
+                            inicialesEjecutivo
+                          ) : (
+                            <FaUserTie size={22} />
+                          )}
+                        </div>
 
-                    <div className="col-md-8">
-                      {prospecto.idEjecutivoAltas == null ||
-                      prospecto.idEjecutivoAltas === "" ? (
-                        <h5 className="fw-medium">
-                          No se asignó ejecutivo de altas
-                        </h5>
-                      ) : (
-                        <>
-                          <div className="row">
-                            <div className="col-md-8">
-                              <h5 className="fw-medium">
-                                <strong>Ejecutivo de altas asignado:</strong>{" "}
-                                {ejecutivoAltas?.nombre}{" "}
-                                {ejecutivoAltas?.apellidoPaterno ?? ""}{" "}
-                                {ejecutivoAltas?.apellidoMaterno ?? ""}
-                              </h5>
-                            </div>
-                            <div className="col-md-4">
-                              <button
-                                className="btn btn-success btn-sm"
-                                onClick={() =>
-                                  navigate(`/clientes/nuevo/${prospecto.id}`)
-                                }
-                              >
-                                Registrar nuevo cliente
-                              </button>
-                            </div>
-                          </div>
-                        </>
-                      )}
+                        <div style={{ minWidth: 0 }}>
+                          <small className="text-muted text-uppercase fw-semibold d-block">
+                            Ejecutivo de altas
+                          </small>
+                          {tieneEjecutivoAltas ? (
+                            <h5 className="fw-bold mb-0 text-break">
+                              {nombreEjecutivoAltas || "Cargando..."}
+                            </h5>
+                          ) : (
+                            <h6 className="mb-0 text-muted fst-italic">
+                              Sin ejecutivo asignado
+                            </h6>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* acciones */}
+                      <div className="d-flex flex-wrap gap-2 justify-content-lg-end">
+                        <button
+                          className={`btn btn-sm d-inline-flex align-items-center gap-2 ${
+                            tieneEjecutivoAltas
+                              ? "btn-outline-secondary"
+                              : "btn-primary"
+                          }`}
+                          onClick={() => {
+                            setFormEjecutivoAltas({
+                              ...formEjecutivoAltas,
+                              id: prospecto.id,
+                              idEjecutivoAltas:
+                                prospecto.idEjecutivoAltas ?? "",
+                              idEstatus: 11,
+                            });
+
+                            setModalEjecutivos(true);
+                          }}
+                        >
+                          {tieneEjecutivoAltas ? (
+                            <>
+                              <FaExchangeAlt /> Cambiar ejecutivo
+                            </>
+                          ) : (
+                            <>
+                              <FaUserTie /> Asignar ejecutivo altas
+                            </>
+                          )}
+                        </button>
+
+                        {tieneEjecutivoAltas && (
+                          <>
+                            <button
+                              className="btn btn-outline-primary btn-sm d-inline-flex align-items-center gap-2"
+                              onClick={abrirModalLigarCliente}
+                            >
+                              <FaLink /> Ligar cliente existente
+                            </button>
+
+                            <button
+                              className="btn btn-success btn-sm d-inline-flex align-items-center gap-2"
+                              onClick={() =>
+                                navigate(`/clientes/nuevo/${prospecto.id}`)
+                              }
+                            >
+                              <FaUserPlus /> Registrar nuevo cliente
+                            </button>
+                          </>
+                        )}
+                      </div>
                     </div>
                   </div>
                   {!isMobile ? (
@@ -1035,6 +1248,103 @@ function IntermedioTab({
                   onClick={async () => {
                     setModalEjecutivos(false);
                   }}
+                >
+                  Cancelar
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* MODAL LIGAR CLIENTE EXISTENTE */}
+        {modalLigarCliente && (
+          <div className="modal-overlay">
+            <div className="modal-box-prospectos modal-prospectos">
+              <div className="modal-header">
+                <h2>Ligar cliente existente</h2>
+              </div>
+
+              <div className="form-grid-prospectos">
+                <div className="form-group full-prospectos">
+                  <label>Clientes registrados</label>
+
+                  <Select
+                    components={makeAnimated()}
+                    options={opcionesClientes}
+                    value={clienteALigar}
+                    onChange={setClienteALigar}
+                    isLoading={cargandoClientes}
+                    isClearable
+                    placeholder="Buscar por razón social o RFC..."
+                    noOptionsMessage={() =>
+                      cargandoClientes
+                        ? "Cargando clientes..."
+                        : "No hay clientes disponibles para ligar"
+                    }
+                    menuPortalTarget={document.body}
+                    styles={{
+                      menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+                    }}
+                  />
+                  <small className="text-muted mt-1">
+                    Solo se muestran clientes que aún no están ligados a este
+                    prospecto.
+                  </small>
+                </div>
+              </div>
+
+              <div className="modal-footer-prospectos">
+                <button
+                  className="btn btn-primary btn-sm d-inline-flex align-items-center gap-2"
+                  disabled={!clienteALigar || ligando}
+                  onClick={async () => {
+                    setLigando(true);
+                    const resultado = await ligarClienteProspecto();
+                    let enviados = 0;
+
+                    if (resultado === "Cliente registrado exitosamente") {
+                      const clienteId = clienteALigar.value;
+
+                      /* mismas funciones que al registrar cliente nuevo */
+                      enviados = await enviarContactosACliente(clienteId);
+                      const texto = `Se guardaron ${enviados} contacto's, desde prospección`;
+
+                      await actualizarEstatusProspectoAltas();
+                      await registrarEstatusHistorial(12);
+                      await historialContactosProspecto(clienteId, texto);
+                    }
+
+                    setLigando(false);
+
+                    if (resultado !== "Cliente registrado exitosamente") {
+                      await Swal.fire({
+                        icon: "warning",
+                        title: "Aviso",
+                        html: `${resultado ?? "No se pudo ligar el cliente"}`,
+                        confirmButtonText: "Aceptar",
+                        confirmButtonColor: "#830912",
+                        allowOutsideClick: false,
+                      });
+                    } else {
+                      await ObtenerClientesPorProspecto();
+                      setModalLigarCliente(false);
+                      await Swal.fire({
+                        icon: "success",
+                        html: `Cliente ligado al prospecto correctamente.<br>Se enviaron ${enviados} de ${formContactos.length} contacto(s) de prospección al cliente.`,
+                        confirmButtonText: "Aceptar",
+                        confirmButtonColor: "#28a745",
+                        allowOutsideClick: false,
+                      });
+                      await onProspectoActualizado();
+                    }
+                  }}
+                >
+                  <FaLink /> {ligando ? "Ligando..." : "Ligar cliente"}
+                </button>
+
+                <button
+                  className="btn btn-secondary btn-sm"
+                  onClick={() => setModalLigarCliente(false)}
                 >
                   Cancelar
                 </button>

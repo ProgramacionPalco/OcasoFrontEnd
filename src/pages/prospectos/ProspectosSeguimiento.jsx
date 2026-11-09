@@ -35,6 +35,11 @@ function ProspectosSeguimiento() {
     idEjecutivo: "",
     idEjecutivoAltas: "",
     tipoOperacion: "",
+    logistica: false,
+    importador: false,
+    idPais: null,
+    idEstado: null,
+    idCiudad: null,
     fechaRegistro: "",
     idEstatus: "",
   });

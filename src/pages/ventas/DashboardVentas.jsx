@@ -262,13 +262,16 @@ function DashboardVentas() {
   return (
     <>
       <div className="container-fluid">
-        <div className="row">
-          <h2 className="fw-bold m-0 mb-3">Dashboard</h2>
+        <div className="row g-3 align-items-center">
+          <div className="col-12 col-lg-5">
+            <h3 className="fw-bold m-0">Dashboard</h3>
+          </div>
 
-          <div className="col-md-4 my-3">
+          <div className="col-6 col-md-5 col-lg-3">
             <TextField
               select
               fullWidth
+              size="small"
               label="Seleccione mes"
               value={mes}
               onChange={(e) => setMes(Number(e.target.value))}
@@ -289,10 +292,11 @@ function DashboardVentas() {
             </TextField>
           </div>
 
-          <div className="col-md-4 my-3">
+          <div className="col-6 col-md-4 col-lg-2">
             <TextField
               select
               fullWidth
+              size="small"
               label="Seleccione año"
               value={año}
               onChange={(e) => setAño(Number(e.target.value))}
@@ -305,11 +309,12 @@ function DashboardVentas() {
             </TextField>
           </div>
 
-          <div className="col-md-4 mt-3">
+          <div className="col-12 col-md-3 col-lg-2">
             <Button
               fullWidth
               variant="contained"
-              className="btn btn-primary mt-2"
+              className="btn btn-primary"
+              sx={{ height: 40 }}
               onClick={async () => {
                 await ObtenerVentasPorMes();
                 await ObtenerProspectosPorMes();
@@ -326,25 +331,25 @@ function DashboardVentas() {
             }}
             style={{ cursor: "pointer" }}
           >
-            <div className="card shadow-sm border-0 bg-success bg-opacity-10 rounded-3">
-              <div className="card-body p-4">
+            <div className="card shadow-sm border-0 bg-success bg-opacity-10 rounded-3 h-100">
+              <div className="card-body py-3 px-4">
                 <div className="d-flex justify-content-between align-items-center">
                   <div>
-                    <h6 className="text-secondary mb-2">
+                    <div className="small text-secondary fw-semibold mb-1">
                       Clientes nuevos registrados
-                    </h6>
+                    </div>
 
-                    <h2 className="fw-bold text-success mb-1">
+                    <div className="fs-3 fw-bold text-success lh-1 mb-1">
                       {clientes.length}
-                    </h2>
+                    </div>
 
                     <small className="text-muted">
                       Total de clientes nuevos
                     </small>
                   </div>
 
-                  <div className="bg-success text-white rounded-circle p-3 d-flex align-items-center justify-content-center">
-                    <FaUserPlus size={24} />
+                  <div className="bg-success text-white rounded-circle p-2 d-flex align-items-center justify-content-center">
+                    <FaUserPlus size={20} />
                   </div>
                 </div>
               </div>
@@ -358,23 +363,23 @@ function DashboardVentas() {
             }}
             style={{ cursor: "pointer" }}
           >
-            <div className="card shadow-sm border-0 bg-primary bg-opacity-10 rounded-3">
-              <div className="card-body p-4">
+            <div className="card shadow-sm border-0 bg-primary bg-opacity-10 rounded-3 h-100">
+              <div className="card-body py-3 px-4">
                 <div className="d-flex justify-content-between align-items-center">
                   <div>
-                    <h6 className="text-secondary mb-2">
+                    <div className="small text-secondary fw-semibold mb-1">
                       Prospectos registrados
-                    </h6>
+                    </div>
 
-                    <h2 className="fw-bold text-primary mb-1">
+                    <div className="fs-3 fw-bold text-primary lh-1 mb-1">
                       {prospectos.length}
-                    </h2>
+                    </div>
 
                     <small className="text-muted">Total de prospectos</small>
                   </div>
 
-                  <div className="bg-primary text-white rounded-circle p-3 d-flex align-items-center justify-content-center">
-                    <FaUsers size={24} />
+                  <div className="bg-primary text-white rounded-circle p-2 d-flex align-items-center justify-content-center">
+                    <FaUsers size={20} />
                   </div>
                 </div>
               </div>
@@ -382,20 +387,23 @@ function DashboardVentas() {
           </div>
 
           {/* graficas */}
-          <div className="col-md-6 my-2">
+          <div className="col-md-6">
             <GraficaClientes clientesAnuales={clientesAnuales} />
           </div>
 
-          <div className="col-md-6 my-2">
+          <div className="col-md-6">
             <GraficaProspectos prospectosAnuales={prospectosAnuales} />
           </div>
 
-          <div className="col-md-12 my-2">
+          <div className="col-12">
+            <h6 className="fw-semibold mb-2">Prospectos del mes</h6>
             {!isMobile ? (
-            <div className="form-grid-prospectos">
+            <div>
               <DataGrid
                 rows={prospectos}
                 columns={columnsProspectosDetalles}
+                density="compact"
+                autoHeight
                 pageSizeOptions={[5, 10, 25, 50]}
                 disableRowSelectionOnClick
                 initialState={{
@@ -436,12 +444,12 @@ function DashboardVentas() {
             </div>
             ) : (
               /* CARDS PARA MÓVIL */
-              <div className="row g-3">
+              <div className="row g-2">
                 {prospectos.map((prospecto) => (
                   <div className="col-12" key={prospecto.id}>
                     <div className="card shadow-sm border-0 rounded-3">
-                      <div className="card-body">
-                        <div className="d-flex justify-content-between align-items-start mb-3">
+                      <div className="card-body p-3">
+                        <div className="d-flex justify-content-between align-items-start mb-2">
                           <div>
                             <h6 className="fw-bold mb-1">{prospecto.nombre}</h6>
                             <small className="text-muted">#{prospecto.id}</small>
@@ -452,9 +460,9 @@ function DashboardVentas() {
                           </span>
                         </div>
 
-                        <hr />
+                        <hr className="my-2" />
 
-                        <div className="row g-2 mb-3">
+                        <div className="row g-2 mb-2">
                           <div className="col-6">
                             <small className="text-muted d-block">Ejecutivo</small>
                             <small className="fw-medium">
@@ -472,7 +480,7 @@ function DashboardVentas() {
 
                         <button
                           type="button"
-                          className="btn btn-outline-primary w-100"
+                          className="btn btn-outline-primary btn-sm w-100"
                           onClick={() => abrirHistorial(prospecto.id)}
                         >
                           Historial prospección
@@ -501,6 +509,7 @@ function DashboardVentas() {
               <DataGrid
                 rows={clientes}
                 columns={columnsClientes}
+                density="compact"
                 pageSizeOptions={[5, 10, 25, 50]}
                 disableRowSelectionOnClick
                 initialState={{
@@ -602,6 +611,7 @@ function DashboardVentas() {
               <DataGrid
                 rows={prospectos}
                 columns={columnsProspectos}
+                density="compact"
                 pageSizeOptions={[5, 10, 25, 50]}
                 disableRowSelectionOnClick
                 initialState={{
