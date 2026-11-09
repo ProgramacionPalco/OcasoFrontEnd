@@ -192,9 +192,11 @@ function DetalleRequisicion() {
 
                 {
                     tab === "documentos" &&
-                    <DocumentosTab
-                        documentos={detalle.documentos}
-                    />
+                        <DocumentosTab
+                            documentos={detalle.documentos}
+                            idRequisicion={id}
+                            onDocumentoSubido={cargar}
+                        />
                 }
 
                 {

@@ -105,6 +105,7 @@ export default function NuevaRequisicion() {
             setEmpresas(
                 empresasRes.data
             );
+            //console.log("EMPRESAS API:", empresasRes.data);
 
             setDepartamentos(
                 deptosRes.data
@@ -276,130 +277,6 @@ export default function NuevaRequisicion() {
 
     };
 
-    /**const guardarRequisicion=async()=>{
-
-        try{
-
-            const payload={
-
-                requisicion:{
-
-                    empresa:
-                        Number(form.empresa),
-
-                    departamento:
-                        Number(
-                            form.departamento
-                        ),
-
-                    usuario:
-                        localStorage.getItem(
-                            "usuario"
-                        ),
-
-                    solicitanteNombre:
-                        form.solicitanteNombre,
-
-                    fecha:
-                        form.fecha,
-
-                    descripcion:
-                        form.descripcion,
-
-                    categoria:
-                        Number(
-                            form.categoria
-                        ),
-
-                    comentarios:
-                        form.comentarios,
-
-                    clasificacionPoliza:
-                        Number(
-                            form.clasificacionPoliza
-                        ),
-
-                    oc:
-                        form.oc || "",
-
-                    estatus:1,
-
-                    correo:0,
-                    duplicada:0,
-                    entregado:0,
-                    eliminada:0,
-                    validada:0,
-                    guardada:0
-
-                },
-
-                detalles:
-
-                    detalles.map(x=>({
-
-                        cantidad:
-                            Number(
-                                x.cantidad
-                            ),
-
-                        concepto:
-                            x.concepto,
-
-                        precioUnitario:
-                            Number(
-                                x.precioUnitario
-                            ),
-
-                        iva:
-                            Number(
-                                x.iva
-                            ),
-
-                        total:
-                            Number(
-                                x.total
-                            )
-
-                    })),
-
-                documentos:[]
-
-            };
-
-            const response=
-                await api.post(
-
-                    "/compras/crear",
-
-                    payload
-
-                );
-
-            alert(
-
-                `Requisición creada #${
-
-                    response.data.idRequisicion
-
-                }`
-
-            );
-
-        }
-        catch(error){
-
-            console.error(
-                error
-            );
-
-            alert(
-                "Error al guardar requisición"
-            );
-
-        }
-
-    };***/
-
     const guardarRequisicion = async () => {
 
         const token = localStorage.getItem("token");
@@ -423,6 +300,7 @@ export default function NuevaRequisicion() {
                 categoria: Number(form.categoria),
                 comentarios: form.comentarios,
                 clasificacionPoliza: Number(form.clasificacionPoliza),
+                urgente: Number(form.urgente),
                 guardada: 1
             };
 

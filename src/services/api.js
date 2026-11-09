@@ -119,6 +119,18 @@ export const obtenerControlRequisiciones = (
         }
     });
 
+export const agregarDocumentoRequisicion = (idRequisicion, archivo, comentario) => {
+    const formData = new FormData();
+
+    formData.append("archivo", archivo);
+    formData.append("comentario", comentario || "");
+
+    return api.post(
+        `/compras/requisicion/${idRequisicion}/documentos`,
+        formData
+    );
+};    
+
 export default api;
 //import axios from "axios";
 //

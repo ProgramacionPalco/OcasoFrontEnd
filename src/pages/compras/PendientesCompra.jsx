@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import DataTable from "react-data-table-component";
 import { obtenerRequisicionesOrdenCompra } from "../../services/api";
+import { FaEye } from "react-icons/fa";
 
 function PendientesCompra() {
 
@@ -124,10 +125,22 @@ function PendientesCompra() {
 
         {
             name: "Acciones",
-            cell: row => {
+            cell: row => (
+                <div className="d-flex gap-2">
 
-                if (filtroEstado === "por-generar") {
-                    return (
+                    {/* VER REQUISICIÓN COMPLETA */}
+                    <button
+                        className="btn btn-outline-primary btn-sm"
+                        title="Ver requisición"
+                        onClick={() =>
+                            navigate(`/compras/detalle/${row.id}`)
+                        }
+                    >
+                        <FaEye /> Ver
+                    </button>
+
+                    {/* ADMINISTRAR ORDEN DE COMPRA */}
+                    {filtroEstado === "por-generar" && (
                         <button
                             className="btn btn-success btn-sm"
                             onClick={() =>
@@ -136,21 +149,22 @@ function PendientesCompra() {
                         >
                             Administrar OC
                         </button>
-                    );
-                }
+                    )}
 
-                return (
-                    <button
-                        className="btn btn-outline-primary btn-sm"
-                        onClick={() =>
-                            navigate(`/compras/orden-compra/${row.id}`)
-                        }
-                    >
-                        Ver órdenes
-                    </button>
-                );
-            },
-            width: "170px"
+                    {filtroEstado !== "por-generar" && (
+                        <button
+                            className="btn btn-outline-success btn-sm"
+                            onClick={() =>
+                                navigate(`/compras/orden-compra/${row.id}`)
+                            }
+                        >
+                            Ver órdenes
+                        </button>
+                    )}
+
+                </div>
+            ),
+            width: "240px"
         }
 
     ];
