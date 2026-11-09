@@ -3,6 +3,12 @@ import api from "../../../services/api";
 
 import Select from "react-select";
 import makeAnimated from "react-select/animated";
+import {
+  FaSyncAlt,
+  FaFileInvoiceDollar,
+  FaCalculator,
+  FaTimes,
+} from "react-icons/fa";
 
 import { DataGrid } from "@mui/x-data-grid";
 import { Button, TextField } from "@mui/material";
@@ -183,11 +189,11 @@ function CotizarTab({ prospecto: prospectoInicial, onProspectoActualizado }) {
           <div className="card shadow-sm">
             <div className="card-body">
               <div className="row">
-                <h3>Cotizar prospecto</h3>
+                <div className="col-12 d-flex flex-column flex-sm-row align-items-sm-center justify-content-between gap-2 mb-3">
+                  <h3 className="mb-0">Cotizar prospecto</h3>
 
-                <div className="col-md-6 d-flex justify-content-end mb-3 mb-sm-0">
                   <button
-                    className="btn btn-success btn-sm"
+                    className="btn btn-success btn-sm d-inline-flex align-items-center gap-2 align-self-start align-self-sm-auto"
                     onClick={async () => {
                       await obtenerEstatus();
 
@@ -206,38 +212,72 @@ function CotizarTab({ prospecto: prospectoInicial, onProspectoActualizado }) {
                       setModalEstatus(true);
                     }}
                   >
-                    Actualizar estatus cotizacion
+                    <FaSyncAlt /> Actualizar estatus cotización
                   </button>
                 </div>
 
-                <div className="col-md-6 d-flex justify-content-end">
-                  <button
-                    className="btn btn-primary btn-sm"
-                    onClick={async () => {
-                      /* alert(
+                {/* tarjeta cotizaciones */}
+                <div className="col-12">
+                  <div
+                    className="card border-0 shadow-sm mb-3"
+                    style={{ borderLeft: "4px solid #0d6efd" }}
+                  >
+                    <div className="card-body d-flex flex-column flex-lg-row align-items-lg-center gap-3">
+                      <div
+                        className="d-flex align-items-center gap-3 flex-grow-1"
+                        style={{ minWidth: 0 }}
+                      >
+                        <div
+                          className="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0 bg-primary bg-opacity-10 text-primary"
+                          style={{ width: 52, height: 52 }}
+                        >
+                          <FaFileInvoiceDollar size={22} />
+                        </div>
+
+                        <div style={{ minWidth: 0 }}>
+                          <small className="text-muted text-uppercase fw-semibold d-block">
+                            Cotizaciones del prospecto
+                          </small>
+                          <h5 className="fw-bold mb-0">
+                            {prospectosCotizaciones.length}{" "}
+                            {prospectosCotizaciones.length === 1
+                              ? "cotización registrada"
+                              : "cotizaciones registradas"}
+                          </h5>
+                        </div>
+                      </div>
+
+                      <div className="d-flex flex-wrap gap-2 justify-content-lg-end">
+                        <button
+                          className="btn btn-primary btn-sm d-inline-flex align-items-center gap-2"
+                          onClick={async () => {
+                            /* alert(
                         "La seccion de cotizador sera habilitada proximamente",
                       ); */
 
-                      await Swal.fire({
-                        icon: "warning",
-                        title: "Aviso",
-                        html: `La seccion de cotizador sera habilitada proximamente`,
-                        confirmButtonText: "Aceptar",
-                        confirmButtonColor: "#830912",
-                        allowOutsideClick: false,
-                      });
+                            await Swal.fire({
+                              icon: "warning",
+                              title: "Aviso",
+                              html: `La seccion de cotizador sera habilitada proximamente`,
+                              confirmButtonText: "Aceptar",
+                              confirmButtonColor: "#830912",
+                              allowOutsideClick: false,
+                            });
 
-                      /* await obtenerServicios();
+                            /* await obtenerServicios();
                       await obtenerServiciosRegistrados();
 
                       setCotizadorSeccion(true); */
-                    }}
-                  >
-                    cotizar servicio a prospecto
-                  </button>
+                          }}
+                        >
+                          <FaCalculator /> Cotizar servicio
+                        </button>
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
-                <h5 className="fw-bold m-0">Cotizaciones historial</h5>
+                <h5 className="fw-bold mb-2">Cotizaciones historial</h5>
                 {!isMobile ? (
                   <DataGrid
                     rows={prospectosCotizaciones}
@@ -355,15 +395,13 @@ function CotizarTab({ prospecto: prospectoInicial, onProspectoActualizado }) {
                     />
                   </div>
 
-                  <div className="col-md-4 offset-4">
+                  <div className="col-md-8 d-flex align-items-end justify-content-end mt-3 mt-md-0">
                     <button
                       type="button"
-                      class="btn btn-danger"
-                      onClick={async () => {
-                        setCotizadorSeccion(false);
-                      }}
+                      className="btn btn-outline-secondary btn-sm d-inline-flex align-items-center gap-2"
+                      onClick={() => setCotizadorSeccion(false)}
                     >
-                      Cancelar
+                      <FaTimes /> Cancelar
                     </button>
                   </div>
                 </div>

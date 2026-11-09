@@ -11,6 +11,8 @@ import makeAnimated from "react-select/animated";
 
 import Swal from "sweetalert2";
 
+import UbicacionSelects from "./components/UbicacionSelects";
+
 const formProspectoInicial = {
   /* idServicio: "", */
   nombre: "",
@@ -31,6 +33,11 @@ const formProspectoInicial = {
   comentarios: "",
   idEjecutivo: "",
   tipoOperacion: "",
+  logistica: false,
+  importador: false,
+  idPais: null,
+  idEstado: null,
+  idCiudad: null,
 };
 
 const nuevoContactoInicial = {
@@ -359,11 +366,11 @@ function Prospectos() {
               idEstatus: idEstatus,
             });
 
-            if (idEstatus >= 4) {
+            /* if (idEstatus >= 4) {
               setBtnCotizar(true);
             } else {
               setBtnCotizar(false);
-            }
+            } */
 
             await obtenerEstatus(idEstatus);
 
@@ -648,11 +655,11 @@ function Prospectos() {
                                 idEstatus: idEstatus,
                               });
 
-                              if (idEstatus >= 4) {
+                              /* if (idEstatus >= 4) {
                                 setBtnCotizar(true);
                               } else {
                                 setBtnCotizar(false);
-                              }
+                              } */
 
                               await obtenerEstatus(idEstatus);
 
@@ -675,174 +682,448 @@ function Prospectos() {
 
         {modalNuevoProspecto && (
           <div className="modal-overlay">
-            <div className="modal-box-prospectos modal-prospectos">
-              <div className="modal-header">
+            <div className="modal-box-prospectos modal-prospectos modal-nuevo-prospecto">
+              <div className="modal-header modal-header-nuevo-prospecto">
                 <h2>Registrar Prospecto</h2>
               </div>
 
-              <div className="form-grid-prospectos">
-                <div className="form-group full-prospectos">
-                  <label>Nombre</label>
-                  <input
-                    autoComplete="off"
-                    value={formProspecto.nombre || ""}
-                    onChange={(e) =>
-                      setFormProspecto({
-                        ...formProspecto,
-                        nombre: e.target.value,
-                      })
-                    }
-                  />
-                </div>
+              <div className="modal-body-nuevo-prospecto">
+                <div className="form-grid-nuevo-prospecto">
+                  {/* DATOS GENERALES */}
+                  <h6 className="seccion-nuevo-prospecto">Datos generales</h6>
 
-                <div className="form-group span-2-prospectos">
-                  <label>Servicio</label>
+                  <div className="form-group full-prospectos">
+                    <label>Nombre</label>
+                    <input
+                      autoComplete="off"
+                      value={formProspecto.nombre || ""}
+                      onChange={(e) =>
+                        setFormProspecto({
+                          ...formProspecto,
+                          nombre: e.target.value,
+                        })
+                      }
+                    />
+                  </div>
 
-                  <Select
-                    closeMenuOnSelect={false}
-                    components={animatedComponents}
-                    isMulti
-                    placeholder="Seleccione servicio"
-                    options={servicios.map((r) => ({
-                      value: r.id,
-                      label: r.servicio,
-                    }))}
-                    value={servicios
-                      .map((r) => ({
+                  <div className="form-group span-3-prospectos">
+                    <label>Tipo Compañia</label>
+
+                    <select
+                      value={formProspecto.idTipoEmpresa}
+                      onChange={(e) =>
+                        setFormProspecto({
+                          ...formProspecto,
+                          idTipoEmpresa: parseInt(e.target.value),
+                        })
+                      }
+                    >
+                      <option value="">Seleccione tipo empresa</option>
+
+                      {tipoEmpresa.map((r) => (
+                        <option key={r.id} value={r.id}>
+                          {r.tipo}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="form-group span-3-prospectos">
+                    <label>Servicio</label>
+
+                    <Select
+                      closeMenuOnSelect={false}
+                      components={animatedComponents}
+                      isMulti
+                      placeholder="Seleccione servicio"
+                      classNamePrefix="rs"
+                      menuPortalTarget={document.body}
+                      styles={{
+                        menuPortal: (base) => ({ ...base, zIndex: 10000 }),
+                      }}
+                      options={servicios.map((r) => ({
                         value: r.id,
                         label: r.servicio,
-                      }))
-                      .filter((opcion) =>
-                        formProspecto.idServicios?.includes(opcion.value),
-                      )}
-                    onChange={(opciones) => {
-                      const seleccionados = opciones.map((x) => ({
-                        idProspecto: "",
-                        idServicio: Number(x.value),
-                      }));
+                      }))}
+                      value={servicios
+                        .map((r) => ({
+                          value: r.id,
+                          label: r.servicio,
+                        }))
+                        .filter((opcion) =>
+                          formProspecto.idServicios?.includes(opcion.value),
+                        )}
+                      onChange={(opciones) => {
+                        const seleccionados = opciones.map((x) => ({
+                          idProspecto: "",
+                          idServicio: Number(x.value),
+                        }));
 
-                      setFormServicios(seleccionados);
+                        setFormServicios(seleccionados);
 
-                      setFormProspecto({
-                        ...formProspecto,
-                        idServicios: opciones.map((x) => Number(x.value)),
-                      });
-                    }}
-                  />
-                </div>
+                        setFormProspecto({
+                          ...formProspecto,
+                          idServicios: opciones.map((x) => Number(x.value)),
+                        });
+                      }}
+                    />
+                  </div>
 
-                <div className="form-group span-2-prospectos">
-                  <label>Tipo Compañia</label>
+                  <div className="form-group span-3-prospectos">
+                    <label>Contacto obtenido a travez de</label>
 
-                  <select
-                    value={formProspecto.idTipoEmpresa}
-                    onChange={(e) =>
-                      setFormProspecto({
-                        ...formProspecto,
-                        idTipoEmpresa: parseInt(e.target.value),
-                      })
+                    <input
+                      autoComplete="off"
+                      value={formProspecto.tipoContacto || ""}
+                      onChange={(e) =>
+                        setFormProspecto({
+                          ...formProspecto,
+                          tipoContacto: e.target.value,
+                        })
+                      }
+                    />
+                  </div>
+
+                  <div className="form-group span-3-prospectos">
+                    <label>Asunto Correo</label>
+
+                    <input
+                      autoComplete="off"
+                      value={formProspecto.asuntoCorreo || ""}
+                      onChange={(e) =>
+                        setFormProspecto({
+                          ...formProspecto,
+                          asuntoCorreo: e.target.value,
+                        })
+                      }
+                    />
+                  </div>
+
+                  {/* UBICACION */}
+                  <h6 className="seccion-nuevo-prospecto">Ubicación</h6>
+
+                  <UbicacionSelects
+                    idPais={formProspecto.idPais}
+                    idEstado={formProspecto.idEstado}
+                    idCiudad={formProspecto.idCiudad}
+                    onChange={(cambios) =>
+                      setFormProspecto((prev) => ({ ...prev, ...cambios }))
                     }
-                  >
-                    <option value="">Seleccione tipo empresa</option>
+                  />
 
-                    {tipoEmpresa.map((r) => (
-                      <option key={r.id} value={r.id}>
-                        {r.tipo}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+                  {/* OPERACION */}
+                  <h6 className="seccion-nuevo-prospecto">Operación</h6>
 
-                <div className="form-group full-prospectos">
-                  <Button
-                    variant="contained"
-                    color="success"
-                    size="small"
-                    onClick={async () => {
-                      setSeccionContacto(true);
-                    }}
-                  >
-                    Seccion contactos
-                  </Button>
-                </div>
+                  <div className="form-group span-2-prospectos">
+                    <label>Tipo Operacion</label>
 
-                {/* seccion de contactos */}
-                {seccionContacto && (
-                  <>
-                    <div className="form-group span-2-prospectos">
-                      <label>Contacto</label>
+                    <input
+                      autoComplete="off"
+                      value={formProspecto.tipoOperacion || ""}
+                      onChange={(e) =>
+                        setFormProspecto({
+                          ...formProspecto,
+                          tipoOperacion: e.target.value,
+                        })
+                      }
+                    />
+                  </div>
+
+                  <div className="form-group span-2-prospectos">
+                    <label>Aduanas</label>
+
+                    <input
+                      autoComplete="off"
+                      value={formProspecto.aduanas || ""}
+                      onChange={(e) =>
+                        setFormProspecto({
+                          ...formProspecto,
+                          aduanas: e.target.value,
+                        })
+                      }
+                    />
+
+                    {/*  <select
+                      value={formProspecto.idAduanas}
+                      onChange={(e) =>
+                        setFormProspecto({
+                          ...formProspecto,
+                          idAduanas: parseInt(e.target.value),
+                        })
+                      }
+                    >
+                      <option value="">Seleccione aduana</option>
+
+                      {aduanas.map((r) => (
+                        <option key={r.id} value={r.id}>
+                          {r.seccion} {r.nombre}
+                        </option>
+                      ))}
+                    </select> */}
+                  </div>
+
+                  <div className="form-group span-2-prospectos">
+                    <label>Rutas Operacion</label>
+
+                    <input
+                      autoComplete="off"
+                      value={formProspecto.rutasOperacion || ""}
+                      onChange={(e) =>
+                        setFormProspecto({
+                          ...formProspecto,
+                          rutasOperacion: e.target.value,
+                        })
+                      }
+                    />
+                  </div>
+
+                  <div className="form-group full-prospectos">
+                    <label>Mercancias Productos</label>
+
+                    <input
+                      autoComplete="off"
+                      value={formProspecto.mercanciasProductos || ""}
+                      onChange={(e) =>
+                        setFormProspecto({
+                          ...formProspecto,
+                          mercanciasProductos: e.target.value,
+                        })
+                      }
+                    />
+                  </div>
+
+                  <div className="form-group span-2-prospectos">
+                    <label>Volumen Estimado Mensual</label>
+
+                    <input
+                      autoComplete="off"
+                      value={formProspecto.volumenEstimadoMensual || ""}
+                      onChange={(e) =>
+                        setFormProspecto({
+                          ...formProspecto,
+                          volumenEstimadoMensual: e.target.value,
+                        })
+                      }
+                    />
+                  </div>
+
+                  <div className="form-group span-2-prospectos">
+                    <label>Nivel Urgencia</label>
+
+                    <select
+                      value={formProspecto.nivelUrgencia}
+                      onChange={(e) =>
+                        setFormProspecto({
+                          ...formProspecto,
+                          nivelUrgencia: e.target.value,
+                        })
+                      }
+                    >
+                      <option value="">Seleccione nivel de urgencia</option>
+
+                      <option key="Baja"> Baja </option>
+                      <option key="Media"> Media </option>
+                      <option key="Alta"> Alta </option>
+                      <option key="Critica"> Critica </option>
+                    </select>
+                  </div>
+
+                  {/* fuera de .form-group para no heredar el padding de los inputs */}
+                  <div className="checks-nuevo-prospecto d-flex flex-wrap align-items-center gap-4">
+                    <div className="form-check m-0">
                       <input
-                        autoComplete="off"
-                        value={nuevoContacto.contacto}
+                        className="form-check-input"
+                        type="checkbox"
+                        id="chkLogistica"
+                        checked={formProspecto.logistica}
                         onChange={(e) =>
-                          setNuevoContacto({
-                            ...nuevoContacto,
-                            contacto: e.target.value,
+                          setFormProspecto({
+                            ...formProspecto,
+                            logistica: e.target.checked,
                           })
                         }
                       />
+                      <label className="form-check-label" htmlFor="chkLogistica">
+                        Logística
+                      </label>
                     </div>
 
-                    <div className="form-group span-2-prospectos">
-                      <label>Correo</label>
+                    <div className="form-check m-0">
                       <input
-                        type="email"
-                        autoComplete="off"
-                        value={nuevoContacto.correo}
+                        className="form-check-input"
+                        type="checkbox"
+                        id="chkImportador"
+                        checked={formProspecto.importador}
                         onChange={(e) =>
-                          setNuevoContacto({
-                            ...nuevoContacto,
-                            correo: e.target.value,
+                          setFormProspecto({
+                            ...formProspecto,
+                            importador: e.target.checked,
                           })
                         }
                       />
+                      <label className="form-check-label" htmlFor="chkImportador">
+                        Importador
+                      </label>
                     </div>
+                  </div>
 
-                    <div className="form-group span-2-prospectos">
-                      <label>telefono</label>
+                  {/* SEGUIMIENTO */}
+                  <h6 className="seccion-nuevo-prospecto">Seguimiento</h6>
 
-                      <input
-                        autoComplete="off"
-                        value={nuevoContacto.telefono}
-                        onChange={(e) =>
-                          setNuevoContacto({
-                            ...nuevoContacto,
-                            telefono: e.target.value,
-                          })
-                        }
-                      />
-                    </div>
+                  <div className="form-group span-3-prospectos">
+                    <label>Ejecutivo de ventas</label>
 
-                    <div className="form-group span-2-prospectos">
-                      <label>Ext</label>
+                    <select
+                      value={formProspecto.idEjecutivo}
+                      onChange={(e) =>
+                        setFormProspecto({
+                          ...formProspecto,
+                          idEjecutivo: e.target.value,
+                        })
+                      }
+                    >
+                      <option value="">Seleccione ejecutivo ventas</option>
 
-                      <input
-                        autoComplete="off"
-                        value={nuevoContacto.extension}
-                        onChange={(e) =>
-                          setNuevoContacto({
-                            ...nuevoContacto,
-                            extension: e.target.value,
-                          })
-                        }
-                      />
-                    </div>
+                      {ejecutivos.map((r) => (
+                        <option key={r.id} value={r.id}>
+                          {r.nombre} {r.apellidoPaterno ?? ""}{" "}
+                          {r.apellidoMaterno ?? ""}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
 
-                    <div className="form-group span-2-prospectos">
-                      <button
-                        className="btn btn-info btn-sm"
-                        onClick={async () => {
-                          if (!(await validarContacto())) return;
+                  <div className="form-group span-3-prospectos">
+                    <label>Fecha Contacto</label>
 
-                          await agregarContacto();
-                        }}
-                      >
-                        agregar contacto a prospecto
-                      </button>
-                    </div>
+                    <input
+                      type="datetime-local"
+                      autoComplete="off"
+                      value={formProspecto.fechaContacto || ""}
+                      onChange={(e) =>
+                        setFormProspecto({
+                          ...formProspecto,
+                          fechaContacto: e.target.value,
+                        })
+                      }
+                    />
+                  </div>
 
+                  <div className="form-group full-prospectos">
+                    <label>Comentarios</label>
+
+                    <textarea
+                      rows={2}
+                      autoComplete="off"
+                      value={formProspecto.comentarios || ""}
+                      onChange={(e) =>
+                        setFormProspecto({
+                          ...formProspecto,
+                          comentarios: e.target.value,
+                        })
+                      }
+                    />
+                  </div>
+
+                  {/* CONTACTOS */}
+                  <div className="seccion-nuevo-prospecto d-flex justify-content-between align-items-center gap-2">
+                    <h6 className="m-0">
+                      Contactos{" "}
+                      <span className="badge bg-secondary">
+                        {formContactos.length}
+                      </span>
+                    </h6>
+
+                    <button
+                      type="button"
+                      className={`btn btn-sm ${
+                        seccionContacto ? "btn-outline-secondary" : "btn-success"
+                      }`}
+                      onClick={() => setSeccionContacto(!seccionContacto)}
+                    >
+                      {seccionContacto ? "Ocultar formulario" : "+ Agregar contacto"}
+                    </button>
+                  </div>
+
+                  {seccionContacto && (
+                    <>
+                      <div className="form-group span-3-prospectos">
+                        <label>Contacto</label>
+                        <input
+                          autoComplete="off"
+                          value={nuevoContacto.contacto}
+                          onChange={(e) =>
+                            setNuevoContacto({
+                              ...nuevoContacto,
+                              contacto: e.target.value,
+                            })
+                          }
+                        />
+                      </div>
+
+                      <div className="form-group span-3-prospectos">
+                        <label>Correo</label>
+                        <input
+                          type="email"
+                          autoComplete="off"
+                          value={nuevoContacto.correo}
+                          onChange={(e) =>
+                            setNuevoContacto({
+                              ...nuevoContacto,
+                              correo: e.target.value,
+                            })
+                          }
+                        />
+                      </div>
+
+                      <div className="form-group span-2-prospectos">
+                        <label>Telefono</label>
+
+                        <input
+                          autoComplete="off"
+                          value={nuevoContacto.telefono}
+                          onChange={(e) =>
+                            setNuevoContacto({
+                              ...nuevoContacto,
+                              telefono: e.target.value,
+                            })
+                          }
+                        />
+                      </div>
+
+                      <div className="form-group span-2-prospectos">
+                        <label>Ext</label>
+
+                        <input
+                          autoComplete="off"
+                          value={nuevoContacto.extension}
+                          onChange={(e) =>
+                            setNuevoContacto({
+                              ...nuevoContacto,
+                              extension: e.target.value,
+                            })
+                          }
+                        />
+                      </div>
+
+                      <div className="form-group span-2-prospectos justify-content-end">
+                        <button
+                          type="button"
+                          className="btn btn-info"
+                          onClick={async () => {
+                            if (!(await validarContacto())) return;
+
+                            await agregarContacto();
+                          }}
+                        >
+                          Agregar contacto a prospecto
+                        </button>
+                      </div>
+                    </>
+                  )}
+
+                  {formContactos.length > 0 && (
                     <div className="form-group full-prospectos">
-                      <h5 className="fw-bold m-0">Contactos prospectos</h5>
                       {!isMobile ? (
                         <DataGrid
                           rows={formContactos}
@@ -889,284 +1170,84 @@ function Prospectos() {
                         <>
                           {/* CARDS DE CONTACTOS PARA MÓVIL */}
                           <div className="row g-3">
-                            {formContactos.length === 0 ? (
-                              <div className="text-center text-muted py-4">
-                                No hay contactos registrados.
-                              </div>
-                            ) : (
-                              formContactos.map((contacto, index) => (
-                                <div
-                                  className="col-12"
-                                  key={contacto.id ?? index}
-                                >
-                                  <div className="card shadow-sm border-0 rounded-3">
-                                    <div className="card-body">
-                                      <div className="d-flex align-items-center gap-2 mb-3">
-                                        <div className="bg-primary bg-opacity-10 text-primary rounded-circle p-3">
-                                          <FaAddressBook size={22} />
-                                        </div>
-
-                                        <div>
-                                          <h6 className="fw-bold mb-0">
-                                            {contacto.contacto || "Sin nombre"}
-                                          </h6>
-                                          <small className="text-muted">
-                                            Contacto registrado
-                                          </small>
-                                        </div>
+                            {formContactos.map((contacto, index) => (
+                              <div
+                                className="col-12"
+                                key={contacto.id ?? index}
+                              >
+                                <div className="card shadow-sm border-0 rounded-3">
+                                  <div className="card-body">
+                                    <div className="d-flex align-items-center gap-2 mb-3">
+                                      <div className="bg-primary bg-opacity-10 text-primary rounded-circle p-3">
+                                        <FaAddressBook size={22} />
                                       </div>
 
-                                      <hr />
-
-                                      <div className="mb-3">
-                                        <small className="text-muted d-block">
-                                          Correo electrónico
+                                      <div>
+                                        <h6 className="fw-bold mb-0">
+                                          {contacto.contacto || "Sin nombre"}
+                                        </h6>
+                                        <small className="text-muted">
+                                          Contacto registrado
                                         </small>
-                                        <span className="text-break">
-                                          {contacto.correo || "Sin correo"}
+                                      </div>
+                                    </div>
+
+                                    <hr />
+
+                                    <div className="mb-3">
+                                      <small className="text-muted d-block">
+                                        Correo electrónico
+                                      </small>
+                                      <span className="text-break">
+                                        {contacto.correo || "Sin correo"}
+                                      </span>
+                                    </div>
+
+                                    <div className="row g-2">
+                                      <div className="col-8">
+                                        <small className="text-muted d-block">
+                                          Teléfono
+                                        </small>
+                                        <span>
+                                          {contacto.telefono || "Sin teléfono"}
                                         </span>
                                       </div>
 
-                                      <div className="row g-2">
-                                        <div className="col-8">
-                                          <small className="text-muted d-block">
-                                            Teléfono
-                                          </small>
-                                          <span>
-                                            {contacto.telefono ||
-                                              "Sin teléfono"}
-                                          </span>
-                                        </div>
-
-                                        <div className="col-4">
-                                          <small className="text-muted d-block">
-                                            Extensión
-                                          </small>
-                                          <span>
-                                            {contacto.extension || "N/A"}
-                                          </span>
-                                        </div>
+                                      <div className="col-4">
+                                        <small className="text-muted d-block">
+                                          Extensión
+                                        </small>
+                                        <span>
+                                          {contacto.extension || "N/A"}
+                                        </span>
                                       </div>
                                     </div>
                                   </div>
                                 </div>
-                              ))
-                            )}
+                              </div>
+                            ))}
                           </div>
                         </>
                       )}
                     </div>
+                  )}
 
-                    <div className="form-group full-prospectos">
-                      <button
-                        className="btn btn-secondary btn-sm"
-                        onClick={() => setSeccionContacto(false)}
-                      >
-                        Cerrar contactos
-                      </button>
+                  {formContactos.length === 0 && !seccionContacto && (
+                    <div className="text-muted small" style={{ gridColumn: "1 / -1" }}>
+                      No hay contactos registrados.
                     </div>
-                  </>
-                )}
-
-                <div className="form-group span-2-prospectos">
-                  <label>Tipo Contacto</label>
-
-                  <input
-                    autoComplete="off"
-                    value={formProspecto.tipoContacto || ""}
-                    onChange={(e) =>
-                      setFormProspecto({
-                        ...formProspecto,
-                        tipoContacto: e.target.value,
-                      })
-                    }
-                  />
-                </div>
-
-                <div className="form-group span-2-prospectos">
-                  <label>Asunto Correo</label>
-
-                  <input
-                    autoComplete="off"
-                    value={formProspecto.asuntoCorreo || ""}
-                    onChange={(e) =>
-                      setFormProspecto({
-                        ...formProspecto,
-                        asuntoCorreo: e.target.value,
-                      })
-                    }
-                  />
-                </div>
-
-                <div className="form-group span-2-prospectos">
-                  <label>Aduanas</label>
-
-                  <input
-                    autoComplete="off"
-                    value={formProspecto.aduanas || ""}
-                    onChange={(e) =>
-                      setFormProspecto({
-                        ...formProspecto,
-                        aduanas: e.target.value,
-                      })
-                    }
-                  />
-
-                  {/*  <select
-                    value={formProspecto.idAduanas}
-                    onChange={(e) =>
-                      setFormProspecto({
-                        ...formProspecto,
-                        idAduanas: parseInt(e.target.value),
-                      })
-                    }
-                  >
-                    <option value="">Seleccione aduana</option>
-
-                    {aduanas.map((r) => (
-                      <option key={r.id} value={r.id}>
-                        {r.seccion} {r.nombre}
-                      </option>
-                    ))}
-                  </select> */}
-                </div>
-
-                <div className="form-group span-2-prospectos">
-                  <label>Rutas Operacion</label>
-
-                  <input
-                    autoComplete="off"
-                    value={formProspecto.rutasOperacion || ""}
-                    onChange={(e) =>
-                      setFormProspecto({
-                        ...formProspecto,
-                        rutasOperacion: e.target.value,
-                      })
-                    }
-                  />
-                </div>
-
-                <div className="form-group full-prospectos">
-                  <label>Mercancias Productos</label>
-
-                  <input
-                    autoComplete="off"
-                    value={formProspecto.mercanciasProductos || ""}
-                    onChange={(e) =>
-                      setFormProspecto({
-                        ...formProspecto,
-                        mercanciasProductos: e.target.value,
-                      })
-                    }
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label>Volumen Estimado Mensual</label>
-
-                  <input
-                    autoComplete="off"
-                    value={formProspecto.volumenEstimadoMensual || ""}
-                    onChange={(e) =>
-                      setFormProspecto({
-                        ...formProspecto,
-                        volumenEstimadoMensual: e.target.value,
-                      })
-                    }
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label>Nivel Urgencia</label>
-
-                  <select
-                    value={formProspecto.nivelUrgencia}
-                    onChange={(e) =>
-                      setFormProspecto({
-                        ...formProspecto,
-                        nivelUrgencia: e.target.value,
-                      })
-                    }
-                  >
-                    <option value="">Seleccione nivel de urgencia</option>
-
-                    <option key="Baja"> Baja </option>
-                    <option key="Media"> Media </option>
-                    <option key="Alta"> Alta </option>
-                    <option key="Critica"> Critica </option>
-                  </select>
-                </div>
-
-                <div className="form-group span-2-prospectos">
-                  <label>Tipo Operacion</label>
-
-                  <input
-                    autoComplete="off"
-                    value={formProspecto.tipoOperacion || ""}
-                    onChange={(e) =>
-                      setFormProspecto({
-                        ...formProspecto,
-                        tipoOperacion: e.target.value,
-                      })
-                    }
-                  />
-                </div>
-
-                <div className="form-group span-2-prospectos">
-                  <label>Ejecutivo de ventas</label>
-
-                  <select
-                    value={formProspecto.idEjecutivo}
-                    onChange={(e) =>
-                      setFormProspecto({
-                        ...formProspecto,
-                        idEjecutivo: e.target.value,
-                      })
-                    }
-                  >
-                    <option value="">Seleccione ejecutivo ventas</option>
-
-                    {ejecutivos.map((r) => (
-                      <option key={r.id} value={r.id}>
-                        {r.nombre} {r.apellidoPaterno ?? ""}{" "}
-                        {r.apellidoMaterno ?? ""}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="form-group span-2-prospectos">
-                  <label>Fecha Contacto</label>
-
-                  <input
-                    type="datetime-local"
-                    autoComplete="off"
-                    value={formProspecto.fechaContacto || ""}
-                    onChange={(e) =>
-                      setFormProspecto({
-                        ...formProspecto,
-                        fechaContacto: e.target.value,
-                      })
-                    }
-                  />
-                </div>
-
-                <div className="form-group full-prospectos">
-                  <label>Comentarios</label>
-
-                  <input
-                    autoComplete="off"
-                    value={formProspecto.comentarios || ""}
-                    onChange={(e) =>
-                      setFormProspecto({
-                        ...formProspecto,
-                        comentarios: e.target.value,
-                      })
-                    }
-                  />
+                  )}
                 </div>
               </div>
-              <div className="modal-footer-prospectos">
+
+              <div className="modal-footer-prospectos modal-footer-nuevo-prospecto">
+                <button
+                  className="btn btn-secondary"
+                  onClick={cerrarModalNuevoProspecto}
+                >
+                  Cancelar
+                </button>
+
                 <button
                   className="btn btn-primary"
                   onClick={async () => {
@@ -1216,13 +1297,6 @@ function Prospectos() {
                   }}
                 >
                   Guardar Prospecto
-                </button>
-
-                <button
-                  className="btn btn-secondary"
-                  onClick={cerrarModalNuevoProspecto}
-                >
-                  Cancelar
                 </button>
               </div>
             </div>
@@ -1323,7 +1397,7 @@ function Prospectos() {
               <div className="my-3">
                 <div className="row justify-content-end">
                   {/* Botón para cotizaciones */}
-                  {btnCotizar && (
+                 {/*  {btnCotizar && ( */}
                     <div className="col-md-5 mb-3">
                       <button
                         className="btn btn-success"
@@ -1336,7 +1410,7 @@ function Prospectos() {
                         Cotizacion seguimiento prospecto
                       </button>
                     </div>
-                  )}
+                 {/*  )} */}
                   <div className="col-md-3 col-6">
                     <button
                       className="btn btn-primary"

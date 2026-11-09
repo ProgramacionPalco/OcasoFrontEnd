@@ -367,3 +367,172 @@
 .swal2-container {
   z-index: 10000 !important;
 }
+
+/* =========================
+   MODAL NUEVO PROSPECTO
+   header y footer fijos, solo el contenido hace scroll
+========================= */
+
+.modal-box-prospectos.modal-nuevo-prospecto {
+  width: 900px;
+  max-height: 92vh;
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  overflow: hidden;
+}
+
+.modal-header-nuevo-prospecto {
+  margin: 0;
+  padding: 12px 20px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.modal-header-nuevo-prospecto h2 {
+  margin: 0;
+  font-size: 19px;
+}
+
+.modal-body-nuevo-prospecto {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 4px 20px 16px;
+}
+
+.modal-footer-prospectos.modal-footer-nuevo-prospecto {
+  margin: 0;
+  padding: 10px 20px;
+  border-top: 1px solid #e5e7eb;
+  background: #f9fafb;
+}
+
+.modal-footer-prospectos.modal-footer-nuevo-prospecto button {
+  padding: 6px 16px;
+  font-size: 14px;
+}
+
+/* 6 columnas: span-2 = 1/3, span-3 = 1/2, full = fila completa */
+.form-grid-nuevo-prospecto {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 10px 14px;
+}
+
+/* controles mas compactos solo en este modal */
+.form-grid-nuevo-prospecto .form-group label {
+  font-size: 12px;
+  margin-bottom: 3px;
+}
+
+.form-grid-nuevo-prospecto .form-group input,
+.form-grid-nuevo-prospecto .form-group select {
+  height: 34px;
+  padding: 4px 9px;
+  font-size: 13px;
+}
+
+.form-grid-nuevo-prospecto .rs__control {
+  min-height: 34px;
+  font-size: 13px;
+}
+
+.form-grid-nuevo-prospecto .rs__value-container {
+  padding: 0 8px;
+}
+
+.form-grid-nuevo-prospecto .rs__indicator {
+  padding: 5px;
+}
+
+.form-grid-nuevo-prospecto .form-check,
+.form-grid-nuevo-prospecto .btn {
+  font-size: 13px;
+}
+
+.form-grid-nuevo-prospecto > .form-group.span-2-prospectos {
+  grid-column: span 2;
+}
+
+.form-grid-nuevo-prospecto > .form-group.span-3-prospectos {
+  grid-column: span 3;
+}
+
+.form-grid-nuevo-prospecto .seccion-nuevo-prospecto {
+  grid-column: 1 / -1;
+  margin: 10px 0 0;
+  padding-bottom: 4px;
+  border-bottom: 2px solid #e5e7eb;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  color: #1f2937;
+}
+
+.form-grid-nuevo-prospecto .checks-nuevo-prospecto {
+  grid-column: span 2;
+  align-self: end;
+  min-height: 34px;
+}
+
+.form-grid-nuevo-prospecto .form-group textarea {
+  padding: 6px 9px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-size: 13px;
+  resize: vertical;
+}
+
+/* Tablet: 2 columnas */
+@media (max-width: 991px) {
+  .form-grid-nuevo-prospecto {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .form-grid-nuevo-prospecto > .form-group.span-2-prospectos,
+  .form-grid-nuevo-prospecto > .form-group.span-3-prospectos {
+    grid-column: span 1;
+  }
+
+  .form-grid-nuevo-prospecto .checks-nuevo-prospecto {
+    grid-column: 1 / -1;
+    min-height: 0;
+  }
+}
+
+/* Movil: 1 columna y modal a pantalla completa */
+@media (max-width: 576px) {
+  .modal-box-prospectos.modal-nuevo-prospecto {
+    width: 100%;
+    max-width: 100%;
+    height: 100%;
+    max-height: 100%;
+    border-radius: 0;
+  }
+
+  .modal-header-nuevo-prospecto {
+    padding: 14px 16px;
+  }
+
+  .modal-header-nuevo-prospecto h2 {
+    font-size: 17px;
+  }
+
+  .modal-body-nuevo-prospecto {
+    padding: 6px 16px 16px;
+  }
+
+  .form-grid-nuevo-prospecto {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+  }
+
+  .modal-footer-prospectos.modal-footer-nuevo-prospecto {
+    padding: 12px 16px;
+  }
+
+  .modal-footer-prospectos.modal-footer-nuevo-prospecto button {
+    flex: 1;
+  }
+}

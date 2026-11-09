@@ -6,6 +6,8 @@ import makeAnimated from "react-select/animated";
 
 import Swal from "sweetalert2";
 
+import UbicacionSelects from "./UbicacionSelects";
+
 function EditarTab({ prospecto: prospectoInicial, ejecutivos, tipoEmpresa, onProspectoActualizado }) {
   /* import del select para seleccion multiple */
   const animatedComponents = makeAnimated();
@@ -166,8 +168,17 @@ function EditarTab({ prospecto: prospectoInicial, ejecutivos, tipoEmpresa, onPro
               </select>
             </div>
 
+            <UbicacionSelects
+              idPais={prospecto.idPais}
+              idEstado={prospecto.idEstado}
+              idCiudad={prospecto.idCiudad}
+              onChange={(cambios) =>
+                setProspecto((prev) => ({ ...prev, ...cambios }))
+              }
+            />
+
             <div className="form-group span-2-prospectos">
-              <label>Tipo Contacto</label>
+              <label>Contacto obtenido a travez de</label>
 
               <input
                 autoComplete="off"
@@ -330,6 +341,48 @@ function EditarTab({ prospecto: prospectoInicial, ejecutivos, tipoEmpresa, onPro
                   })
                 }
               />
+            </div>
+
+            {/* fuera de .form-group para no heredar el padding de los inputs */}
+            <div
+              className="d-flex flex-wrap gap-4"
+              style={{ gridColumn: "1 / -1" }}
+            >
+              <div className="form-check">
+                <input
+                  className="form-check-input"
+                  type="checkbox"
+                  id="chkLogisticaEditar"
+                  checked={!!prospecto.logistica}
+                  onChange={(e) =>
+                    setProspecto({
+                      ...prospecto,
+                      logistica: e.target.checked,
+                    })
+                  }
+                />
+                <label className="form-check-label" htmlFor="chkLogisticaEditar">
+                  Logística
+                </label>
+              </div>
+
+              <div className="form-check">
+                <input
+                  className="form-check-input"
+                  type="checkbox"
+                  id="chkImportadorEditar"
+                  checked={!!prospecto.importador}
+                  onChange={(e) =>
+                    setProspecto({
+                      ...prospecto,
+                      importador: e.target.checked,
+                    })
+                  }
+                />
+                <label className="form-check-label" htmlFor="chkImportadorEditar">
+                  Importador
+                </label>
+              </div>
             </div>
 
             <div className="form-group full-prospectos">
