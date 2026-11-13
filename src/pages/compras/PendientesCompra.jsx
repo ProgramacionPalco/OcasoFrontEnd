@@ -1,8 +1,26 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import DataTable from "react-data-table-component";
-import { obtenerRequisicionesOrdenCompra } from "../../services/api";
-import { FaEye } from "react-icons/fa";
+import { obtenerRequisicionesOrdenCompra,  generarExcelRequisicion } from "../../services/api";
+import estilosTabla, { paginacionEs } from "../../components/estilosTabla";
+import {
+    FaEye,
+    FaFileExcel,
+    FaClipboardList,
+    FaListUl,
+    FaSearch,
+    FaTimes,
+    FaShoppingCart,
+    FaHourglassHalf,
+    FaSyncAlt,
+    FaCheckCircle
+} from "react-icons/fa";
+
+const FILTROS = [
+    { valor: "por-generar", texto: "Por generar", desc: "Aprobadas sin orden de compra", icono: <FaHourglassHalf />, tono: "warning" },
+    { valor: "proceso", texto: "En proceso", desc: "Órdenes de compra en curso", icono: <FaSyncAlt />, tono: "info" },
+    { valor: "completadas", texto: "Completadas", desc: "Órdenes de compra concluidas", icono: <FaCheckCircle />, tono: "success" }
+];
 
 function PendientesCompra() {
 
@@ -33,6 +51,33 @@ function PendientesCompra() {
         }
         finally {
             setLoading(false);
+        }
+    };
+
+    // ==========================================
+    // EXPORTAR A EXCEL
+    // ==========================================
+    const descargarExcel = async (id) => {
+        try {
+            const response = await generarExcelRequisicion(id);
+
+            const url = window.URL.createObjectURL(
+                new Blob([response.data])
+            );
+
+            const enlace = document.createElement("a");
+            enlace.href = url;
+            enlace.download = `Requisicion_${id}.xlsx`;
+
+            document.body.appendChild(enlace);
+            enlace.click();
+
+            enlace.remove();
+            window.URL.revokeObjectURL(url);
+        }
+        catch (error) {
+            console.error("Error al generar Excel:", error);
+            alert("No fue posible generar el Excel de la requisición.");
         }
     };
 
@@ -73,6 +118,10 @@ function PendientesCompra() {
     });
 
 
+    const inicial = (texto) => (texto || "?").trim().charAt(0).toUpperCase();
+
+    const filtroActual = FILTROS.find(f => f.valor === filtroEstado);
+
     // ==========================================
     // COLUMNAS
     // ==========================================
@@ -81,90 +130,133 @@ function PendientesCompra() {
         {
             name: "REQ",
             selector: row => row.id,
+            cell: row => <span className="mr-folio">REQ-{row.id}</span>,
             sortable: true,
-            width: "100px"
+            width: "110px"
         },
 
         {
             name: "Empresa",
             selector: row => row.empresa,
-            sortable: true
+            cell: row => (
+                <div className="cliente-nombre">
+                    <span className="cliente-avatar">{inicial(row.empresa)}</span>
+                    <span className="pc-texto">{row.empresa}</span>
+                </div>
+            ),
+            sortable: true,
+            grow: 2,
+            minWidth: "200px"
         },
 
         {
             name: "Solicitante",
             selector: row => row.solicitante,
-            sortable: true
+            cell: row => <span className="pc-texto">{row.solicitante}</span>,
+            sortable: true,
+            grow: 1.5,
+            minWidth: "150px"
         },
 
         {
             name: "Categoría",
             selector: row => row.categoria,
-            sortable: true
+            cell: row => (
+                row.categoria
+                    ? <span className="mr-categoria">{row.categoria}</span>
+                    : <span className="text-muted">—</span>
+            ),
+            sortable: true,
+            minWidth: "130px"
         },
 
         {
             name: "Fecha",
-            selector: row =>
-                new Date(row.fecha)
-                    .toLocaleDateString("es-MX"),
-            sortable: true
+            selector: row => row.fecha,
+            cell: row => (
+                <span className="docs-fecha">
+                    {new Date(row.fecha).toLocaleDateString("es-MX", {
+                        day: "2-digit",
+                        month: "short",
+                        year: "numeric"
+                    })}
+                </span>
+            ),
+            sortable: true,
+            width: "120px"
         },
 
         {
             name: "Total",
-            selector: row =>
-                "$" +
-                Number(row.total)
-                    .toLocaleString("es-MX", {
+            selector: row => Number(row.total),
+            cell: row => (
+                <span className="mr-total fw-semibold">
+                    ${Number(row.total).toLocaleString("es-MX", {
                         minimumFractionDigits: 2,
                         maximumFractionDigits: 2
-                    }),
-            sortable: true
+                    })}
+                </span>
+            ),
+            sortable: true,
+            right: true,
+            width: "140px"
         },
 
         {
             name: "Acciones",
             cell: row => (
-                <div className="d-flex gap-2">
+                <div className="docs-acciones">
+
+                    {/* ADMINISTRAR ORDEN DE COMPRA / VER ÓRDENES (acción principal) */}
+                    {filtroEstado === "por-generar" ? (
+                        <button
+                            className="btn btn-success dash-btn-tabla"
+                            title="Administrar orden de compra"
+                            onClick={() =>
+                                navigate(`/compras/orden-compra/${row.id}`)
+                            }
+                        >
+                            <FaClipboardList /> Administrar OC
+                        </button>
+                    ) : (
+                        <button
+                            className="btn dash-btn-tabla dash-btn-suave"
+                            title="Ver órdenes de compra"
+                            onClick={() =>
+                                navigate(`/compras/orden-compra/${row.id}`)
+                            }
+                        >
+                            <FaListUl /> Ver órdenes
+                        </button>
+                    )}
 
                     {/* VER REQUISICIÓN COMPLETA */}
                     <button
-                        className="btn btn-outline-primary btn-sm"
+                        className="btn btn-sm btn-outline-primary explorador-btn-icono"
                         title="Ver requisición"
+                        aria-label="Ver requisición"
                         onClick={() =>
                             navigate(`/compras/detalle/${row.id}`)
                         }
                     >
-                        <FaEye /> Ver
+                        <FaEye />
                     </button>
 
-                    {/* ADMINISTRAR ORDEN DE COMPRA */}
-                    {filtroEstado === "por-generar" && (
-                        <button
-                            className="btn btn-success btn-sm"
-                            onClick={() =>
-                                navigate(`/compras/orden-compra/${row.id}`)
-                            }
-                        >
-                            Administrar OC
-                        </button>
-                    )}
-
-                    {filtroEstado !== "por-generar" && (
-                        <button
-                            className="btn btn-outline-success btn-sm"
-                            onClick={() =>
-                                navigate(`/compras/orden-compra/${row.id}`)
-                            }
-                        >
-                            Ver órdenes
-                        </button>
-                    )}
+                    {/* EXCEL */}
+                    <button
+                        className="btn btn-sm btn-outline-success explorador-btn-icono"
+                        title="Descargar requisición en Excel"
+                        aria-label="Descargar requisición en Excel"
+                        onClick={() => descargarExcel(row.id)}
+                    >
+                        <FaFileExcel />
+                    </button>
 
                 </div>
             ),
-            width: "240px"
+            width: "240px",
+            right: true,
+            ignoreRowClick: true
         }
 
     ];
@@ -172,150 +264,120 @@ function PendientesCompra() {
 
     return (
 
-        <div className="container-fluid">
+        <div className="container-fluid dash">
 
-            <div className="card shadow-sm">
+            {/* ========================= */}
+            {/* ENCABEZADO */}
+            {/* ========================= */}
 
-                <div className="card-body">
+            <div className="dash-hero mb-4">
+                <div className="dash-hero-texto">
+                    <span className="dash-eyebrow">Compras</span>
+                    <h2 className="dash-titulo">Órdenes de compra</h2>
+                    <div className="dash-contexto">
+                        <span>
+                            <FaShoppingCart /> Requisiciones aprobadas listas para gestionar su orden de compra
+                        </span>
+                    </div>
+                </div>
+            </div>
 
-                    <h3>Órdenes de compra</h3>
-                    {/*Filtro*/}
-                    <div className="d-flex gap-2 mb-4">
+            {/* ========================= */}
+            {/* FILTRO POR ESTADO */}
+            {/* ========================= */}
 
+            <div className="row g-3 mb-4">
+                {FILTROS.map(f => (
+                    <div className="col-12 col-md-4" key={f.valor}>
                         <button
-                            className={`btn ${
-                                filtroEstado === "por-generar"
-                                    ? "btn-primary"
-                                    : "btn-outline-primary"
-                            }`}
-                            onClick={() => setFiltroEstado("por-generar")}
+                            type="button"
+                            className={`filtro-kpi ${filtroEstado === f.valor ? "activo" : ""}`}
+                            onClick={() => setFiltroEstado(f.valor)}
+                            aria-pressed={filtroEstado === f.valor}
                         >
-                            Por generar
+                            <span className={`dash-kpi-icono dash-tono-${f.tono}`}>{f.icono}</span>
+                            <span className="filtro-kpi-texto">
+                                <span className="filtro-kpi-label">{f.texto}</span>
+                                <span className="pc-filtro-desc">{f.desc}</span>
+                            </span>
                         </button>
+                    </div>
+                ))}
+            </div>
 
-                        <button
-                            className={`btn ${
-                                filtroEstado === "proceso"
-                                    ? "btn-primary"
-                                    : "btn-outline-primary"
-                            }`}
-                            onClick={() => setFiltroEstado("proceso")}
-                        >
-                            En proceso
-                        </button>
+            {/* ========================= */}
+            {/* LISTADO */}
+            {/* ========================= */}
 
-                        <button
-                            className={`btn ${
-                                filtroEstado === "completadas"
-                                    ? "btn-primary"
-                                    : "btn-outline-primary"
-                            }`}
-                            onClick={() => setFiltroEstado("completadas")}
-                        >
-                            Completadas
-                        </button>
+            <div className="dash-panel p-0 overflow-hidden mb-4">
 
+                <div className="listado-toolbar">
+
+                    <div className="explorador-buscar listado-buscar">
+                        <FaSearch />
+                        <input
+                            type="text"
+                            placeholder="REQ, solicitante, empresa, categoría..."
+                            value={busqueda}
+                            onChange={(e) =>
+                                setBusqueda(e.target.value)
+                            }
+                            aria-label="Buscar requisición"
+                        />
+                        {busqueda && (
+                            <button
+                                type="button"
+                                className="pc-limpiar"
+                                title="Limpiar búsqueda"
+                                aria-label="Limpiar búsqueda"
+                                onClick={() =>
+                                    setBusqueda("")
+                                }
+                            >
+                                <FaTimes />
+                            </button>
+                        )}
                     </div>
 
-
-                    {/* BUSCADOR */}
-                    <div className="row mb-4">
-
-                        <div className="col-md-6">
-
-                            <label className="form-label">
-                                Buscar requisición
-                            </label>
-
-                            <div className="input-group">
-
-                                <input
-                                    type="text"
-                                    className="form-control"
-                                    placeholder="REQ, solicitante, empresa, categoría..."
-                                    value={busqueda}
-                                    onChange={(e) =>
-                                        setBusqueda(e.target.value)
-                                    }
-                                />
-
-                                {busqueda && (
-
-                                    <button
-                                        type="button"
-                                        className="btn btn-outline-secondary"
-                                        onClick={() =>
-                                            setBusqueda("")
-                                        }
-                                    >
-                                        Limpiar
-                                    </button>
-
-                                )}
-
-                            </div>
-
-                        </div>
-
-
-                        <div className="col-md-6 d-flex align-items-end">
-
-                            <div className="text-muted pb-2">
-
-                                Mostrando{" "}
-
-                                <strong>
-                                    {requisicionesFiltradas.length}
-                                </strong>
-
-                                {" "}de{" "}
-
-                                <strong>
-                                    {requisiciones.length}
-                                </strong>
-
-                                {" "}requisiciones
-
-                            </div>
-
-                        </div>
-
-                    </div>
-
-
-                    {/* TABLA */}
-                    <DataTable
-                        columns={columnas}
-                        data={requisicionesFiltradas}
-                        progressPending={loading}
-                        progressComponent={
-                            <div className="py-5">
-                                <div
-                                    className="spinner-border text-primary"
-                                    role="status"
-                                />
-                            </div>
-                        }
-                        pagination
-                        paginationPerPage={10}
-                        paginationRowsPerPageOptions={[
-                            10,
-                            25,
-                            50,
-                            100
-                        ]}
-                        noDataComponent={
-                            <div className="py-4 text-muted">
-                                No se encontraron requisiciones.
-                            </div>
-                        }
-                        highlightOnHover
-                        striped
-                        responsive
-                        persistTableHead
-                    />
+                    <span className="listado-contador">
+                        {filtroActual?.texto}: mostrando{" "}
+                        <strong>{requisicionesFiltradas.length}</strong>
+                        {" "}de{" "}
+                        <strong>{requisiciones.length}</strong>
+                    </span>
 
                 </div>
+
+                <DataTable
+                    columns={columnas}
+                    data={requisicionesFiltradas}
+                    customStyles={estilosTabla}
+                    progressPending={loading}
+                    progressComponent={
+                        <div className="dash-vacio">
+                            <div className="spinner-border text-primary" role="status" />
+                            <span>Cargando requisiciones…</span>
+                        </div>
+                    }
+                    pagination
+                    paginationPerPage={10}
+                    paginationRowsPerPageOptions={[
+                        10,
+                        25,
+                        50,
+                        100
+                    ]}
+                    paginationComponentOptions={paginacionEs}
+                    noDataComponent={
+                        <div className="dash-vacio">
+                            <FaClipboardList />
+                            <span>No se encontraron requisiciones.</span>
+                        </div>
+                    }
+                    highlightOnHover
+                    responsive
+                    persistTableHead
+                />
 
             </div>
 

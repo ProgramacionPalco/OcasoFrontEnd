@@ -5,6 +5,17 @@
     <link rel="icon" type="image/x-icon" href="/IconoOcaso2.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Ocaso ERP</title>
+    <script>
+      // Aplica el tema guardado antes de pintar para evitar parpadeo
+      (function () {
+        var t = null;
+        try { t = localStorage.getItem("tema"); } catch (e) {}
+        if (t !== "light" && t !== "dark") {
+          t = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+        }
+        document.documentElement.setAttribute("data-bs-theme", t);
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

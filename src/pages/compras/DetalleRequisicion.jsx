@@ -60,7 +60,7 @@ function DetalleRequisicion() {
                     <Workflow
                         detalle={detalle}
                     />
-                    <h4 className="fw-bold">
+                    <h4 className="fw-bold text-break">
 
                         {detalle.general.descripcion}
 

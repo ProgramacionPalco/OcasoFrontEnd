@@ -65,7 +65,7 @@ function GeneralTab({ detalle }) {
 
                 <h6>Descripción</h6>
 
-                <div className="border rounded p-3 bg-light">
+                <div className="border rounded p-3 bg-body-tertiary text-break">
 
                     {detalle.general.descripcion}
 
@@ -75,7 +75,7 @@ function GeneralTab({ detalle }) {
 
                 <h6>Comentarios</h6>
 
-                <div className="border rounded p-3 bg-light">
+                <div className="border rounded p-3 bg-body-tertiary text-break">
 
                     {detalle.general.comentarios}
 

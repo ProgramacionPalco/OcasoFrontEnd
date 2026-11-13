@@ -204,6 +204,7 @@ opacity:(noAplica || !puedeEditar)
   display:"flex",
   justifyContent:"space-between",
   alignItems:"center",
+  gap:"10px",
   marginBottom:"10px",
   border:"1px solid #ddd",
   padding:"10px",
@@ -211,10 +212,10 @@ opacity:(noAplica || !puedeEditar)
   }}
   >
 
-  <span>{item.file.name}</span>
+  <span className="text-break" style={{minWidth:0}}>{item.file.name}</span>
 
   <button
-  className="btn btn-danger btn-sm"
+  className="btn btn-danger btn-sm flex-shrink-0"
   onClick={()=>eliminarArchivo(index)}
   >
   Eliminar

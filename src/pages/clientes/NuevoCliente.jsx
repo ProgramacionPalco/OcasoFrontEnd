@@ -5,8 +5,82 @@ import Swal from "sweetalert2";
 import Select from "react-select";
 import makeAnimated from "react-select/animated";
 import { DataGrid } from "@mui/x-data-grid";
+import { useMediaQuery } from "@mui/material";
+import {
+  FaEnvelope,
+  FaPhone,
+  FaUserTie,
+  FaUserPlus,
+  FaCheck,
+  FaFileInvoice,
+  FaMapMarkerAlt,
+  FaCogs,
+  FaInfoCircle,
+  FaAddressBook,
+  FaConciergeBell,
+  FaGlobeAmericas,
+  FaArrowLeft,
+  FaArrowRight,
+  FaSave,
+} from "react-icons/fa";
+
+const PASOS = [
+  {
+    titulo: "Prospección",
+    desc: "Origen del cliente",
+    subtitulo: "Información capturada durante la prospección",
+    icono: <FaUserTie />,
+  },
+  {
+    titulo: "Datos fiscales",
+    desc: "RFC y razón social",
+    subtitulo: "Identificación fiscal del cliente",
+    icono: <FaFileInvoice />,
+  },
+  {
+    titulo: "Dirección",
+    desc: "Domicilio fiscal",
+    subtitulo: "Domicilio fiscal registrado ante el SAT",
+    icono: <FaMapMarkerAlt />,
+  },
+  {
+    titulo: "Configuración",
+    desc: "Ejecutivos y servicios",
+    subtitulo: "Responsables comerciales y servicios contratados",
+    icono: <FaCogs />,
+  },
+];
+
+const SERVICIOS_CLIENTE = [
+  { name: "servicioPalco", texto: "Servicio Palco" },
+  { name: "servicioSLP", texto: "Servicio SLP" },
+  { name: "servicioMAYA", texto: "Servicio MAYA" },
+  { name: "servicioOla", texto: "Servicio OLA" },
+];
+
+const estiloGridContactos = {
+  border: 0,
+  fontSize: 14,
+  "& .MuiDataGrid-columnHeaders, & .MuiDataGrid-columnHeader": {
+    backgroundColor: "var(--bs-tertiary-bg)",
+  },
+  "& .MuiDataGrid-columnHeaderTitle": {
+    fontSize: 12,
+    fontWeight: 700,
+    textTransform: "uppercase",
+    letterSpacing: ".04em",
+    color: "var(--bs-secondary-color)",
+  },
+  "& .MuiDataGrid-cell": {
+    borderColor: "var(--bs-border-color-translucent)",
+  },
+  "& .MuiDataGrid-row:hover": {
+    backgroundColor: "rgba(var(--bs-primary-rgb), .04)",
+  },
+};
 
 function NuevoCliente() {
+  const esMovil = useMediaQuery("(max-width:768px)");
   /* import del select para seleccion multiple */
   const animatedComponents = makeAnimated();
 
@@ -375,412 +449,551 @@ function NuevoCliente() {
   }
 }, [prospecto?.idEjecutivoAltas]);
 
-  return (
-    <div className="card p-4">
-      <h3>Nuevo Cliente</h3>
+  const pasoActual = PASOS[step];
 
-      <div className="mb-4">
-        <span className={step === 0 ? "fw-bold" : ""}>0- Prospeccion</span>
-        {" → "}
-        <span className={step === 1 ? "fw-bold" : ""}>1- Datos</span>
-        {" → "}
-        <span className={step === 2 ? "fw-bold" : ""}>2- Dirección</span>
-        {" → "}
-        <span className={step === 3 ? "fw-bold" : ""}>3- Configuración</span>
+  return (
+    <div className="container-fluid dash">
+
+      {/* ========================= */}
+      {/* ENCABEZADO */}
+      {/* ========================= */}
+
+      <div className="dash-hero mb-4">
+        <div className="dash-hero-texto">
+          <span className="dash-eyebrow">Clientes</span>
+          <h2 className="dash-titulo">Nuevo cliente</h2>
+          <div className="dash-contexto">
+            {clienteProspeccion ? (
+              <span>
+                <FaUserTie /> Alta desde prospección
+                {prospecto.nombre ? `: ${prospecto.nombre}` : ""}
+              </span>
+            ) : (
+              <span><FaUserPlus /> Alta directa de cliente</span>
+            )}
+          </div>
+        </div>
       </div>
 
-      {step === 0 && (
-        <div>
-          <h5>Datos de prospeccion</h5>
+      {/* ========================= */}
+      {/* PASOS */}
+      {/* ========================= */}
 
-          {!clienteProspeccion ? (
-            <>
-              <div
-                className="alert alert-warning d-flex align-items-center"
-                role="alert"
+      <ol className="nc-pasos mb-4">
+        {PASOS.map((p, i) => {
+          const estado = i === step ? "activo" : i < step ? "completo" : "";
+          return (
+            <li key={p.titulo} className={`nc-paso ${estado}`}>
+              <button
+                type="button"
+                className="nc-paso-boton"
+                onClick={() => i < step && setStep(i)}
+                disabled={i >= step}
+                aria-current={i === step ? "step" : undefined}
               >
-                <svg
-                  className="bi flex-shrink-0 me-2"
-                  role="img"
-                  aria-label="Warning:"
-                >
-                  <use xlink:href="#exclamation-triangle-fill" />
-                </svg>
-                <div>
-                  No accedio desde prospeccion, por lo tanto esta seccion no
-                  contiene datos
+                <span className="nc-paso-num">
+                  {i < step ? <FaCheck /> : i + 1}
+                </span>
+                <span className="nc-paso-texto">
+                  <span className="nc-paso-titulo">{p.titulo}</span>
+                  <span className="nc-paso-desc">{p.desc}</span>
+                </span>
+              </button>
+            </li>
+          );
+        })}
+      </ol>
+
+      {/* ========================= */}
+      {/* FORMULARIO */}
+      {/* ========================= */}
+
+      <div className="dash-panel nc-form p-0 overflow-hidden mb-4">
+
+        <div className="nc-form-header">
+          <span className="nc-form-icono">{pasoActual.icono}</span>
+          <div>
+            <h3 className="nc-form-titulo">{pasoActual.titulo}</h3>
+            <div className="nc-form-sub">{pasoActual.subtitulo}</div>
+          </div>
+          <span className="nc-form-paso">Paso {step + 1} de {PASOS.length}</span>
+        </div>
+
+        <div className="nc-form-cuerpo">
+
+          {step === 0 && (
+            <>
+              {!clienteProspeccion ? (
+                <div className="nc-aviso">
+                  <FaInfoCircle />
+                  <div>
+                    <strong>No accedió desde prospección.</strong>
+                    <span>
+                      Esta sección no contiene datos; continúe con el siguiente paso
+                      para capturar la información del cliente.
+                    </span>
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <>
+                  <div className="row g-3">
+                    <div className="col-md-6">
+                      <label className="form-label">Nombre del prospecto</label>
+                      <input
+                        className="form-control"
+                        readOnly
+                        autoComplete="off"
+                        value={prospecto.nombre || ""}
+                        onChange={(e) =>
+                          setProspecto({
+                            ...prospecto,
+                            nombre: e.target.value,
+                          })
+                        }
+                      />
+                    </div>
+
+                    <div className="col-md-6">
+                      <label className="form-label">Tipo compañía</label>
+                      <select
+                        className="form-select"
+                        disabled
+                        value={prospecto.idTipoEmpresa}
+                      >
+                        <option value="">Seleccione tipo empresa</option>
+
+                        {tipoEmpresa.map((r) => (
+                          <option key={r.id} value={r.id}>
+                            {r.tipo}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="col-12">
+                      <label className="form-label">Servicio</label>
+
+                      <Select
+                        readOnly
+                        closeMenuOnSelect={false}
+                        components={animatedComponents}
+                        isMulti
+                        classNamePrefix="rs"
+                        placeholder="Seleccione servicio"
+                        options={servicios.map((r) => ({
+                          value: r.id,
+                          label: r.servicio,
+                        }))}
+                        value={servicios
+                          .map((r) => ({
+                            value: r.id,
+                            label: r.servicio,
+                          }))
+                          .filter((opcion) =>
+                            (serviciosRegistrados ?? [])
+                              .map((x) => x.idServicio)
+                              .includes(opcion.value),
+                          )}
+                      />
+                    </div>
+
+                    <div className="col-md-4">
+                      <label className="form-label">Aduanas</label>
+                      <input
+                        className="form-control"
+                        readOnly
+                        autoComplete="off"
+                        value={prospecto.aduanas || ""}
+                        onChange={(e) =>
+                          setProspecto({
+                            ...prospecto,
+                            aduanas: e.target.value,
+                          })
+                        }
+                      />
+                    </div>
+
+                    <div className="col-md-4">
+                      <label className="form-label">Tipo contacto</label>
+                      <input
+                        className="form-control"
+                        readOnly
+                        autoComplete="off"
+                        value={prospecto.tipoContacto || ""}
+                        onChange={(e) =>
+                          setProspecto({
+                            ...prospecto,
+                            tipoContacto: e.target.value,
+                          })
+                        }
+                      />
+                    </div>
+
+                    <div className="col-md-4">
+                      <label className="form-label">Nivel de urgencia</label>
+                      <select
+                        className="form-select"
+                        disabled
+                        value={prospecto.nivelUrgencia}
+                      >
+                        <option value="">Seleccione nivel de urgencia</option>
+
+                        <option key="Baja"> Baja </option>
+                        <option key="Media"> Media </option>
+                        <option key="Alta"> Alta </option>
+                        <option key="Critica"> Critica </option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <h4 className="nc-seccion">
+                    <FaAddressBook /> Contactos del prospecto
+                    <span className="np-contador">{formContactos.length}</span>
+                  </h4>
+
+                  {formContactos.length === 0 ? (
+                    <div className="np-vacio">
+                      <FaAddressBook /> Sin contactos registrados.
+                    </div>
+                  ) : esMovil ? (
+                    <div className="d-flex flex-column gap-2">
+                      {formContactos.map((c, i) => (
+                        <div key={c.id ?? i} className="nc-contacto">
+                          <span className="cliente-avatar">
+                            {(c.contacto || "?").trim().charAt(0).toUpperCase()}
+                          </span>
+                          <div style={{ minWidth: 0 }}>
+                            <div className="fw-semibold text-break">{c.contacto}</div>
+                            {c.correo && (
+                              <div className="small text-break text-muted">
+                                <FaEnvelope className="me-1" />{c.correo}
+                              </div>
+                            )}
+                            {(c.telefono || c.extension) && (
+                              <div className="small text-muted">
+                                <FaPhone className="me-1" />
+                                {c.telefono}
+                                {c.extension ? ` ext. ${c.extension}` : ""}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="np-tabla">
+                      <DataGrid
+                        rows={formContactos}
+                        columns={columnsContactos}
+                        pageSizeOptions={[5, 10, 25, 30, 50]}
+                        disableRowSelectionOnClick
+                        autoHeight
+                        initialState={{
+                          pagination: {
+                            paginationModel: { pageSize: 30 },
+                          },
+                        }}
+                        checkboxSelection
+                        sx={estiloGridContactos}
+                      />
+                    </div>
+                  )}
+                </>
+              )}
             </>
-          ) : (
-            <div className="row">
-              <div className="form-group">
-                <label>Nombre del prospecto</label>
+          )}
+
+          {step === 1 && (
+            <div className="row g-3">
+              <div className="col-md-4">
+                <label className="form-label">RFC</label>
                 <input
-                  readOnly
-                  autoComplete="off"
-                  value={prospecto.nombre || ""}
-                  onChange={(e) =>
-                    setProspecto({
-                      ...prospecto,
-                      nombre: e.target.value,
-                    })
-                  }
+                  className="form-control nc-mayusculas"
+                  placeholder="Ej. ABC123456XYZ"
+                  name="rfc"
+                  value={cliente.rfc}
+                  onChange={handleChange}
                 />
               </div>
-              <div className="form-group span-2-prospectos">
-                <label>Servicio</label>
 
-                <Select
-                  readOnly
-                  closeMenuOnSelect={false}
-                  components={animatedComponents}
-                  isMulti
-                  placeholder="Seleccione servicio"
-                  options={servicios.map((r) => ({
-                    value: r.id,
-                    label: r.servicio,
-                  }))}
-                  value={servicios
-                    .map((r) => ({
-                      value: r.id,
-                      label: r.servicio,
-                    }))
-                    .filter((opcion) =>
-                      (serviciosRegistrados ?? [])
-                        .map((x) => x.idServicio)
-                        .includes(opcion.value),
-                    )}
+              <div className="col-md-8">
+                <label className="form-label">Razón social</label>
+                <input
+                  className="form-control"
+                  placeholder="Nombre o razón social del cliente"
+                  name="razonSocial"
+                  value={cliente.razonSocial}
+                  onChange={handleChange}
                 />
               </div>
-              <div className="form-group">
-                <label>Tipo Compañia</label>
 
-                <select disabled value={prospecto.idTipoEmpresa}>
-                  <option value="">Seleccione tipo empresa</option>
-
-                  {tipoEmpresa.map((r) => (
-                    <option key={r.id} value={r.id}>
-                      {r.tipo}
-                    </option>
-                  ))}
+              <div className="col-md-6">
+                <label className="form-label">Tipo de persona</label>
+                <select
+                  className="form-select"
+                  name="personaFM"
+                  value={cliente.personaFM}
+                  onChange={handleChange}
+                >
+                  <option value="">Seleccione tipo de persona</option>
+                  <option value="1">Persona Física</option>
+                  <option value="2">Persona Moral</option>
                 </select>
               </div>
 
-              <div className="form-group">
-                <label>Aduanas</label>
-
-                <input
-                  readOnly
-                  autoComplete="off"
-                  value={prospecto.aduanas || ""}
-                  onChange={(e) =>
-                    setProspecto({
-                      ...prospecto,
-                      aduanas: e.target.value,
-                    })
-                  }
-                />
-              </div>
-
-              <div className="form-group">
-                <label>Tipo Contacto</label>
-
-                <input
-                  readOnly
-                  autoComplete="off"
-                  value={prospecto.tipoContacto || ""}
-                  onChange={(e) =>
-                    setProspecto({
-                      ...prospecto,
-                      tipoContacto: e.target.value,
-                    })
-                  }
-                />
-              </div>
-
-              <div className="form-group">
-                <label>Nivel Urgencia</label>
-
-                <select disabled value={prospecto.nivelUrgencia}>
-                  <option value="">Seleccione nivel de urgencia</option>
-
-                  <option key="Baja"> Baja </option>
-                  <option key="Media"> Media </option>
-                  <option key="Alta"> Alta </option>
-                  <option key="Critica"> Critica </option>
+              <div className="col-md-6">
+                <label className="form-label">Tipo de cliente</label>
+                <select
+                  className="form-select"
+                  name="tipoClienteId"
+                  value={cliente.tipoClienteId ?? ""}
+                  onChange={handleChange}
+                >
+                  <option value="">Seleccione tipo de cliente</option>
+                  <option value="1">Importador</option>
+                  <option value="2">Exportador</option>
+                  <option value="3">Mixto</option>
                 </select>
               </div>
+            </div>
+          )}
 
-              <div className="form-group mt-3">
-                <h5 className="fw-bold m-0">Contactos prospectos</h5>
-
-                <DataGrid
-                  rows={formContactos}
-                  columns={columnsContactos}
-                  pageSizeOptions={[5, 10, 25, 50]}
-                  disableRowSelectionOnClick
-                  initialState={{
-                    pagination: {
-                      paginationModel: { pageSize: 30 },
-                    },
-                  }}
-                  checkboxSelection
-                  sx={{
-                    backgroundColor: "#fff",
-                    borderRadius: "10px",
-                    border: "1px solid #e5e7eb",
-
-                    "& .MuiDataGrid-columnHeaders": {
-                      backgroundColor: "#1f2937",
-                      color: "#fff",
-                      fontWeight: "bold",
-                    },
-
-                    "& .MuiDataGrid-columnHeaderTitle": {
-                      fontWeight: "bold",
-                      color: "#fff",
-                    },
-
-                    "& .MuiDataGrid-columnHeader": {
-                      backgroundColor: "#1f2937",
-                      color: "#fff",
-                    },
-
-                    "& .MuiDataGrid-cell": {
-                      borderColor: "#f1f5f9",
-                    },
-
-                    "& .MuiDataGrid-row:hover": {
-                      backgroundColor: "#f8fafc",
-                    },
-                  }}
+          {step === 2 && (
+            <div className="row g-3">
+              <div className="col-md-6">
+                <label className="form-label">Calle</label>
+                <input
+                  className="form-control"
+                  name="calle"
+                  value={cliente.calle}
+                  onChange={handleChange}
+                />
+              </div>
+              <div className="col-6 col-md-3">
+                <label className="form-label">Número</label>
+                <input
+                  className="form-control"
+                  name="numero"
+                  value={cliente.numero}
+                  onChange={handleChange}
+                />
+              </div>
+              <div className="col-6 col-md-3">
+                <label className="form-label">Número interior</label>
+                <input
+                  className="form-control"
+                  placeholder="Opcional"
+                  name="numeroInterior"
+                  value={cliente.numeroInterior}
+                  onChange={handleChange}
+                />
+              </div>
+              <div className="col-md-8">
+                <label className="form-label">Colonia</label>
+                <input
+                  className="form-control"
+                  name="colonia"
+                  value={cliente.colonia}
+                  onChange={handleChange}
+                />
+              </div>
+              <div className="col-md-4">
+                <label className="form-label">Código postal</label>
+                <input
+                  className="form-control"
+                  name="cp"
+                  inputMode="numeric"
+                  value={cliente.cp}
+                  onChange={handleChange}
+                />
+              </div>
+              <div className="col-md-4">
+                <label className="form-label">Ciudad</label>
+                <input
+                  className="form-control"
+                  name="ciudad"
+                  value={cliente.ciudad}
+                  onChange={handleChange}
+                />
+              </div>
+              <div className="col-md-4">
+                <label className="form-label">Estado</label>
+                <input
+                  className="form-control"
+                  name="estado"
+                  value={cliente.estado}
+                  onChange={handleChange}
+                />
+              </div>
+              <div className="col-md-4">
+                <label className="form-label">País</label>
+                <input
+                  className="form-control"
+                  name="pais"
+                  value={cliente.pais}
+                  onChange={handleChange}
                 />
               </div>
             </div>
           )}
-          <button className="btn btn-primary mt-3" onClick={() => setStep(1)}>
-            Siguiente
-          </button>
+
+          {step === 3 && (
+            <>
+              <div className="row g-3">
+                {/* Ejecutivo de ventas */}
+                <div className="col-md-4">
+                  <label className="form-label">Ejecutivo de altas responsable</label>
+                  <select
+                    className="form-select"
+                    name="ejecutivoVentaId"
+                    value={cliente.ejecutivoVentaId || ""}
+                    onChange={handleChange}
+                    disabled={!!prospecto?.idEjecutivoAltas}
+                  >
+                    <option value="">Seleccione ejecutivo de altas</option>
+
+                    {ejecutivosVentas.map((e) => (
+                      <option key={e.id} value={e.id}>
+                        {e.nombre + " " + e.apellidoPaterno + " " + e.apellidoMaterno}
+                      </option>
+                    ))}
+                  </select>
+                  {!!prospecto?.idEjecutivoAltas && (
+                    <div className="form-text">Asignado desde prospección.</div>
+                  )}
+                </div>
+
+                {/* Ejecutivo */}
+                <div className="col-md-4">
+                  <label className="form-label">Ejecutivo</label>
+                  <select
+                    className="form-select"
+                    name="idEjecutivo"
+                    value={cliente.idEjecutivo ?? ""}
+                    onChange={handleChange}
+                  >
+                    <option value="">Seleccione ejecutivo</option>
+
+                    {ejecutivos.map((e) => (
+                      <option key={e.id} value={e.id}>
+                        {e.nombre}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Empresa */}
+                <div className="col-md-4">
+                  <label className="form-label">Empresa razón</label>
+                  <select
+                    className="form-select"
+                    name="idRazon"
+                    value={cliente.idRazon ?? ""}
+                    onChange={handleChange}
+                  >
+                    <option value="">Seleccione empresa</option>
+
+                    {empresas.map((e) => (
+                      <option key={e.id} value={e.id}>
+                        {e.nombreEmpresa}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <h4 className="nc-seccion">
+                <FaConciergeBell /> Servicios contratados
+              </h4>
+
+              <div className="nc-opciones">
+                {SERVICIOS_CLIENTE.map((s) => (
+                  <label
+                    key={s.name}
+                    className={`nc-opcion ${cliente[s.name] ? "activa" : ""}`}
+                  >
+                    <span className="nc-opcion-texto">
+                      <span className="nc-opcion-titulo">{s.texto}</span>
+                      <span className="nc-opcion-desc">
+                        {cliente[s.name] ? "Activo" : "No contratado"}
+                      </span>
+                    </span>
+                    <span className="form-check form-switch m-0">
+                      <input
+                        className="form-check-input"
+                        type="checkbox"
+                        role="switch"
+                        name={s.name}
+                        checked={!!cliente[s.name]}
+                        onChange={handleChange}
+                      />
+                    </span>
+                  </label>
+                ))}
+              </div>
+
+              <h4 className="nc-seccion">
+                <FaGlobeAmericas /> Alcance
+              </h4>
+
+              <label className={`nc-opcion nc-opcion-ancha ${cliente.esInternacional ? "activa" : ""}`}>
+                <span className="nc-opcion-texto">
+                  <span className="nc-opcion-titulo">Cliente internacional</span>
+                  <span className="nc-opcion-desc">
+                    Marque esta opción si el cliente opera fuera de México.
+                  </span>
+                </span>
+                <span className="form-check form-switch m-0">
+                  <input
+                    className="form-check-input"
+                    type="checkbox"
+                    role="switch"
+                    name="esInternacional"
+                    checked={!!cliente.esInternacional}
+                    onChange={handleChange}
+                  />
+                </span>
+              </label>
+            </>
+          )}
         </div>
-      )}
 
-      {step === 1 && (
-        <div>
-          <h5>Datos Fiscales</h5>
+        {/* ========================= */}
+        {/* NAVEGACIÓN */}
+        {/* ========================= */}
 
-          <input
-            className="form-control mb-2"
-            placeholder="RFC"
-            name="rfc"
-            value={cliente.rfc}
-            onChange={handleChange}
-          />
-
-          <input
-            className="form-control mb-2"
-            placeholder="Razón Social"
-            name="razonSocial"
-            value={cliente.razonSocial}
-            onChange={handleChange}
-          />
-
-          <select
-            className="form-control mb-2"
-            name="personaFM"
-            onChange={handleChange}
-          >
-            <option value="">Tipo Persona</option>
-            <option value="1">Persona Física</option>
-            <option value="2">Persona Moral</option>
-          </select>
-
-          <select
-            className="form-control"
-            name="tipoClienteId"
-            onChange={handleChange}
-          >
-            <option value="">Tipo Cliente</option>
-            <option value="1">Importador</option>
-            <option value="2">Exportador</option>
-            <option value="3">Mixto</option>
-          </select>
-          <button
-            className="btn btn-secondary mt-3 me-3"
-            onClick={() => setStep(0)}
-          >
-            Regresar
-          </button>
-          <button className="btn btn-primary mt-3" onClick={() => setStep(2)}>
-            Siguiente
-          </button>
-        </div>
-      )}
-
-      {step === 2 && (
-        <div>
-          <h5>Dirección</h5>
-
-          <input
-            className="form-control mb-2"
-            placeholder="Calle"
-            name="calle"
-            onChange={handleChange}
-          />
-          <input
-            className="form-control mb-2"
-            placeholder="Número"
-            name="numero"
-            onChange={handleChange}
-          />
-          <input
-            className="form-control mb-2"
-            placeholder="Número Interior"
-            name="numeroInterior"
-            onChange={handleChange}
-          />
-          <input
-            className="form-control mb-2"
-            placeholder="Colonia"
-            name="colonia"
-            onChange={handleChange}
-          />
-          <input
-            className="form-control mb-2"
-            placeholder="CP"
-            name="cp"
-            onChange={handleChange}
-          />
-          <input
-            className="form-control mb-2"
-            placeholder="Ciudad"
-            name="ciudad"
-            onChange={handleChange}
-          />
-          <input
-            className="form-control mb-2"
-            placeholder="Estado"
-            name="estado"
-            onChange={handleChange}
-          />
-          <input
-            className="form-control mb-2"
-            placeholder="País"
-            name="pais"
-            onChange={handleChange}
-          />
-
-          <button className="btn btn-secondary me-2" onClick={() => setStep(1)}>
-            Regresar
-          </button>
-
-          <button className="btn btn-primary" onClick={() => setStep(3)}>
-            Siguiente
-          </button>
-        </div>
-      )}
-
-      {step === 3 && (
-        <div>
-          <h5>Configuración Comercial</h5>
-          {/* Ejecutivo de ventas */}
-          <select
-            className="form-control mb-3"
-            name="ejecutivoVentaId"
-            value={cliente.ejecutivoVentaId || ""}
-            onChange={handleChange}
-            disabled={!!prospecto?.idEjecutivoAltas}
-          >
-            <option value="">Ejecutivo de altas responsable</option>
-
-            {ejecutivosVentas.map((e) => (
-              <option key={e.id} value={e.id}>
-                {e.nombre + " " + e.apellidoPaterno + " " + e.apellidoMaterno}
-              </option>
-            ))}
-          </select>
-
-          {/* Ejecutivo */}
-          <select
-            className="form-control mb-3"
-            name="idEjecutivo"
-            onChange={handleChange}
-          >
-            <option value="">Seleccione Ejecutivo</option>
-
-            {ejecutivos.map((e) => (
-              <option key={e.id} value={e.id}>
-                {e.nombre}
-              </option>
-            ))}
-          </select>
-
-          {/* Empresa */}
-          <select
-            className="form-control mb-3"
-            name="idRazon"
-            onChange={handleChange}
-          >
-            <option value="">Empresa Razón</option>
-
-            {empresas.map((e) => (
-              <option key={e.id} value={e.id}>
-                {e.nombreEmpresa}
-              </option>
-            ))}
-          </select>
-
-          <label className="form-check">
-            <input
-              type="checkbox"
-              name="servicioPalco"
-              onChange={handleChange}
-            />
-            Servicio Palco
-          </label>
-
-          <label className="form-check">
-            <input type="checkbox" name="servicioSLP" onChange={handleChange} />
-            Servicio SLP
-          </label>
-
-          <label className="form-check">
-            <input
-              type="checkbox"
-              name="servicioMAYA"
-              onChange={handleChange}
-            />
-            Servicio MAYA
-          </label>
-
-          <label className="form-check">
-            <input type="checkbox" name="servicioOla" onChange={handleChange} />
-            Servicio OLA
-          </label>
-
-          <label className="form-check mt-3">
-            <input
-              type="checkbox"
-              name="esInternacional"
-              onChange={handleChange}
-            />
-            Cliente Internacional
-          </label>
-
-          <div className="mt-3">
+        <div className="nc-pie">
+          {step > 0 ? (
             <button
-              className="btn btn-secondary me-2"
-              onClick={() => setStep(2)}
+              type="button"
+              className="btn btn-outline-secondary np-btn"
+              onClick={() => setStep(step - 1)}
             >
-              Regresar
+              <FaArrowLeft /> Regresar
             </button>
+          ) : (
+            <span />
+          )}
 
-            <button className="btn btn-success" onClick={guardarCliente}>
-              Guardar Cliente
+          {step < PASOS.length - 1 ? (
+            <button
+              type="button"
+              className="btn btn-primary np-btn"
+              onClick={() => setStep(step + 1)}
+            >
+              Siguiente <FaArrowRight />
             </button>
-          </div>
+          ) : (
+            <button
+              type="button"
+              className="btn btn-success np-btn"
+              onClick={guardarCliente}
+            >
+              <FaSave /> Guardar cliente
+            </button>
+          )}
         </div>
-      )}
+      </div>
     </div>
   );
 }

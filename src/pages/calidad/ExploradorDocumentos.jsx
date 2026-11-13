@@ -14,7 +14,19 @@ import {
   FaFileExcel,
   FaFileAlt,
   FaList,
-  FaTh
+  FaTh,
+  FaFolderOpen,
+  FaLock,
+  FaHome,
+  FaChevronRight,
+  FaSearch,
+  FaCheckCircle,
+  FaEye,
+  FaDownload,
+  FaHistory,
+  FaUpload,
+  FaPrint,
+  FaCloudUploadAlt
 } from "react-icons/fa";
 
 export default function ExploradorDocumentos(){
@@ -277,90 +289,208 @@ useEffect(() => {
     }
   };
 
+  // ==============================
+  // DATOS DE PRESENTACIÓN
+  // ==============================
+
+  const TITULOS = {
+    iso: "Sistema de Gestión ISO",
+    oea: "Operador Económico Autorizado"
+  };
+
+  const tipoTexto = (tipo || "").toUpperCase();
+  const tituloTipo = TITULOS[(tipo || "").toLowerCase()] ?? `Documentos ${tipoTexto}`;
+
+  const totalCarpetas = filtrados.filter(x => x.tipo === "carpeta").length;
+  const totalArchivos = filtrados.length - totalCarpetas;
+
+  // Carpetas primero, luego archivos
+  const ordenados = [...filtrados].sort((a, b) => {
+    if (a.tipo === "carpeta" && b.tipo !== "carpeta") return -1;
+    if (a.tipo !== "carpeta" && b.tipo === "carpeta") return 1;
+    return 0;
+  });
+
+  const extension = (item) =>
+    item.tipo === "carpeta" ? "carpeta" : item.nombre.split(".").pop().toLowerCase();
+
+  const claseTipo = (item) => {
+    const ext = extension(item);
+    if (ext === "carpeta") return "archivo-carpeta";
+    if (ext === "pdf") return "archivo-pdf";
+    if (ext === "doc" || ext === "docx") return "archivo-word";
+    if (ext === "xls" || ext === "xlsx") return "archivo-excel";
+    return "archivo-otro";
+  };
+
+  const fechaCorta = (f) => (f ? new Date(f).toLocaleDateString("es-MX") : null);
+
   return(
-    <div className="container-fluid">
-      {/* HEADER */}
-        <div className="mb-3">
+    <div className="container-fluid dash">
 
-        <h4 className="mb-1 text-uppercase">
-            Calidad / {tipo}
-        </h4>
+      {/* ========================= */}
+      {/* ENCABEZADO */}
+      {/* ========================= */}
 
-        {/*  BREADCRUMB */}
-        <div style={{fontSize:"14px"}}>
+      <div className="dash-hero mb-4">
+        <div className="dash-hero-texto">
+          <span className="dash-eyebrow">Calidad · {tipoTexto}</span>
+          <h2 className="dash-titulo">{tituloTipo}</h2>
+          <div className="dash-contexto">
+            <span><FaFolderOpen /> {totalCarpetas} carpetas</span>
+            <span><FaFileAlt /> {totalArchivos} documentos</span>
+            <span><FaLock /> Documentos controlados</span>
+          </div>
+        </div>
+      </div>
 
-            <span 
-            style={{cursor:"pointer", color:"#2563eb", fontWeight:"500"}}
+      {/* ========================= */}
+      {/* BARRA DE NAVEGACIÓN */}
+      {/* ========================= */}
+
+      <div className="explorador-toolbar mb-3">
+
+        {/* BREADCRUMB */}
+        <nav className="explorador-ruta" aria-label="Ruta">
+
+          <button
+            type="button"
+            className={`explorador-miga ${partesRuta.length === 0 ? "actual" : ""}`}
             onClick={()=>cargar("")}
-            >
-            {tipo.toUpperCase()}
-            </span>
+          >
+            <FaHome /> {tipoTexto}
+          </button>
 
-            {partesRuta.map((parte,index)=>(
-            <span key={index}>
-                {" / "}
-                <span
-                style={{cursor:"pointer", color:"#2563eb"}}
+          {partesRuta.map((parte,index)=>(
+            <span key={index} className="explorador-ruta-tramo">
+              <FaChevronRight className="explorador-ruta-sep" />
+              <button
+                type="button"
+                className={`explorador-miga ${index === partesRuta.length - 1 ? "actual" : ""}`}
                 onClick={()=>irRuta(index)}
-                >
-                {parte}
-                </span>
-            </span>
-            ))}
-
-        </div>
-
-        </div>
-
-        {/* CONTROLES DERECHA */}
-        <div className="d-flex justify-content-end align-items-center mb-3 gap-2">
-
-        <input
-            type="text"
-            placeholder="Buscar..."
-            className="form-control"
-            style={{width:200}}
-            value={busqueda}
-            onChange={(e)=>setBusqueda(e.target.value)}
-        />
-
-        <button className={`btn ${vista==="grid"?"btn-dark":"btn-outline-dark"}`} onClick={()=>setVista("grid")}>
-            <FaTh />
-        </button>
-
-        <button className={`btn ${vista==="list"?"btn-dark":"btn-outline-dark"}`} onClick={()=>setVista("list")}>
-            <FaList />
-        </button>
-
-        </div>  
-
-      {/* GRID */}
-      {!loading && vista === "grid" && (
-        <div className="row">
-          {filtrados.map((item,index)=>(
-            <div key={index} className="col-md-3 mb-4">
-              <div 
-                className="card p-3 h-100 shadow-sm"
-                style={{cursor:"pointer"}}
-                onClick={()=>handleClick(item)}
               >
-                <div className="text-center mb-3">
-                  {getIcon(item)}
-                </div>
+                {parte}
+              </button>
+            </span>
+          ))}
 
+        </nav>
 
-                <div className="text-center">
-                  <p className="mb-1">{item.nombre}</p>
-                </div>
+        {/* CONTROLES */}
+        <div className="explorador-controles">
+
+          <div className="explorador-buscar">
+            <FaSearch />
+            <input
+              type="text"
+              placeholder="Buscar en esta carpeta..."
+              value={busqueda}
+              onChange={(e)=>setBusqueda(e.target.value)}
+              aria-label="Buscar"
+            />
+          </div>
+
+          <div className="explorador-vista" role="group" aria-label="Tipo de vista">
+            <button
+              type="button"
+              className={vista==="grid" ? "activo" : ""}
+              onClick={()=>setVista("grid")}
+              title="Vista de cuadrícula"
+              aria-label="Vista de cuadrícula"
+            >
+              <FaTh />
+            </button>
+            <button
+              type="button"
+              className={vista==="list" ? "activo" : ""}
+              onClick={()=>setVista("list")}
+              title="Vista de lista"
+              aria-label="Vista de lista"
+            >
+              <FaList />
+            </button>
+          </div>
+
+        </div>
+
+      </div>
+
+      {/* ========================= */}
+      {/* CARGANDO / VACÍO */}
+      {/* ========================= */}
+
+      {loading && (
+        <div className="dash-panel">
+          <div className="dash-vacio">
+            <div className="spinner-border text-primary" role="status" />
+            <span>Cargando documentos…</span>
+          </div>
+        </div>
+      )}
+
+      {!loading && ordenados.length === 0 && (
+        <div className="dash-panel">
+          <div className="dash-vacio">
+            <FaFolderOpen />
+            <span>
+              {busqueda
+                ? "No se encontraron elementos con esa búsqueda."
+                : "Esta carpeta está vacía."}
+            </span>
+          </div>
+        </div>
+      )}
+
+      {/* ========================= */}
+      {/* GRID */}
+      {/* ========================= */}
+
+      {!loading && vista === "grid" && ordenados.length > 0 && (
+        <div className="explorador-grid">
+          {ordenados.map((item,index)=>(
+            <div
+              key={index}
+              className={`archivo-card ${claseTipo(item)}`}
+              role="button"
+              tabIndex={0}
+              onClick={()=>handleClick(item)}
+              onKeyDown={(e)=>{
+                if (e.key === "Enter") handleClick(item);
+              }}
+              title={item.nombre}
+            >
+              <div className="archivo-icono">
+                {getIcon(item)}
+              </div>
+
+              <div className="archivo-nombre">{item.nombre}</div>
+
+              <div className="archivo-meta">
+                {item.tipo === "carpeta" ? (
+                  <span>Carpeta</span>
+                ) : (
+                  <>
+                    <span className="archivo-ext">{extension(item).toUpperCase()}</span>
+                    {item.version && <span>v{item.version}</span>}
+                    {fechaCorta(item.fechaModificacion) && (
+                      <span>{fechaCorta(item.fechaModificacion)}</span>
+                    )}
+                  </>
+                )}
               </div>
             </div>
           ))}
         </div>
       )}
 
+      {/* ========================= */}
       {/* LISTA */}
-      {!loading && vista === "list" && (
-        <table className="table table-hover">
+      {/* ========================= */}
+
+      {!loading && vista === "list" && ordenados.length > 0 && (
+        <div className="dash-panel p-0 overflow-hidden">
+        <div className="table-responsive">
+        <table className="table table-hover align-middle mb-0 explorador-tabla">
 
             <thead>
             <tr>
@@ -368,12 +498,12 @@ useEffect(() => {
                 <th>Versión</th>
                 <th>Estado</th>
                 <th>Fecha</th>
-                <th>Acciones</th>
+                <th className="text-end">Acciones</th>
             </tr>
             </thead>
 
         <tbody>
-        {filtrados.map((item,index)=>{
+        {ordenados.map((item,index)=>{
 
             const esVigente =
                 item.esVigente ?? item.EsVigente;
@@ -381,57 +511,60 @@ useEffect(() => {
             return(
             <tr key={index}>
 
-                <td className="d-flex align-items-center gap-2">
-                  {getIcon(item)}
-                  {item.nombre}
+                <td>
+                  <div className={`explorador-nombre ${claseTipo(item)}`}>
+                    <span className="archivo-icono archivo-icono-sm">
+                      {getIcon(item)}
+                    </span>
+                    <span className="text-break">{item.nombre}</span>
+                  </div>
                 </td>
 
                 {item.tipo === "carpeta" ? (
                 <>
-                    <td>-</td>
-                    <td>-</td>
-                    <td>-</td>
-                    <td>
+                    <td className="text-muted">—</td>
+                    <td className="text-muted">—</td>
+                    <td className="text-muted">—</td>
+                    <td className="text-end">
                     <button
-                        className="btn btn-sm btn-primary"
+                        className="btn btn-sm btn-outline-primary dash-btn-tabla"
                         onClick={()=>entrarCarpeta(item.nombre)}
                     >
-                        Abrir
+                        <FaFolderOpen /> Abrir
                     </button>
                     </td>
                 </>
                 ) : (
                 <>
                     <td>
-
-                      <span className="fw-bold">
+                      <span className="explorador-version">
                           v{item.version || 1}
                       </span>
-
                     </td>
 
                     <td>
-
-                    <span className="badge bg-success">
-                        Vigente
-                    </span>
-
+                      <span className="explorador-estado">
+                          <FaCheckCircle /> Vigente
+                      </span>
                     </td>
 
-                    <td>
+                    <td className="text-muted">
                     {item.fechaModificacion
                         ? new Date(item.fechaModificacion).toLocaleDateString()
                         : "-"}
                     </td>
 
-                    <td className="d-flex gap-2">
+                    <td>
+                    <div className="explorador-acciones">
 
                     {esVigente && (
                         <button
-                        className="btn btn-sm btn-primary"
+                        className="btn btn-sm btn-primary explorador-btn-icono"
                         onClick={()=>handleClick(item)}
+                        title="Ver documento"
+                        aria-label="Ver documento"
                         >
-                        Ver
+                        <FaEye />
                         </button>
                     )}
 
@@ -440,43 +573,47 @@ useEffect(() => {
                         esVigente && (
 
                           <button
-                            className="btn btn-sm btn-dark"
+                            className="btn btn-sm btn-outline-secondary explorador-btn-icono"
                             onClick={() => descargarArchivo(item)}
+                            title="Descargar"
+                            aria-label="Descargar"
                           >
-                            Descargar
+                            <FaDownload />
                           </button>
 
                       )}
-                    
 
                         <button
-                            className="btn btn-sm btn-secondary"
+                            className="btn btn-sm btn-outline-secondary explorador-btn-icono"
                             onClick={(e)=>{
                                 e.stopPropagation();
                                 abrirHistorial(item);
                             }}
+                            title="Historial de versiones"
+                            aria-label="Historial de versiones"
                         >
-                            Historial
+                            <FaHistory />
                         </button>
-
 
                       {
                         puedeSubirDocumentos &&
                         esVigente && (
 
                           <button
-                            className="btn btn-sm btn-warning"
+                            className="btn btn-sm btn-outline-warning explorador-btn-icono"
                             onClick={(e)=>{
                               e.stopPropagation();
                               abrirActualizar(item);
                             }}
+                            title="Actualizar (subir nueva versión)"
+                            aria-label="Actualizar documento"
                           >
-                            Actualizar
+                            <FaUpload />
                           </button>
 
                       )}
-                        
 
+                    </div>
                     </td>
                 </>
                 )}
@@ -488,44 +625,50 @@ useEffect(() => {
         </tbody>
 
         </table>
+        </div>
+        </div>
         )}
 
+      {/* ========================= */}
       {/* VISOR PDF */}
-      {/* VISOR PDF PRO */}
+      {/* ========================= */}
+
 {pdfUrl && (
-  <div className="modal show d-block" style={{ background: "rgba(0,0,0,0.7)" }}>
+  <div className="modal show d-block explorador-modal-fondo">
 
     <div className="modal-dialog modal-xl modal-dialog-centered">
 
-      <div className="modal-content" style={{ borderRadius: "12px", overflow: "hidden" }}>
+      <div className="modal-content explorador-visor">
 
         {/* HEADER */}
-        <div className="modal-header bg-dark text-white d-flex justify-content-between align-items-center">
+        <div className="explorador-visor-header">
 
-          <div>
-            <h6 className="mb-0">Vista previa del documento</h6>
-            <small style={{ opacity: 0.7 }}>
-              Documento controlado - No descargar versiones locales
-            </small>
+          <div className="d-flex align-items-center gap-3">
+            <span className="explorador-visor-icono"><FaFilePdf /></span>
+            <div>
+              <h6 className="mb-0">Vista previa del documento</h6>
+              <small>Documento controlado - No descargar versiones locales</small>
+            </div>
           </div>
 
           <button
             className="btn-close btn-close-white"
             onClick={() => setPdfUrl(null)}
+            aria-label="Cerrar"
           />
         </div>
 
         {/* TOOLBAR */}
-        <div className="d-flex justify-content-between align-items-center px-3 py-2 border-bottom bg-light">
+        <div className="explorador-visor-toolbar">
 
-          <span style={{ fontSize: "14px", fontWeight: 500 }}>
-            Visualización protegida
+          <span className="explorador-visor-protegido">
+            <FaLock /> Visualización protegida
           </span>
 
           <div className="d-flex gap-2">
 
             <button
-              className="btn btn-sm btn-outline-secondary"
+              className="btn btn-sm btn-outline-secondary dash-btn-tabla"
               onClick={() =>
                 Swal.fire({
                   icon: "warning",
@@ -534,11 +677,11 @@ useEffect(() => {
                 })
               }
             >
-              Descargar
+              <FaDownload /> Descargar
             </button>
 
             <button
-              className="btn btn-sm btn-outline-secondary"
+              className="btn btn-sm btn-outline-secondary dash-btn-tabla"
               onClick={() =>
                 Swal.fire({
                   icon: "warning",
@@ -547,7 +690,7 @@ useEffect(() => {
                 })
               }
             >
-              Imprimir
+              <FaPrint /> Imprimir
             </button>
 
           </div>
@@ -561,22 +704,11 @@ useEffect(() => {
                 width="100%"
                 height="100%"
                 style={{ border: "none" }}
+                title="Vista previa del documento"
             />
 
             {/* WATERMARK */}
-            <div
-                style={{
-                position: "absolute",
-                top: "40%",
-                left: "50%",
-                transform: "translate(-50%, -50%) rotate(-20deg)",
-                fontSize: "48px",
-                color: "rgba(0,0,0,0.08)",
-                fontWeight: "bold",
-                pointerEvents: "none",
-                userSelect: "none"
-                }}
-            >
+            <div className="explorador-marca-agua">
                 DOCUMENTO CONTROLADO
             </div>
 
@@ -586,20 +718,17 @@ useEffect(() => {
 
         </div>
     </div>
-    )}  
+    )}
 
       {descargando && (
-            <div 
-                className="modal show d-block"
-                style={{background:"rgba(0,0,0,0.5)"}}
-            >
+            <div className="modal show d-block explorador-modal-fondo">
                 <div className="modal-dialog modal-sm modal-dialog-centered">
 
-                <div className="modal-content text-center p-4">
+                <div className="modal-content text-center p-4 explorador-modal">
 
-                    <div className="spinner-border text-primary mb-3" />
+                    <div className="spinner-border text-primary mb-3 mx-auto" />
 
-                    <p className="mb-0">Descargando documento...</p>
+                    <p className="mb-0 fw-semibold">Descargando documento...</p>
 
                 </div>
 
@@ -607,52 +736,76 @@ useEffect(() => {
             </div>
         )}
 
-        {/* Modal actualizar */}
+        {/* ========================= */}
+        {/* MODAL ACTUALIZAR */}
+        {/* ========================= */}
+
         {showModalActualizar && (
-            <div className="modal show d-block" style={{ background: "rgba(0,0,0,0.5)" }}>
-                <div className="modal-dialog">
-                <div className="modal-content">
+            <div className="modal show d-block explorador-modal-fondo">
+                <div className="modal-dialog modal-dialog-centered">
+                <div className="modal-content explorador-modal">
 
                     <div className="modal-header">
-                    <h5 className="modal-title">Actualizar documento</h5>
+                      <div className="d-flex align-items-center gap-3">
+                        <span className="explorador-modal-icono dash-tono-warning"><FaUpload /></span>
+                        <h5 className="modal-title mb-0">Actualizar documento</h5>
+                      </div>
                     <button
                         className="btn-close"
                         onClick={() => setShowModalActualizar(false)}
+                        aria-label="Cerrar"
                     />
                     </div>
 
                     <div className="modal-body">
 
-                    <p>
-                        Documento: <b>{documentoSeleccionado?.nombre}</b>
-                    </p>
+                    <div className="explorador-doc-actual">
+                        <FaFilePdf />
+                        <div style={{ minWidth: 0 }}>
+                          <small>Documento</small>
+                          <div className="fw-semibold text-break">{documentoSeleccionado?.nombre}</div>
+                        </div>
+                    </div>
 
-                    <input
-                        type="file"
-                        className="form-control"
-                        accept="application/pdf"
-                        onChange={(e) => setArchivoActualizar(e.target.files[0])}
-                    />
+                    <label className={`explorador-subir ${archivoActualizar ? "con-archivo" : ""}`}>
+                        <input
+                            type="file"
+                            accept="application/pdf"
+                            onChange={(e) => setArchivoActualizar(e.target.files[0])}
+                        />
+                        <FaCloudUploadAlt className="explorador-subir-icono" />
+                        {archivoActualizar ? (
+                          <>
+                            <span className="fw-semibold text-break">{archivoActualizar.name}</span>
+                            <small>Haz clic para cambiar el archivo</small>
+                          </>
+                        ) : (
+                          <>
+                            <span className="fw-semibold">Selecciona el nuevo PDF</span>
+                            <small>Haz clic para buscar el archivo</small>
+                          </>
+                        )}
+                    </label>
 
-                    <small className="text-muted">
-                        Se generará automáticamente una nueva versión
+                    <small className="text-muted d-flex align-items-center gap-2 mt-3">
+                        <FaHistory /> Se generará automáticamente una nueva versión
                     </small>
 
                     </div>
 
                     <div className="modal-footer">
                     <button
-                        className="btn btn-secondary"
+                        className="btn btn-outline-secondary dash-btn"
                         onClick={() => setShowModalActualizar(false)}
                     >
                         Cancelar
                     </button>
 
                     <button
-                        className="btn btn-primary"
+                        className="btn btn-primary dash-btn"
                         onClick={actualizarDocumento}
                     >
-                        Subir nueva versión
+                        <FaUpload /> Subir nueva versión
                     </button>
                     </div>
 
@@ -661,42 +814,49 @@ useEffect(() => {
             </div>
             )}
 
+      {/* ========================= */}
       {/* MODAL HISTORIAL */}
+      {/* ========================= */}
 
       {modalHistorial && (
 
-  <div 
-    className="modal show d-block"
-    style={{background:"rgba(0,0,0,0.6)"}}
-  >
+  <div className="modal show d-block explorador-modal-fondo">
 
-    <div className="modal-dialog modal-lg">
+    <div className="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
 
-      <div className="modal-content">
+      <div className="modal-content explorador-modal">
 
         <div className="modal-header">
-          <h5>Historial de versiones</h5>
+          <div className="d-flex align-items-center gap-3">
+            <span className="explorador-modal-icono dash-tono-primary"><FaHistory /></span>
+            <h5 className="modal-title mb-0">Historial de versiones</h5>
+          </div>
 
           <button
             className="btn-close"
             onClick={()=>setModalHistorial(false)}
+            aria-label="Cerrar"
           />
         </div>
 
         <div className="modal-body">
 
           {historial.length === 0 ? (
-            <p>No hay historial disponible</p>
+            <div className="dash-vacio">
+              <FaHistory />
+              <span>No hay historial disponible</span>
+            </div>
           ) : (
 
-            <table className="table table-bordered">
+            <div className="table-responsive">
+            <table className="table align-middle mb-0 explorador-tabla">
 
               <thead>
                 <tr>
                   <th>Versión</th>
                   <th>Fecha</th>
                   <th>Usuario</th>
-                  <th>Acción</th>
+                  <th className="text-end">Acción</th>
                 </tr>
               </thead>
 
@@ -705,17 +865,19 @@ useEffect(() => {
                 {historial.map((h,index)=>(
                   <tr key={index}>
 
-                    <td>v{h.version}</td>
-
                     <td>
+                      <span className="explorador-version">v{h.version}</span>
+                    </td>
+
+                    <td className="text-muted">
                       {new Date(h.fecha).toLocaleDateString()}
                     </td>
 
                     <td>{h.creadoPor ?? "-"}</td>
 
-                    <td>
+                    <td className="text-end">
                       <button
-                        className="btn btn-sm btn-primary"
+                        className="btn btn-sm btn-outline-primary dash-btn-tabla"
                         onClick={() => {
 
                           const ext = h.ruta.split(".").pop().toLowerCase();
@@ -745,7 +907,7 @@ useEffect(() => {
 
                         }}
                       >
-                        Ver
+                        <FaEye /> Ver
                       </button>
                     </td>
 
@@ -755,6 +917,7 @@ useEffect(() => {
               </tbody>
 
             </table>
+            </div>
 
           )}
 

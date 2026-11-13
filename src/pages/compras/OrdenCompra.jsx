@@ -61,6 +61,7 @@ function AdministrarOrdenesCompra() {
 
                             :
 
+                            <div className="table-responsive">
                             <table className="table table-hover">
 
                                 <thead>
@@ -112,6 +113,7 @@ function AdministrarOrdenesCompra() {
                                 </tbody>
 
                             </table>
+                            </div>
 
                     }
 

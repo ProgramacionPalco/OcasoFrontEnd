@@ -376,10 +376,11 @@ function DetalleAprobacion() {
                                     align-items-center
                                     border-bottom
                                     py-3
+                                    gap-2
                                 "
                             >
 
-                                <div>
+                                <div className="text-break" style={{ minWidth: 0 }}>
 
                                     <strong>
                                         {doc.nombreDocumento}
@@ -486,7 +487,7 @@ function DetalleAprobacion() {
 
                             <div className="modal-header">
 
-                                <h5 className="modal-title">
+                                <h5 className="modal-title text-break">
                                     {nombreDocumento}
                                 </h5>
 

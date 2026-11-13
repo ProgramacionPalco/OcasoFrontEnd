@@ -129,7 +129,12 @@ export const agregarDocumentoRequisicion = (idRequisicion, archivo, comentario) 
         `/compras/requisicion/${idRequisicion}/documentos`,
         formData
     );
-};    
+};  
+
+export const generarExcelRequisicion = (id) =>
+    api.get(`/compras/requisicion/${id}/excel`, {
+        responseType: "blob"
+    });
 
 export default api;
 //import axios from "axios";

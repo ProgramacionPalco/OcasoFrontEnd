@@ -1,6 +1,16 @@
 import { useEffect, useState } from "react";
 import api from "../../services/api";
 import DataTable from "../../components/DataTable";
+import {
+  FaUserTie,
+  FaUserPlus,
+  FaUser,
+  FaEnvelope,
+  FaEdit,
+  FaTrashAlt,
+  FaSave,
+  FaTimes,
+} from "react-icons/fa";
 
 function CatalogoEjecutivosVentas() {
   const [ejecutivos, setEjecutivos] = useState([]);
@@ -93,114 +103,193 @@ function CatalogoEjecutivosVentas() {
     }
   };
 
+  const editando = Boolean(ejecutivoForm.id);
+
+  const cancelarEdicion = () =>
+    setEjecutivoForm({
+      id: null,
+      nombre: "",
+      apellidoPaterno: "",
+      apellidoMaterno: "",
+      correo: "",
+    });
+
+  const nombreCompleto = (row) =>
+    `${row.nombre ?? ""} ${row.apellidoPaterno ?? ""} ${row.apellidoMaterno ?? ""}`
+      .replace(/\s+/g, " ")
+      .trim();
+
+  const iniciales = (row) =>
+    `${(row.nombre || "?").trim().charAt(0)}${(row.apellidoPaterno || "").trim().charAt(0)}`.toUpperCase();
+
   const columns = [
     {
       header: "Nombre",
-      render: (row) =>
-        `${row.nombre} ${row.apellidoPaterno ?? ""} ${row.apellidoMaterno ?? ""}`,
+      render: (row) => (
+        <div className={`cliente-nombre ${ejecutivoForm.id === row.id ? "ce-editando" : ""}`}>
+          <span className="cliente-avatar">{iniciales(row)}</span>
+          <span className="text-break">{nombreCompleto(row)}</span>
+        </div>
+      ),
     },
 
     {
       header: "Correo",
-      field: "correo",
+      render: (row) =>
+        row.correo ? (
+          <a className="contacto-dato" href={`mailto:${row.correo}`}>
+            <FaEnvelope />
+            <span className="text-break">{row.correo}</span>
+          </a>
+        ) : (
+          <span className="text-muted">—</span>
+        ),
     },
 
     {
       header: "Acciones",
+      align: "end",
       render: (row) => (
-        <>
+        <div className="docs-acciones">
           <button
-            className="btn btn-sm btn-warning me-2"
-            onClick={() => editarEjecutivo(row)}
+            className="btn btn-sm btn-outline-primary explorador-btn-icono"
+            title="Editar"
+            aria-label="Editar ejecutivo"
+            onClick={() => {
+              editarEjecutivo(row);
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            }}
           >
-            Editar
+            <FaEdit />
           </button>
 
           <button
-            className="btn btn-sm btn-danger"
+            className="btn btn-sm btn-outline-danger explorador-btn-icono"
+            title="Eliminar"
+            aria-label="Eliminar ejecutivo"
             onClick={() => eliminarEjecutivo(row.id)}
           >
-            Eliminar
+            <FaTrashAlt />
           </button>
-        </>
+        </div>
       ),
     },
   ];
 
+  const CAMPOS = [
+    { name: "nombre", label: "Nombre", placeholder: "Nombre(s)", icono: <FaUser />, requerido: true },
+    { name: "apellidoPaterno", label: "Apellido paterno", placeholder: "Apellido paterno", icono: <FaUser /> },
+    { name: "apellidoMaterno", label: "Apellido materno", placeholder: "Apellido materno", icono: <FaUser /> },
+    { name: "correo", label: "Correo", placeholder: "correo@empresa.com", icono: <FaEnvelope />, requerido: true, type: "email" },
+  ];
+
   return (
-    <div className="container-fluid">
-      <h2 className="mb-4">Catálogo Ejecutivos de Altas</h2>
+    <div className="container-fluid dash">
 
-      <div className="card shadow-sm p-4 mb-4">
-        <h5 className="mb-3">
-          {ejecutivoForm.id ? "Editar Ejecutivo" : "Nuevo Ejecutivo"}
-        </h5>
+      {/* ========================= */}
+      {/* ENCABEZADO */}
+      {/* ========================= */}
 
-        <div className="row">
-          <div className="col-md-6">
-            <input
-              className="form-control mb-3"
-              placeholder="Nombre"
-              value={ejecutivoForm.nombre}
-              onChange={(e) =>
-                setEjecutivoForm({
-                  ...ejecutivoForm,
-                  nombre: e.target.value,
-                })
-              }
-            />
+      <div className="dash-hero mb-4">
+        <div className="dash-hero-texto">
+          <span className="dash-eyebrow">Catálogos</span>
+          <h2 className="dash-titulo">Ejecutivos de altas</h2>
+          <div className="dash-contexto">
+            <span>
+              <FaUserTie /> {ejecutivos.length.toLocaleString("es-MX")}{" "}
+              {ejecutivos.length === 1 ? "ejecutivo registrado" : "ejecutivos registrados"}
+            </span>
           </div>
+        </div>
+      </div>
 
-          <div className="col-md-6">
-            <input
-              className="form-control mb-3"
-              placeholder="Apellido paterno"
-              value={ejecutivoForm.apellidoPaterno}
-              onChange={(e) =>
-                setEjecutivoForm({
-                  ...ejecutivoForm,
-                  apellidoPaterno: e.target.value,
-                })
-              }
-            />
+      <div className="row g-4 mb-4">
+
+        {/* ========================= */}
+        {/* FORMULARIO */}
+        {/* ========================= */}
+
+        <div className="col-12 col-xl-4">
+          <div className={`dash-panel nc-form p-0 overflow-hidden cd-form ${editando ? "cd-form-editando" : ""}`}>
+
+            <div className="nc-form-header">
+              <span className="nc-form-icono">{editando ? <FaEdit /> : <FaUserPlus />}</span>
+              <div style={{ minWidth: 0 }}>
+                <h3 className="nc-form-titulo">
+                  {ejecutivoForm.id ? "Editar ejecutivo" : "Nuevo ejecutivo"}
+                </h3>
+                <div className="nc-form-sub text-truncate">
+                  {editando
+                    ? nombreCompleto(ejecutivoForm) || "Ejecutivo seleccionado"
+                    : "Agrega un ejecutivo de altas al catálogo"}
+                </div>
+              </div>
+            </div>
+
+            <div className="nc-form-cuerpo">
+              <div className="row g-3">
+                {CAMPOS.map((c) => (
+                  <div className={c.name === "correo" ? "col-12" : "col-12 col-md-4 col-xl-12"} key={c.name}>
+                    <label className="form-label">
+                      {c.label}
+                      {c.requerido && <span className="text-danger ms-1">*</span>}
+                    </label>
+                    <div className="nr-input-icono">
+                      {c.icono}
+                      <input
+                        type={c.type || "text"}
+                        className="form-control"
+                        placeholder={c.placeholder}
+                        value={ejecutivoForm[c.name]}
+                        onChange={(e) =>
+                          setEjecutivoForm({
+                            ...ejecutivoForm,
+                            [c.name]: e.target.value,
+                          })
+                        }
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="nc-pie">
+              {editando ? (
+                <button
+                  type="button"
+                  className="btn btn-outline-secondary np-btn"
+                  onClick={cancelarEdicion}
+                >
+                  <FaTimes /> Cancelar
+                </button>
+              ) : (
+                <span />
+              )}
+
+              <button className="btn btn-primary np-btn" onClick={guardarEjecutivo}>
+                <FaSave /> {editando ? "Actualizar ejecutivo" : "Guardar ejecutivo"}
+              </button>
+            </div>
+
           </div>
+        </div>
 
-          <div className="col-md-6">
-            <input
-              className="form-control mb-3"
-              placeholder="Apellido materno"
-              value={ejecutivoForm.apellidoMaterno}
-              onChange={(e) =>
-                setEjecutivoForm({
-                  ...ejecutivoForm,
-                  apellidoMaterno: e.target.value,
-                })
-              }
-            />
-          </div>
+        {/* ========================= */}
+        {/* LISTADO */}
+        {/* ========================= */}
 
-          <div className="col-md-6">
-            <input
-              className="form-control mb-3"
-              placeholder="Correo"
-              value={ejecutivoForm.correo}
-              onChange={(e) =>
-                setEjecutivoForm({
-                  ...ejecutivoForm,
-                  correo: e.target.value,
-                })
-              }
+        <div className="col-12 col-xl-8">
+          <div className="dash-panel p-0 overflow-hidden">
+            <DataTable
+              data={ejecutivos}
+              columns={columns}
+              placeholder="Buscar ejecutivo o correo..."
+              vacio="No hay ejecutivos registrados."
             />
           </div>
         </div>
 
-        <button className="btn btn-primary w-100" onClick={guardarEjecutivo}>
-          Guardar Ejecutivo
-        </button>
-      </div>
-
-      <div className="card shadow-sm p-3">
-        <DataTable data={ejecutivos} columns={columns} />
       </div>
     </div>
   );

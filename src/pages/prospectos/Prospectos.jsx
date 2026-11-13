@@ -3,8 +3,77 @@ import { useNavigate } from "react-router-dom";
 import api from "../../services/api";
 
 import { DataGrid } from "@mui/x-data-grid";
-import { Button, TextField, MenuItem } from "@mui/material";
-import { FaAddressBook } from "react-icons/fa";
+import {
+  FaAddressBook,
+  FaUsers,
+  FaSearch,
+  FaPlus,
+  FaFileInvoiceDollar,
+  FaHourglassHalf,
+  FaUserCheck,
+  FaExchangeAlt,
+  FaUserPlus,
+  FaBuilding,
+  FaMapMarkerAlt,
+  FaTruck,
+  FaCalendarCheck,
+  FaChevronUp,
+  FaSave,
+} from "react-icons/fa";
+
+// Quita acentos y pasa a minúsculas para comparar
+const normalizar = (texto) =>
+  String(texto ?? "")
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .toLowerCase()
+    .trim();
+
+// Un filtro coincide si algún campo del prospecto contiene el texto (misma regla de antes)
+const coincide = (prospecto, filtro) => {
+  const f = normalizar(filtro);
+  if (!f) return true;
+  return Object.values(prospecto).some((valor) => normalizar(valor).includes(f));
+};
+
+const claseUrgencia = (nivel) => {
+  const n = normalizar(nivel);
+  if (n.startsWith("crit")) return "critica";
+  if (n.startsWith("alta")) return "alta";
+  if (n.startsWith("media")) return "media";
+  return "baja";
+};
+
+// Estilo del DataGrid alineado al tema (claro y oscuro)
+const estiloGridProspectos = {
+  border: 0,
+  backgroundColor: "transparent",
+  fontSize: 14,
+  "& .MuiDataGrid-columnHeaders, & .MuiDataGrid-columnHeader": {
+    backgroundColor: "var(--bs-tertiary-bg)",
+  },
+  "& .MuiDataGrid-columnHeaderTitle": {
+    fontWeight: 600,
+    fontSize: 12,
+    textTransform: "uppercase",
+    letterSpacing: ".03em",
+    color: "var(--bs-secondary-color)",
+  },
+  "& .MuiDataGrid-cell": {
+    borderColor: "var(--bs-border-color-translucent)",
+    display: "flex",
+    alignItems: "center",
+  },
+  "& .MuiDataGrid-cell:focus, & .MuiDataGrid-cell:focus-within, & .MuiDataGrid-columnHeader:focus": {
+    outline: "none",
+  },
+  "& .MuiDataGrid-row:hover": {
+    backgroundColor: "var(--bs-tertiary-bg)",
+  },
+  "& .MuiDataGrid-footerContainer": {
+    borderColor: "var(--bs-border-color-translucent)",
+  },
+};
 
 import Select from "react-select";
 import makeAnimated from "react-select/animated";
@@ -69,6 +138,8 @@ function Prospectos() {
   /* variables */
   const [loading, setLoading] = useState(true);
   const [busqueda, setBusqueda] = useState("");
+  const [filtroEstatus, setFiltroEstatus] = useState("");
+  const [filtroEjecutivo, setFiltroEjecutivo] = useState("");
   const [btnCotizar, setBtnCotizar] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
@@ -245,12 +316,12 @@ function Prospectos() {
     }
   };
 
-  const prospectosFiltrados = prospectos.filter((p) =>
-    Object.values(p).some((valor) =>
-      String(valor ?? "")
-        .toLowerCase()
-        .includes(busqueda.toLowerCase()),
-    ),
+  // Búsqueda, estatus y ejecutivo se combinan (antes compartían la misma variable)
+  const prospectosFiltrados = prospectos.filter(
+    (p) =>
+      coincide(p, busqueda) &&
+      coincide(p, filtroEstatus) &&
+      coincide(p, filtroEjecutivo),
   );
 
   const actualizarEstatusProspectos = async () => {
@@ -326,59 +397,107 @@ function Prospectos() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
+  // Abre el modal para cambiar el estatus (misma lógica para tabla y tarjetas)
+  const abrirCambioEstatus = async (prospecto) => {
+    const idEstatus = prospecto.estatus;
+
+    setFormEstatus({
+      ...formEstatus,
+      idEstatus: idEstatus,
+      id: prospecto.id,
+    });
+
+    setFormComentarios({
+      ...formComentarios,
+      idProspecto: prospecto.id,
+      idEstatus: idEstatus,
+    });
+
+    /* if (idEstatus >= 4) {
+      setBtnCotizar(true);
+    } else {
+      setBtnCotizar(false);
+    } */
+
+    await obtenerEstatus(idEstatus);
+
+    setModalEstatus(true);
+  };
+
+  const formatoFecha = (value) =>
+    value
+      ? new Date(value).toLocaleString("es-MX", {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: false,
+        })
+      : "";
+
   const columns = [
-    { field: "nombre", headerName: "Nombre", flex: 1, minWidth: 150 },
     {
-      field: "tipoCompañia",
-      headerName: "Tipo compañía",
-      flex: 1,
-      minWidth: 150,
+      field: "nombre",
+      headerName: "Prospecto",
+      flex: 1.6,
+      minWidth: 240,
+      renderCell: (params) => (
+        <div className="cliente-nombre">
+          <span className="cliente-avatar">
+            {(params.value || "?").trim().charAt(0).toUpperCase()}
+          </span>
+          <div style={{ minWidth: 0, lineHeight: 1.25 }}>
+            <div className="text-truncate" title={params.value}>{params.value}</div>
+            {params.row.tipoCompañia && (
+              <div className="prospecto-tipo text-truncate">{params.row.tipoCompañia}</div>
+            )}
+          </div>
+        </div>
+      ),
     },
-    { field: "nivelUrgencia", headerName: "Urgencia", flex: 1, minWidth: 150 },
+    {
+      field: "nivelUrgencia",
+      headerName: "Urgencia",
+      flex: 0.8,
+      minWidth: 120,
+      renderCell: (params) =>
+        params.value ? (
+          <span className={`urgencia-pastilla urgencia-${claseUrgencia(params.value)}`}>
+            {params.value}
+          </span>
+        ) : (
+          <span className="text-muted">—</span>
+        ),
+    },
     {
       field: "nombreEjecutivo",
       headerName: "Ejecutivo",
       flex: 1,
-      minWidth: 150,
+      minWidth: 170,
+      renderCell: (params) =>
+        params.value ? (
+          <span className="text-truncate" title={params.value}>{params.value}</span>
+        ) : (
+          <span className="text-muted">Sin asignar</span>
+        ),
     },
     {
       field: "descripcionEstatus",
       headerName: "Estatus",
       flex: 1,
-      minWidth: 150,
+      minWidth: 160,
       renderCell: (params) => (
-        <Button
-          variant="contained"
-          color="success"
-          size="small"
-          onClick={async () => {
-            const idEstatus = params.row.estatus;
-
-            setFormEstatus({
-              ...formEstatus,
-              idEstatus: idEstatus,
-              id: params.row.id,
-            });
-
-            setFormComentarios({
-              ...formComentarios,
-              idProspecto: params.row.id,
-              idEstatus: idEstatus,
-            });
-
-            /* if (idEstatus >= 4) {
-              setBtnCotizar(true);
-            } else {
-              setBtnCotizar(false);
-            } */
-
-            await obtenerEstatus(idEstatus);
-
-            setModalEstatus(true);
-          }}
+        <button
+          type="button"
+          className="estatus-boton"
+          title="Cambiar estatus"
+          onClick={() => abrirCambioEstatus(params.row)}
         >
+          <span className="estatus-punto" />
           {params.value}
-        </Button>
+          <FaExchangeAlt className="estatus-boton-icono" />
+        </button>
       ),
     },
     {
@@ -386,34 +505,20 @@ function Prospectos() {
       headerName: "Contacto",
       flex: 1,
       minWidth: 150,
-      valueFormatter: (value) =>
-        value
-          ? new Date(value).toLocaleString("es-MX", {
-              day: "2-digit",
-              month: "2-digit",
-              year: "numeric",
-              hour: "2-digit",
-              minute: "2-digit",
-              hour12: false,
-            })
-          : "",
+      valueFormatter: (value) => formatoFecha(value),
+      renderCell: (params) => (
+        <span className="prospecto-fecha">{formatoFecha(params.row.fechaContacto) || "—"}</span>
+      ),
     },
     {
       field: "fechaRegistro",
       headerName: "Registro",
       flex: 1,
       minWidth: 150,
-      valueFormatter: (value) =>
-        value
-          ? new Date(value).toLocaleString("es-MX", {
-              day: "2-digit",
-              month: "2-digit",
-              year: "numeric",
-              hour: "2-digit",
-              minute: "2-digit",
-              hour12: false,
-            })
-          : "",
+      valueFormatter: (value) => formatoFecha(value),
+      renderCell: (params) => (
+        <span className="prospecto-fecha">{formatoFecha(params.row.fechaRegistro) || "—"}</span>
+      ),
     },
   ];
 
@@ -424,75 +529,126 @@ function Prospectos() {
     { field: "extension", headerName: "Extension", flex: 1, minWidth: 120 },
   ];
 
+  const FILTROS_ESTATUS = [
+    { valor: "", texto: "Todos", icono: <FaUsers />, tono: "primary" },
+    { valor: "Prospeccion", texto: "Prospección", icono: <FaSearch />, tono: "info" },
+    { valor: "Cotizacion", texto: "Cotización", icono: <FaFileInvoiceDollar />, tono: "purple" },
+    { valor: "Intermedio", texto: "Intermedio", icono: <FaHourglassHalf />, tono: "warning" },
+    { valor: "Altas", texto: "Altas", icono: <FaUserCheck />, tono: "success" },
+  ];
+
+  const conteoEstatus = (valor) =>
+    valor ? prospectos.filter((p) => coincide(p, valor)).length : prospectos.length;
+
   return (
-    <div className="w-100 overflow-hidden">
-      <div className="justify-content-between align-items-center mb-4 flex-wrap gap-3">
-        <div className="row">
-          <h2 className="fw-bold m-0 ">Prospectos</h2>
+    <div className="container-fluid dash">
+      <div>
 
-          <div className="col-md-3 mt-3">
-            <TextField
-              fullWidth
-              label="Buscar prospecto"
-              value={busqueda}
-              onChange={(e) => setBusqueda(e.target.value)}
-            />
-          </div>
-          <div className="col-md-3 mt-3">
-            <TextField
-              select
-              fullWidth
-              label="Estatus"
-              value={busqueda}
-              onChange={(e) => setBusqueda(e.target.value)}
-            >
-              <MenuItem value="">Todos</MenuItem>
-              <MenuItem value="Prospeccion">Prospeccion</MenuItem>
-              <MenuItem value="Cotizacion">Cotizacion</MenuItem>
-              <MenuItem value="Intermedio">Intermedio</MenuItem>
-              <MenuItem value="Altas">Altas</MenuItem>
-            </TextField>
-          </div>
-          <div className="col-md-3 mt-3">
-            <TextField
-              select
-              fullWidth
-              label="Buscar ejecutivo"
-              value={busqueda}
-              onChange={(e) => setBusqueda(e.target.value)}
-            >
-              <MenuItem value="">Todos los ejecutivos</MenuItem>
+        {/* ========================= */}
+        {/* ENCABEZADO */}
+        {/* ========================= */}
 
-              {ejecutivos.map((r) => (
-                <MenuItem
-                  key={r.id}
-                  value={`${r.nombre} ${r.apellidoPaterno ?? ""} ${r.apellidoMaterno ?? ""}`}
-                >
-                  {r.nombre} {r.apellidoPaterno ?? ""} {r.apellidoMaterno ?? ""}
-                </MenuItem>
-              ))}
-            </TextField>
+        <div className="dash-hero mb-4">
+          <div className="dash-hero-texto">
+            <span className="dash-eyebrow">Ventas</span>
+            <h2 className="dash-titulo">Prospectos</h2>
+            <div className="dash-contexto">
+              <span><FaUsers /> {prospectos.length.toLocaleString("es-MX")} prospectos registrados</span>
+            </div>
           </div>
 
-          <div className="col-md-3 mt-3">
-            <Button
-              variant="contained"
-              className="btn btn-primary"
-              onClick={async () => {
-                await obtenerServicios();
-                /* await obtenerAduanas(); */
-                await obtenerTipoEmpresa();
+          <button
+            type="button"
+            className="btn btn-light dash-btn-hero"
+            onClick={async () => {
+              await obtenerServicios();
+              /* await obtenerAduanas(); */
+              await obtenerTipoEmpresa();
 
-                setModalNuevoProspecto(true);
-              }}
-            >
-              + Nuevo Prospecto
-            </Button>
-          </div>
+              setModalNuevoProspecto(true);
+            }}
+          >
+            <FaPlus />
+            Nuevo prospecto
+          </button>
         </div>
 
-        <div className="row mt-3">
-          <div className="col-md-11">
+        {/* ========================= */}
+        {/* FILTRO POR ESTATUS */}
+        {/* ========================= */}
+
+        <div className="row g-3 mb-4">
+          {FILTROS_ESTATUS.map((f) => (
+            <div className={f.valor ? "col-6 col-md" : "col-12 col-md"} key={f.valor || "todos"}>
+              <button
+                type="button"
+                className={`filtro-kpi ${filtroEstatus === f.valor ? "activo" : ""}`}
+                onClick={() => setFiltroEstatus(f.valor)}
+                aria-pressed={filtroEstatus === f.valor}
+              >
+                <span className={`dash-kpi-icono dash-tono-${f.tono}`}>{f.icono}</span>
+                <span className="filtro-kpi-texto">
+                  <span className="filtro-kpi-label">{f.texto}</span>
+                  <span className="filtro-kpi-valor">
+                    {conteoEstatus(f.valor).toLocaleString("es-MX")}
+                  </span>
+                </span>
+              </button>
+            </div>
+          ))}
+        </div>
+
+        {/* ========================= */}
+        {/* LISTADO */}
+        {/* ========================= */}
+
+        <div className="dash-panel p-0 overflow-hidden mb-4">
+
+          <div className="listado-toolbar">
+
+            <div className="d-flex flex-wrap gap-2 flex-grow-1">
+              <div className="explorador-buscar listado-buscar">
+                <FaSearch />
+                <input
+                  type="text"
+                  placeholder="Buscar prospecto..."
+                  value={busqueda}
+                  onChange={(e) => setBusqueda(e.target.value)}
+                  aria-label="Buscar prospecto"
+                />
+              </div>
+
+              {/* Buscador de ejecutivo: escribir para filtrar y seleccionar */}
+              <Select
+                className="listado-combo"
+                classNamePrefix="rs"
+                aria-label="Buscar ejecutivo"
+                placeholder="Buscar ejecutivo..."
+                isClearable
+                isSearchable
+                options={ejecutivos.map((r) => {
+                  const nombre = `${r.nombre} ${r.apellidoPaterno ?? ""} ${r.apellidoMaterno ?? ""}`;
+                  return { value: nombre, label: nombre.replace(/\s+/g, " ").trim() };
+                })}
+                value={
+                  filtroEjecutivo
+                    ? { value: filtroEjecutivo, label: filtroEjecutivo.replace(/\s+/g, " ").trim() }
+                    : null
+                }
+                onChange={(opcion) => setFiltroEjecutivo(opcion?.value ?? "")}
+                noOptionsMessage={() => "Sin coincidencias"}
+                menuPortalTarget={document.body}
+                styles={{ menuPortal: (base) => ({ ...base, zIndex: 1060 }) }}
+              />
+            </div>
+
+            <span className="listado-contador">
+              Mostrando <strong>{prospectosFiltrados.length.toLocaleString("es-MX")}</strong> de{" "}
+              <strong>{prospectos.length.toLocaleString("es-MX")}</strong>
+            </span>
+
+          </div>
+
             {!isMobile ? (
               <>
                 {/* TABLA */}
@@ -506,15 +662,15 @@ function Prospectos() {
                 >
                   <div
                     style={{
-                      height: 650,
                       width: "100%",
-                      minWidth: 0,
+                      minWidth: 1000,
                     }}
                   >
                     <DataGrid
                       rows={prospectosFiltrados}
                       columns={columns}
                       loading={loading}
+                      rowHeight={60}
                       pageSizeOptions={[5, 10, 25, 50]}
                       disableRowSelectionOnClick
                       autoHeight
@@ -523,159 +679,91 @@ function Prospectos() {
                           paginationModel: { pageSize: 10 },
                         },
                       }}
-                      sx={{
-                        backgroundColor: "#fff",
-                        borderRadius: "10px",
-                        border: "1px solid #e5e7eb",
-                        width: "100%",
-                        minWidth: 0,
-                        backgroundColor: "#fff",
-                        borderRadius: "10px",
-                        border: "1px solid #e5e7eb",
-
-                        "& .MuiDataGrid-columnHeaders": {
-                          backgroundColor: "#1f2937",
-                          color: "#fff",
-                          fontWeight: "bold",
-                        },
-
-                        "& .MuiDataGrid-columnHeaderTitle": {
-                          fontWeight: "bold",
-                          color: "#fff",
-                        },
-
-                        "& .MuiDataGrid-columnHeader": {
-                          backgroundColor: "#1f2937",
-                          color: "#fff",
-                        },
-
-                        "& .MuiDataGrid-cell": {
-                          borderColor: "#f1f5f9",
-                        },
-
-                        "& .MuiDataGrid-row:hover": {
-                          backgroundColor: "#f8fafc",
-                        },
-
-                        "& .MuiDataGrid-cell": {
-                          borderColor: "#f1f5f9",
-                        },
-
-                        // Ajustes para móviles
-                        "@media (max-width: 768px)": {
-                          fontSize: "12px",
-
-                          "& .MuiDataGrid-columnHeaderTitle": {
-                            fontSize: "12px",
-                          },
-
-                          "& .MuiDataGrid-cell": {
-                            fontSize: "12px",
-                          },
-                        },
-                      }}
+                      localeText={{ noRowsLabel: "No hay prospectos para mostrar" }}
+                      sx={estiloGridProspectos}
                     />
                   </div>
                 </div>
               </>
             ) : (
-              <>
+              <div className="p-3">
                 {/* CARDS PARA MÓVIL */}
-                <div className="row g-3">
-                  {prospectosFiltrados.map((prospecto) => (
-                    <div className="col-12" key={prospecto.id}>
-                      <div className="card shadow-sm border-0 rounded-3">
-                        <div className="card-body">
-                          <div className="d-flex justify-content-between align-items-start mb-3">
-                            <div>
-                              <h6 className="fw-bold mb-1">
-                                {prospecto.nombre}
-                              </h6>
-                              <small className="text-muted">
-                                {prospecto.tipoCompañia}
-                              </small>
-                            </div>
 
-                            <span className="badge bg-primary">
+                {loading && (
+                  <div className="dash-vacio">
+                    <div className="spinner-border text-primary" role="status" />
+                    <span>Cargando prospectos…</span>
+                  </div>
+                )}
+
+                {!loading && prospectosFiltrados.length === 0 && (
+                  <div className="dash-vacio">
+                    <FaUsers />
+                    <span>No hay prospectos para mostrar.</span>
+                  </div>
+                )}
+
+                {prospectosFiltrados.map((prospecto) => (
+                  <div className="cliente-tarjeta" key={prospecto.id}>
+
+                    <div className="d-flex align-items-start gap-3">
+                      <span className="cliente-avatar">
+                        {(prospecto.nombre || "?").trim().charAt(0).toUpperCase()}
+                      </span>
+
+                      <div className="flex-grow-1" style={{ minWidth: 0 }}>
+                        <div className="d-flex justify-content-between align-items-start gap-2">
+                          <div className="fw-semibold text-break">{prospecto.nombre}</div>
+                          {prospecto.nivelUrgencia && (
+                            <span className={`urgencia-pastilla urgencia-${claseUrgencia(prospecto.nivelUrgencia)}`}>
                               {prospecto.nivelUrgencia}
                             </span>
-                          </div>
-
-                          <hr />
-
-                          <div className="mb-2">
-                            <small className="text-muted">Ejecutivo</small>
-                            <div className="fw-medium">
-                              {prospecto.nombreEjecutivo || "Sin asignar"}
-                            </div>
-                          </div>
-
-                          <div className="row g-2 mb-3">
-                            <div className="col-6">
-                              <small className="text-muted d-block">
-                                Fecha contacto
-                              </small>
-                              <small>
-                                {prospecto.fechaContacto
-                                  ? new Date(
-                                      prospecto.fechaContacto,
-                                    ).toLocaleString("es-MX")
-                                  : "Sin fecha"}
-                              </small>
-                            </div>
-
-                            <div className="col-6">
-                              <small className="text-muted d-block">
-                                Fecha registro
-                              </small>
-                              <small>
-                                {prospecto.fechaRegistro
-                                  ? new Date(
-                                      prospecto.fechaRegistro,
-                                    ).toLocaleString("es-MX")
-                                  : "Sin fecha"}
-                              </small>
-                            </div>
-                          </div>
-
-                          <button
-                            className="btn btn-success w-100"
-                            onClick={async () => {
-                              const idEstatus = prospecto.estatus;
-
-                              setFormEstatus({
-                                ...formEstatus,
-                                idEstatus: idEstatus,
-                                id: prospecto.id,
-                              });
-
-                              setFormComentarios({
-                                ...formComentarios,
-                                idProspecto: prospecto.id,
-                                idEstatus: idEstatus,
-                              });
-
-                              /* if (idEstatus >= 4) {
-                                setBtnCotizar(true);
-                              } else {
-                                setBtnCotizar(false);
-                              } */
-
-                              await obtenerEstatus(idEstatus);
-
-                              setModalEstatus(true);
-                            }}
-                          >
-                            {prospecto.descripcionEstatus}
-                          </button>
+                          )}
                         </div>
+                        <div className="small text-muted text-break">{prospecto.tipoCompañia}</div>
                       </div>
                     </div>
-                  ))}
-                </div>
-              </>
+
+                    <div className="prospecto-tarjeta-datos">
+                      <div>
+                        <small>Ejecutivo</small>
+                        <span>{prospecto.nombreEjecutivo || "Sin asignar"}</span>
+                      </div>
+                      <div>
+                        <small>Fecha contacto</small>
+                        <span>
+                          {prospecto.fechaContacto
+                            ? new Date(prospecto.fechaContacto).toLocaleString("es-MX")
+                            : "Sin fecha"}
+                        </span>
+                      </div>
+                      <div>
+                        <small>Fecha registro</small>
+                        <span>
+                          {prospecto.fechaRegistro
+                            ? new Date(prospecto.fechaRegistro).toLocaleString("es-MX")
+                            : "Sin fecha"}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="prospecto-tarjeta-pie">
+                      <small>Estatus</small>
+                      <button
+                        type="button"
+                        className="estatus-boton"
+                        title="Cambiar estatus"
+                        onClick={() => abrirCambioEstatus(prospecto)}
+                      >
+                        <span className="estatus-punto" />
+                        {prospecto.descripcionEstatus}
+                        <FaExchangeAlt className="estatus-boton-icono" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
             )}
-          </div>
         </div>
 
         {/* MODAL PROSPECTO */}
@@ -684,13 +772,25 @@ function Prospectos() {
           <div className="modal-overlay">
             <div className="modal-box-prospectos modal-prospectos modal-nuevo-prospecto">
               <div className="modal-header modal-header-nuevo-prospecto">
-                <h2>Registrar Prospecto</h2>
+                <div className="d-flex align-items-center gap-3">
+                  <span className="np-header-icono"><FaUserPlus /></span>
+                  <div>
+                    <h2>Registrar Prospecto</h2>
+                    <small className="np-header-sub">Captura los datos del nuevo prospecto y sus contactos</small>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  className="btn-close"
+                  aria-label="Cerrar"
+                  onClick={cerrarModalNuevoProspecto}
+                />
               </div>
 
               <div className="modal-body-nuevo-prospecto">
                 <div className="form-grid-nuevo-prospecto">
                   {/* DATOS GENERALES */}
-                  <h6 className="seccion-nuevo-prospecto">Datos generales</h6>
+                  <h6 className="seccion-nuevo-prospecto"><FaBuilding /> Datos generales</h6>
 
                   <div className="form-group full-prospectos">
                     <label>Nombre</label>
@@ -800,7 +900,7 @@ function Prospectos() {
                   </div>
 
                   {/* UBICACION */}
-                  <h6 className="seccion-nuevo-prospecto">Ubicación</h6>
+                  <h6 className="seccion-nuevo-prospecto"><FaMapMarkerAlt /> Ubicación</h6>
 
                   <UbicacionSelects
                     idPais={formProspecto.idPais}
@@ -812,7 +912,7 @@ function Prospectos() {
                   />
 
                   {/* OPERACION */}
-                  <h6 className="seccion-nuevo-prospecto">Operación</h6>
+                  <h6 className="seccion-nuevo-prospecto"><FaTruck /> Operación</h6>
 
                   <div className="form-group span-2-prospectos">
                     <label>Tipo Operacion</label>
@@ -968,7 +1068,7 @@ function Prospectos() {
                   </div>
 
                   {/* SEGUIMIENTO */}
-                  <h6 className="seccion-nuevo-prospecto">Seguimiento</h6>
+                  <h6 className="seccion-nuevo-prospecto"><FaCalendarCheck /> Seguimiento</h6>
 
                   <div className="form-group span-3-prospectos">
                     <label>Ejecutivo de ventas</label>
@@ -1028,20 +1128,19 @@ function Prospectos() {
                   {/* CONTACTOS */}
                   <div className="seccion-nuevo-prospecto d-flex justify-content-between align-items-center gap-2">
                     <h6 className="m-0">
-                      Contactos{" "}
-                      <span className="badge bg-secondary">
-                        {formContactos.length}
-                      </span>
+                      <FaAddressBook /> Contactos
+                      <span className="np-contador">{formContactos.length}</span>
                     </h6>
 
                     <button
                       type="button"
-                      className={`btn btn-sm ${
-                        seccionContacto ? "btn-outline-secondary" : "btn-success"
+                      className={`btn btn-sm np-btn ${
+                        seccionContacto ? "btn-outline-secondary" : "btn-outline-primary"
                       }`}
                       onClick={() => setSeccionContacto(!seccionContacto)}
                     >
-                      {seccionContacto ? "Ocultar formulario" : "+ Agregar contacto"}
+                      {seccionContacto ? <FaChevronUp /> : <FaPlus />}
+                      {seccionContacto ? "Ocultar formulario" : "Agregar contacto"}
                     </button>
                   </div>
 
@@ -1109,14 +1208,14 @@ function Prospectos() {
                       <div className="form-group span-2-prospectos justify-content-end">
                         <button
                           type="button"
-                          className="btn btn-info"
+                          className="btn btn-primary np-btn w-100"
                           onClick={async () => {
                             if (!(await validarContacto())) return;
 
                             await agregarContacto();
                           }}
                         >
-                          Agregar contacto a prospecto
+                          <FaPlus /> Agregar contacto a prospecto
                         </button>
                       </div>
                     </>
@@ -1125,6 +1224,7 @@ function Prospectos() {
                   {formContactos.length > 0 && (
                     <div className="form-group full-prospectos">
                       {!isMobile ? (
+                        <div className="np-tabla">
                         <DataGrid
                           rows={formContactos}
                           columns={columnsContactos}
@@ -1136,36 +1236,10 @@ function Prospectos() {
                               paginationModel: { pageSize: 30 },
                             },
                           }}
-                          sx={{
-                            backgroundColor: "#fff",
-                            borderRadius: "10px",
-                            border: "1px solid #e5e7eb",
-
-                            "& .MuiDataGrid-columnHeaders": {
-                              backgroundColor: "#1f2937",
-                              color: "#fff",
-                              fontWeight: "bold",
-                            },
-
-                            "& .MuiDataGrid-columnHeaderTitle": {
-                              fontWeight: "bold",
-                              color: "#fff",
-                            },
-
-                            "& .MuiDataGrid-columnHeader": {
-                              backgroundColor: "#1f2937",
-                              color: "#fff",
-                            },
-
-                            "& .MuiDataGrid-cell": {
-                              borderColor: "#f1f5f9",
-                            },
-
-                            "& .MuiDataGrid-row:hover": {
-                              backgroundColor: "#f8fafc",
-                            },
-                          }}
+                          autoHeight
+                          sx={estiloGridProspectos}
                         />
+                        </div>
                       ) : (
                         <>
                           {/* CARDS DE CONTACTOS PARA MÓVIL */}
@@ -1175,15 +1249,15 @@ function Prospectos() {
                                 className="col-12"
                                 key={contacto.id ?? index}
                               >
-                                <div className="card shadow-sm border-0 rounded-3">
+                                <div className="card shadow-sm border-0 rounded-3 np-contacto-card">
                                   <div className="card-body">
                                     <div className="d-flex align-items-center gap-2 mb-3">
-                                      <div className="bg-primary bg-opacity-10 text-primary rounded-circle p-3">
-                                        <FaAddressBook size={22} />
+                                      <div className="cliente-avatar">
+                                        <FaAddressBook size={16} />
                                       </div>
 
-                                      <div>
-                                        <h6 className="fw-bold mb-0">
+                                      <div style={{ minWidth: 0 }}>
+                                        <h6 className="fw-bold mb-0 text-break">
                                           {contacto.contacto || "Sin nombre"}
                                         </h6>
                                         <small className="text-muted">
@@ -1233,7 +1307,8 @@ function Prospectos() {
                   )}
 
                   {formContactos.length === 0 && !seccionContacto && (
-                    <div className="text-muted small" style={{ gridColumn: "1 / -1" }}>
+                    <div className="np-vacio">
+                      <FaAddressBook />
                       No hay contactos registrados.
                     </div>
                   )}
@@ -1242,14 +1317,14 @@ function Prospectos() {
 
               <div className="modal-footer-prospectos modal-footer-nuevo-prospecto">
                 <button
-                  className="btn btn-secondary"
+                  className="btn btn-outline-secondary np-btn"
                   onClick={cerrarModalNuevoProspecto}
                 >
                   Cancelar
                 </button>
 
                 <button
-                  className="btn btn-primary"
+                  className="btn btn-primary np-btn"
                   onClick={async () => {
                     if (!(await validarProspecto())) return;
 
@@ -1296,7 +1371,7 @@ function Prospectos() {
                     }
                   }}
                 >
-                  Guardar Prospecto
+                  <FaSave /> Guardar prospecto
                 </button>
               </div>
             </div>

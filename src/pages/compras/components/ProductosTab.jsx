@@ -6,6 +6,7 @@ function ProductosTab({ productos }) {
 
             <div className="card-body">
 
+                <div className="table-responsive">
                 <table className="table table-hover align-middle">
 
                     <thead>
@@ -101,6 +102,7 @@ function ProductosTab({ productos }) {
                     </tbody>
 
                 </table>
+                </div>
 
             </div>
 

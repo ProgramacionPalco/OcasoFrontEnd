@@ -1,0 +1,330 @@
+/* ==========================================================
+   MODO OSCURO
+   Bootstrap 5.3 cambia sus componentes con data-bs-theme="dark".
+   Aquí se ajustan los estilos propios y las librerías externas.
+========================================================== */
+
+/* ---------- Botón de tema (ambos modos) ---------- */
+
+.theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 1px solid var(--bs-border-color);
+  border-radius: 50%;
+  background: transparent;
+  color: var(--bs-body-color);
+  font-size: 16px;
+  cursor: pointer;
+  transition: background .2s ease, color .2s ease;
+}
+
+.theme-toggle:hover {
+  background: var(--bs-tertiary-bg);
+}
+
+[data-bs-theme="dark"] .theme-toggle {
+  color: #ffcc33;
+}
+
+/* ---------- Paleta ---------- */
+
+[data-bs-theme="dark"] {
+  --app-bg: #14171c;
+  --app-surface: #1e2329;
+  --app-surface-2: #262c33;
+  --app-border: #343b44;
+  --app-text: #dee2e6;
+  --app-text-muted: #9aa4b1;
+}
+
+[data-bs-theme="dark"] body {
+  background-color: var(--app-bg);
+}
+
+/* ---------- Layout ---------- */
+
+[data-bs-theme="dark"] .main-content {
+  background: var(--app-bg);
+}
+
+[data-bs-theme="dark"] .header {
+  background: var(--app-surface);
+  border-bottom: 1px solid var(--app-border);
+  color: var(--app-text);
+}
+
+[data-bs-theme="dark"] .fecha {
+  color: var(--app-text-muted);
+}
+
+[data-bs-theme="dark"] .sidebar {
+  --sb-bg: linear-gradient(180deg, #0b121d 0%, #0f1a2a 60%, #0b121d 100%);
+  border-right: 1px solid var(--app-border);
+}
+
+/* ---------- Utilidades de Bootstrap con color fijo ---------- */
+
+[data-bs-theme="dark"] .card {
+  --bs-card-bg: var(--app-surface);
+  --bs-card-border-color: var(--app-border);
+}
+
+[data-bs-theme="dark"] .bg-white {
+  background-color: var(--app-surface) !important;
+}
+
+[data-bs-theme="dark"] .bg-light {
+  background-color: var(--app-surface-2) !important;
+}
+
+[data-bs-theme="dark"] .text-dark:not([class*="bg-"]) {
+  color: var(--app-text) !important;
+}
+
+[data-bs-theme="dark"] .table-light {
+  --bs-table-bg: var(--app-surface-2);
+  --bs-table-color: var(--app-text);
+  --bs-table-border-color: var(--app-border);
+}
+
+[data-bs-theme="dark"] .table {
+  --bs-table-bg: var(--app-surface);
+}
+
+[data-bs-theme="dark"] .modal-content {
+  background-color: var(--app-surface);
+}
+
+/* ---------- Estilos propios (layout.css) ---------- */
+
+[data-bs-theme="dark"] .catalog-icon {
+  color: var(--app-text);
+}
+
+[data-bs-theme="dark"] .sticky-col-1,
+[data-bs-theme="dark"] .sticky-col-2,
+[data-bs-theme="dark"] .sticky-col-3 {
+  background: var(--app-surface);
+}
+
+[data-bs-theme="dark"] .estado-na {
+  background: #3a414a;
+}
+
+[data-bs-theme="dark"] .timeline-container::before {
+  background: var(--app-border);
+}
+
+[data-bs-theme="dark"] .timeline-card {
+  background: var(--app-surface-2);
+  border-color: var(--app-border);
+}
+
+[data-bs-theme="dark"] .timeline-user {
+  background: var(--app-border);
+  color: var(--app-text);
+}
+
+[data-bs-theme="dark"] .documento-item {
+  border-color: var(--app-border);
+}
+
+@media (max-width: 768px) {
+  [data-bs-theme="dark"] .documento-item {
+    background: var(--app-surface);
+  }
+}
+
+/* ---------- Estilos propios (admin.css) ---------- */
+
+[data-bs-theme="dark"] .admin-container,
+[data-bs-theme="dark"] .modal-box,
+[data-bs-theme="dark"] .modal-box-prospectos {
+  background: var(--app-surface);
+  color: var(--app-text);
+}
+
+[data-bs-theme="dark"] .search-input,
+[data-bs-theme="dark"] .modal-box input,
+[data-bs-theme="dark"] .form-group select,
+[data-bs-theme="dark"] .form-grid-nuevo-prospecto .form-group textarea {
+  background: var(--app-surface-2);
+  color: var(--app-text);
+  border-color: var(--app-border);
+}
+
+[data-bs-theme="dark"] .form-group label {
+  color: var(--app-text-muted);
+}
+
+[data-bs-theme="dark"] .btn-secondary {
+  background: #4b535c;
+  color: #fff;
+}
+
+[data-bs-theme="dark"] .requisicion-card h5,
+[data-bs-theme="dark"] .form-grid-nuevo-prospecto .seccion-nuevo-prospecto {
+  color: var(--app-text);
+}
+
+[data-bs-theme="dark"] .form-grid-nuevo-prospecto .seccion-nuevo-prospecto,
+[data-bs-theme="dark"] .modal-header-nuevo-prospecto {
+  border-color: var(--app-border);
+}
+
+[data-bs-theme="dark"] .modal-footer-prospectos.modal-footer-nuevo-prospecto {
+  background: var(--app-surface-2);
+  border-color: var(--app-border);
+}
+
+/* ---------- Workflow.css ---------- */
+
+[data-bs-theme="dark"] .workflow-card {
+  background: var(--app-surface);
+}
+
+[data-bs-theme="dark"] .workflow-user {
+  color: var(--app-text-muted);
+}
+
+[data-bs-theme="dark"] .workflow-date {
+  color: var(--app-text-muted);
+}
+
+/* ---------- MUI DataGrid (sx con colores fijos) ---------- */
+
+[data-bs-theme="dark"] .MuiDataGrid-root {
+  background-color: var(--app-surface) !important;
+  color: var(--app-text);
+  border-color: var(--app-border) !important;
+}
+
+[data-bs-theme="dark"] .MuiDataGrid-row:hover {
+  background-color: var(--app-surface-2) !important;
+}
+
+[data-bs-theme="dark"] .MuiDataGrid-cell {
+  border-color: var(--app-border) !important;
+}
+
+/* ---------- react-data-table-component ---------- */
+
+[data-bs-theme="dark"] .rdt_Table,
+[data-bs-theme="dark"] .rdt_TableHead,
+[data-bs-theme="dark"] .rdt_TableHeadRow,
+[data-bs-theme="dark"] .rdt_TableRow,
+[data-bs-theme="dark"] .rdt_Pagination,
+[data-bs-theme="dark"] .rdt_Table + div,
+[data-bs-theme="dark"] .rdt_TableBody > div {
+  background-color: var(--app-surface) !important;
+  color: var(--app-text) !important;
+  border-color: var(--app-border) !important;
+}
+
+[data-bs-theme="dark"] .rdt_TableHeadRow {
+  background-color: var(--app-surface-2) !important;
+}
+
+[data-bs-theme="dark"] .rdt_TableRow:hover {
+  background-color: var(--app-surface-2) !important;
+}
+
+[data-bs-theme="dark"] .rdt_Pagination button {
+  color: var(--app-text) !important;
+  fill: var(--app-text) !important;
+}
+
+[data-bs-theme="dark"] .rdt_Pagination button:disabled {
+  fill: var(--app-text-muted) !important;
+  opacity: .5;
+}
+
+[data-bs-theme="dark"] .rdt_Pagination select,
+[data-bs-theme="dark"] .rdt_Pagination option {
+  background-color: var(--app-surface);
+  color: var(--app-text);
+}
+
+/* ---------- react-select (clases emotion "css-xxxx-<parte>") ---------- */
+
+[data-bs-theme="dark"] [class*="css-"][class*="-control"] {
+  background-color: var(--app-surface-2) !important;
+  border-color: var(--app-border) !important;
+}
+
+[data-bs-theme="dark"] [class*="css-"][class*="-menu"] {
+  background-color: var(--app-surface-2) !important;
+  border: 1px solid var(--app-border);
+}
+
+[data-bs-theme="dark"] [class*="css-"][class*="-option"] {
+  background-color: transparent;
+  color: var(--app-text) !important;
+}
+
+[data-bs-theme="dark"] [class*="css-"][class*="-option"]:hover,
+[data-bs-theme="dark"] [class*="css-"][class*="-option"][aria-selected="true"] {
+  background-color: #2f5e9e !important;
+}
+
+[data-bs-theme="dark"] [class*="css-"][class*="-singleValue"],
+[data-bs-theme="dark"] [class*="css-"][class*="-Input"],
+[data-bs-theme="dark"] [class*="css-"][class*="-input"] {
+  color: var(--app-text) !important;
+}
+
+[data-bs-theme="dark"] [class*="css-"][class*="-placeholder"] {
+  color: var(--app-text-muted) !important;
+}
+
+[data-bs-theme="dark"] [class*="css-"][class*="-multiValue"] {
+  background-color: var(--app-border) !important;
+}
+
+[data-bs-theme="dark"] [class*="css-"][class*="-multiValue"] > div {
+  color: var(--app-text) !important;
+}
+
+/* ---------- SweetAlert2 ---------- */
+
+[data-bs-theme="dark"] .swal2-popup {
+  background: var(--app-surface);
+  color: var(--app-text);
+}
+
+[data-bs-theme="dark"] .swal2-title,
+[data-bs-theme="dark"] .swal2-html-container {
+  color: var(--app-text);
+}
+
+[data-bs-theme="dark"] .swal2-input,
+[data-bs-theme="dark"] .swal2-textarea,
+[data-bs-theme="dark"] .swal2-select {
+  background: var(--app-surface-2);
+  color: var(--app-text);
+  border-color: var(--app-border);
+}
+
+[data-bs-theme="dark"] .swal2-timer-progress-bar {
+  background: rgba(255, 255, 255, .3);
+}
+
+/* ---------- Scrollbars ---------- */
+
+[data-bs-theme="dark"] .main-content::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+[data-bs-theme="dark"] .main-content::-webkit-scrollbar-thumb {
+  background: #3a414a;
+  border-radius: 10px;
+}
+
+[data-bs-theme="dark"] .main-content::-webkit-scrollbar-track {
+  background: var(--app-bg);
+}

@@ -276,9 +276,9 @@ function ControlRequisiciones() {
 
                 <div className="card-body">
 
-                    <div className="row mb-3">
+                    <div className="row g-3 mb-3">
 
-                        <div className="col-md-3">
+                        <div className="col-6 col-md-3">
 
                             <label className="form-label fw-bold">
                                 Año
@@ -301,7 +301,7 @@ function ControlRequisiciones() {
 
                         </div>
 
-                        <div className="col-md-2">
+                        <div className="col-6 col-md-2">
 
                         <label className="form-label fw-bold">
                             Mes

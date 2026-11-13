@@ -1,6 +1,7 @@
-import { NavLink } from "react-router-dom";
+import { NavLink, useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
 import api from "../services/api";
+import logoOcaso from "../assets/Ocaso 2.0.png";
 
 import {
   FaTachometerAlt,
@@ -28,13 +29,40 @@ import {
 function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobileOpen}){
 
   //const [mobileOpen, setMobileOpen] = useState(false);
-  const [catalogosOpen, setCatalogosOpen] = useState(false);
-  const [reportesOpen, setReportesOpen] = useState(false);
-  const [altasOpen, setAltasOpen] = useState(false);
-  const [adminOpen, setAdminOpen] = useState(false);
-  const [calidadOpen, setCalidadOpen] = useState(false);
-  const [comprasOpen, setComprasOpen] = useState(false);
-  const [ventasOpen, setVentasOpen] = useState(false);
+
+  // Grupo activo según la ruta actual (para resaltarlo y abrirlo al cargar)
+  const { pathname } = useLocation();
+  const enRuta = (...prefijos) =>
+    prefijos.some(p => pathname.toLowerCase().startsWith(p.toLowerCase()));
+
+  const grupoActivo = {
+    calidad: enRuta("/calidad"),
+    ventas: enRuta("/ventas", "/prospectos", "/cotizador"),
+    reportes: enRuta("/reportes"),
+    compras: enRuta("/compras"),
+    catalogos: enRuta("/catalogos"),
+    admin: enRuta("/admin"),
+  };
+
+  const [catalogosOpen, setCatalogosOpen] = useState(grupoActivo.catalogos);
+  const [reportesOpen, setReportesOpen] = useState(grupoActivo.reportes);
+  const [altasOpen, setAltasOpen] = useState(grupoActivo.reportes);
+  const [adminOpen, setAdminOpen] = useState(grupoActivo.admin);
+  const [calidadOpen, setCalidadOpen] = useState(grupoActivo.calidad);
+  const [comprasOpen, setComprasOpen] = useState(grupoActivo.compras);
+  const [ventasOpen, setVentasOpen] = useState(grupoActivo.ventas);
+
+  // Con el menú colapsado, al tocar un grupo se expande el menú y se abre ese grupo
+  const alternarGrupo = (abierto, setAbierto) => {
+    if (collapsed) {
+      setCollapsed(false);
+      setAbierto(true);
+    } else {
+      setAbierto(!abierto);
+    }
+  };
+
+  const claseGrupo = (activo) => `menu-title ${activo ? "group-active" : ""}`;
 
   const [menus, setMenus] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -139,14 +167,19 @@ function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobileOpen}){
 
             <div className="sidebar-header">
 
-                {!collapsed &&
-                    <h4 className="logo">
-                        OCASO
-                    </h4>
-                }
+                <NavLink to="/dashboard" className="sidebar-brand" title="Ocaso ERP">
+                    {collapsed ? (
+                        <img src="/IconoOcaso2.ico" alt="Ocaso" className="sidebar-brand-icono" />
+                    ) : (
+                        <img src={logoOcaso} alt="Ocaso" className="sidebar-brand-logo" />
+                    )}
+                </NavLink>
 
-              <FaBars
+              <button
+                  type="button"
                   className="toggle-btn"
+                  title={collapsed ? "Expandir menú" : "Contraer menú"}
+                  aria-label={collapsed ? "Expandir menú" : "Contraer menú"}
                   onClick={() => {
 
                       if(window.innerWidth < 768){
@@ -163,15 +196,21 @@ function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobileOpen}){
                       }
 
                   }}
-              />
+              >
+                  <FaBars />
+              </button>
 
             </div>
 
       <ul className="menu">
 
+        {(tienePermiso("/dashboard") || tienePermiso("/calidad")) && !collapsed && (
+          <li className="menu-section">Principal</li>
+        )}
+
         {tienePermiso("/dashboard") && (
           <li>
-            <NavLink to="/dashboard" className="menu-link">
+            <NavLink to="/dashboard" className="menu-link" title="Dashboard">
               <FaTachometerAlt className="icon" />
               {!collapsed && "Dashboard"}
             </NavLink>
@@ -183,8 +222,9 @@ function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobileOpen}){
           <li className="menu-group">
 
             <div
-              className="menu-title"
-              onClick={() => !collapsed && setCalidadOpen(!calidadOpen)}
+              className={claseGrupo(grupoActivo.calidad)}
+              title="Calidad"
+              onClick={() => alternarGrupo(calidadOpen, setCalidadOpen)}
             >
 
               <div className="menu-title-left">
@@ -206,6 +246,21 @@ function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobileOpen}){
             {!collapsed && calidadOpen && (
 
               <ul className="submenu">
+
+                <li>
+
+                  <NavLink
+                    to="/calidad"
+                    end
+                    className="menu-link"
+                  >
+
+                    <FaTachometerAlt className="icon" />
+                    {!collapsed && "Inicio"}
+
+                  </NavLink>
+
+                </li>
 
                 <li>
 
@@ -243,9 +298,14 @@ function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobileOpen}){
 
         )}
 
+        {(tienePermiso("/clientes") || tienePermiso("/ventas") ||
+          tienePermiso("/clientes/inactivos") || tienePermiso("/reportes/clientes-documentos")) && !collapsed && (
+          <li className="menu-section">Comercial</li>
+        )}
+
         {tienePermiso("/clientes") && (
           <li>
-            <NavLink to="/clientes" end className="menu-link">
+            <NavLink to="/clientes" end className="menu-link" title="Clientes">
               <FaUsers className="icon" />
               {!collapsed && "Clientes"}
             </NavLink>
@@ -257,8 +317,9 @@ function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobileOpen}){
           <li className="menu-group">
 
             <div
-              className="menu-title"
-              onClick={() => !collapsed && setVentasOpen(!ventasOpen)}
+              className={claseGrupo(grupoActivo.ventas)}
+              title="Ventas"
+              onClick={() => alternarGrupo(ventasOpen, setVentasOpen)}
             >
 
               <div className="menu-title-left">
@@ -280,8 +341,6 @@ function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobileOpen}){
             {!collapsed && ventasOpen && (
 
               <ul className="submenu">
-
-                  <ul className="submenu">
                       {tienePermiso("/ventas/DashboardVentas") && (
                         <li>
                           <NavLink to="/ventas/DashboardVentas" end className="menu-link">
@@ -309,8 +368,6 @@ function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobileOpen}){
                         </li>
                       )}
 
-                  </ul>
-
               </ul>
 
             )}
@@ -324,7 +381,7 @@ function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobileOpen}){
         
         {tienePermiso("/clientes/inactivos") && (
           <li>
-            <NavLink to="/clientes/inactivos" className="menu-link">
+            <NavLink to="/clientes/inactivos" className="menu-link" title="Clientes Inactivos">
               <FaUserSlash className="icon" />
               {!collapsed && "Clientes Inactivos"}
             </NavLink>
@@ -336,8 +393,9 @@ function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobileOpen}){
           <li className="menu-group">
 
             <div
-              className="menu-title"
-              onClick={() => !collapsed && setReportesOpen(!reportesOpen)}
+              className={claseGrupo(grupoActivo.reportes)}
+              title="Reportes"
+              onClick={() => alternarGrupo(reportesOpen, setReportesOpen)}
             >
 
               <div className="menu-title-left">
@@ -365,6 +423,7 @@ function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobileOpen}){
                   onClick={() => setAltasOpen(!altasOpen)}
                 >
                   Altas
+                  <FaChevronDown className={`arrow ${altasOpen ? "open" : ""}`} />
                 </li>
 
                 {altasOpen && (
@@ -406,15 +465,21 @@ function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobileOpen}){
 
                 {/**Sección de compras**/}
         {(tienePermiso("/compras/dashboard") || tienePermiso("/compras/nueva") || tienePermiso("/compras/mis-requisiciones")
+        ) && !collapsed && (
+          <li className="menu-section">Operación</li>
+        )}
+
+        {(tienePermiso("/compras/dashboard") || tienePermiso("/compras/nueva") || tienePermiso("/compras/mis-requisiciones")
         )
         && (
 
         <li className="menu-group">
 
             <div
-                className="menu-title"
+                className={claseGrupo(grupoActivo.compras)}
+                title="Compras"
                 onClick={() =>
-                    setComprasOpen(!comprasOpen)
+                    alternarGrupo(comprasOpen, setComprasOpen)
                 }
             >
 
@@ -584,13 +649,21 @@ function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobileOpen}){
 
         {(tienePermiso("/catalogos/documentos") ||
           tienePermiso("/catalogos/empresas") ||
+          tienePermiso("/catalogos/ejecutivos") ||
+          tienePermiso("/admin/usuarios")) && !collapsed && (
+          <li className="menu-section">Configuración</li>
+        )}
+
+        {(tienePermiso("/catalogos/documentos") ||
+          tienePermiso("/catalogos/empresas") ||
           tienePermiso("/catalogos/ejecutivos")) && (
 
             <li className="menu-group">
 
               <div
-                className="menu-title"
-                onClick={() => setCatalogosOpen(!catalogosOpen)}
+                className={claseGrupo(grupoActivo.catalogos)}
+                title="Catálogos"
+                onClick={() => alternarGrupo(catalogosOpen, setCatalogosOpen)}
               >
 
                 <div className="menu-title-left">
@@ -718,8 +791,9 @@ function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobileOpen}){
           <li className="menu-group">
 
             <div
-              className="menu-title"
-              onClick={() => setAdminOpen(!adminOpen)}
+              className={claseGrupo(grupoActivo.admin)}
+              title="Administrador"
+              onClick={() => alternarGrupo(adminOpen, setAdminOpen)}
             >
 
               <div className="menu-title-left">
@@ -766,9 +840,17 @@ function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobileOpen}){
 
       </ul>
 
+      {!collapsed && (
+        <div className="sidebar-footer">
+          <span className="sidebar-footer-punto" />
+          Ocaso ERP · {new Date().getFullYear()}
+        </div>
+      )}
+
     </div>
 
     </>
+
 
   );
 

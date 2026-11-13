@@ -2,7 +2,14 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../../services/api";
 import Swal from "sweetalert2";
-import { FaSearch } from "react-icons/fa";
+import {
+    FaSearch,
+    FaUserSlash,
+    FaArrowLeft,
+    FaCheckCircle,
+    FaEye,
+    FaUserCheck,
+} from "react-icons/fa";
 
 function ClientesInactivos(){
 
@@ -94,137 +101,237 @@ function ClientesInactivos(){
 
     });
 
-    if(loading){
-        return <p>Cargando...</p>
-    }
+    const formatoFecha = (valor) =>
+        valor
+            ? new Date(valor).toLocaleDateString("es-MX", {
+                day: "2-digit",
+                month: "short",
+                year: "numeric",
+            })
+            : "—";
+
+    const inicial = (texto) => (texto || "?").trim().charAt(0).toUpperCase();
 
     return(
 
-        <div className="container-fluid">
+        <div className="container-fluid dash">
 
-            <div className="card shadow-sm">
+            {/* ========================= */}
+            {/* ENCABEZADO */}
+            {/* ========================= */}
 
-                <div className="card-body">
+            <div className="dash-hero mb-4">
+                <div className="dash-hero-texto">
+                    <span className="dash-eyebrow">Clientes</span>
+                    <h2 className="dash-titulo">Clientes inactivos</h2>
+                    <div className="dash-contexto">
+                        <span>
+                            <FaUserSlash /> {clientes.length.toLocaleString("es-MX")}{" "}
+                            {clientes.length === 1 ? "cliente inactivo" : "clientes inactivos"}
+                        </span>
+                    </div>
+                </div>
 
-                    <div className="row align-items-center mb-4">
+                <button
+                    type="button"
+                    className="btn btn-light dash-btn-hero"
+                    onClick={()=>navigate("/clientes")}
+                >
+                    <FaArrowLeft />
+                    Clientes activos
+                </button>
+            </div>
 
-                        <div className="col-md-4">
+            {/* ========================= */}
+            {/* LISTADO */}
+            {/* ========================= */}
 
-                            <div className="input-group shadow-sm">
+            <div className="dash-panel p-0 overflow-hidden mb-4">
 
-                                <span className="input-group-text bg-white">
-                                    <FaSearch />
-                                </span>
+                <div className="listado-toolbar">
 
-                                <input
-                                    type="text"
-                                    className="form-control"
-                                    placeholder="Buscar cliente, RFC o ejecutivo..."
-                                    value={busqueda}
-                                    onChange={(e)=>setBusqueda(e.target.value)}
-                                />
-
-                            </div>
-
-                        </div>
-
-                        <div className="col-md-4 text-center">
-
-                            <h3 className="mb-0 fw-bold">
-                                Clientes Inactivos
-                            </h3>
-
-                        </div>
-
-                        <div className="col-md-4 text-end">
-
-                            <span className="badge bg-danger fs-6 px-3 py-2">
-                                {clientes.length} inactivos
-                            </span>
-
-                        </div>
-
+                    <div className="explorador-buscar listado-buscar">
+                        <FaSearch />
+                        <input
+                            type="text"
+                            placeholder="Buscar cliente, RFC o ejecutivo..."
+                            value={busqueda}
+                            onChange={(e)=>setBusqueda(e.target.value)}
+                            aria-label="Buscar cliente"
+                        />
                     </div>
 
-                    {clientes.length === 0 ? (
-
-                        <div className="alert alert-success mb-0">
-                            No hay clientes inactivos.
-                        </div>
-
-                    ) : (
-
-                        <table className="table table-bordered table-hover align-middle">
-
-                            <thead className="table-dark">
-                                <tr>
-                                    <th>Cliente</th>
-                                    <th>RFC</th>
-                                    <th>Ejecutivo</th>
-                                    <th>Fecha</th>
-                                    <th>Acciones</th>
-                                </tr>
-                            </thead>
-
-                            <tbody>
-
-                                {clientesFiltrados.map(cliente=>(
-
-                                    <tr key={cliente.id}>
-
-                                        <td>
-                                            {cliente.razonSocial}
-                                        </td>
-
-                                        <td>
-                                            {cliente.rfc}
-                                        </td>
-
-                                        <td>
-                                            {cliente.ejecutivo || "-"}
-                                        </td>
-
-                                        <td>
-                                            {
-                                                cliente.fechaCreacion
-                                                ? new Date(cliente.fechaCreacion).toLocaleDateString()
-                                                : "-"
-                                            }
-                                        </td>
-
-                                        <td>
-
-                                            <div className="d-flex gap-2">
-
-                                                <button
-                                                    className="btn btn-primary btn-sm"
-                                                    onClick={()=>navigate(`/clientes/${cliente.id}`)}
-                                                >
-                                                    Ver detalle
-                                                </button>
-
-                                                <button
-                                                    className="btn btn-success btn-sm"
-                                                    onClick={()=>activarCliente(cliente.id)}
-                                                >
-                                                    Activar
-                                                </button>
-
-                                            </div>
-
-                                        </td>
-
-                                    </tr>
-
-                                ))}
-
-                            </tbody>
-
-                        </table>
-
-                    )}
+                    <span className="listado-contador">
+                        Mostrando <strong>{clientesFiltrados.length.toLocaleString("es-MX")}</strong> de{" "}
+                        <strong>{clientes.length.toLocaleString("es-MX")}</strong>
+                    </span>
 
                 </div>
+
+                {loading ? (
+
+                    <div className="dash-vacio">
+                        <div className="spinner-border text-primary" role="status" />
+                        <span>Cargando clientes…</span>
+                    </div>
+
+                ) : clientes.length === 0 ? (
+
+                    <div className="dash-vacio ci-vacio-ok">
+                        <FaCheckCircle />
+                        <span>No hay clientes inactivos.</span>
+                    </div>
+
+                ) : clientesFiltrados.length === 0 ? (
+
+                    <div className="dash-vacio">
+                        <FaSearch />
+                        <span>Ningún cliente coincide con la búsqueda.</span>
+                    </div>
+
+                ) : (
+                    <>
+                        {/* TABLA (escritorio) */}
+
+                        <div className="table-responsive d-none d-md-block">
+                            <table className="table align-middle docs-tabla no-cards">
+
+                                <thead>
+                                    <tr>
+                                        <th>Cliente</th>
+                                        <th>RFC</th>
+                                        <th>Ejecutivo</th>
+                                        <th>Fecha</th>
+                                        <th>Estatus</th>
+                                        <th className="text-end">Acciones</th>
+                                    </tr>
+                                </thead>
+
+                                <tbody>
+
+                                    {clientesFiltrados.map(cliente=>(
+
+                                        <tr key={cliente.id}>
+
+                                            <td>
+                                                <div className="cliente-nombre">
+                                                    <span className="cliente-avatar ci-avatar">
+                                                        {inicial(cliente.razonSocial)}
+                                                    </span>
+                                                    <span className="text-break">{cliente.razonSocial}</span>
+                                                </div>
+                                            </td>
+
+                                            <td>
+                                                {cliente.rfc
+                                                    ? <span className="cliente-rfc">{cliente.rfc}</span>
+                                                    : <span className="text-muted">—</span>}
+                                            </td>
+
+                                            <td>
+                                                {cliente.ejecutivo || <span className="text-muted">Sin asignar</span>}
+                                            </td>
+
+                                            <td className="docs-fecha">
+                                                {formatoFecha(cliente.fechaCreacion)}
+                                            </td>
+
+                                            <td>
+                                                <span className="estatus-pastilla estatus-negado">
+                                                    <span className="estatus-punto" />
+                                                    Inactivo
+                                                </span>
+                                            </td>
+
+                                            <td>
+
+                                                <div className="docs-acciones">
+
+                                                    <button
+                                                        className="btn dash-btn-tabla dash-btn-suave"
+                                                        onClick={()=>navigate(`/clientes/${cliente.id}`)}
+                                                    >
+                                                        <FaEye /> Ver detalle
+                                                    </button>
+
+                                                    <button
+                                                        className="btn btn-success dash-btn-tabla"
+                                                        onClick={()=>activarCliente(cliente.id)}
+                                                    >
+                                                        <FaUserCheck /> Activar
+                                                    </button>
+
+                                                </div>
+
+                                            </td>
+
+                                        </tr>
+
+                                    ))}
+
+                                </tbody>
+
+                            </table>
+                        </div>
+
+                        {/* TARJETAS (celular) */}
+
+                        <div className="d-md-none p-3">
+
+                            {clientesFiltrados.map(cliente=>(
+
+                                <div className="cliente-tarjeta ci-tarjeta" key={cliente.id}>
+
+                                    <div className="d-flex align-items-start gap-3">
+                                        <span className="cliente-avatar ci-avatar">
+                                            {inicial(cliente.razonSocial)}
+                                        </span>
+
+                                        <div className="flex-grow-1" style={{ minWidth: 0 }}>
+                                            <div className="d-flex justify-content-between align-items-start gap-2">
+                                                <div className="fw-semibold text-break">{cliente.razonSocial}</div>
+                                                <span className="estatus-pastilla estatus-negado">Inactivo</span>
+                                            </div>
+                                            {cliente.rfc && (
+                                                <span className="cliente-rfc d-inline-block mt-1">{cliente.rfc}</span>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    <div className="prospecto-tarjeta-datos">
+                                        <div>
+                                            <small>Ejecutivo</small>
+                                            <span>{cliente.ejecutivo || "Sin asignar"}</span>
+                                        </div>
+                                        <div>
+                                            <small>Fecha</small>
+                                            <span>{formatoFecha(cliente.fechaCreacion)}</span>
+                                        </div>
+                                    </div>
+
+                                    <div className="d-flex gap-2">
+                                        <button
+                                            className="btn dash-btn-tabla dash-btn-suave flex-fill"
+                                            onClick={()=>navigate(`/clientes/${cliente.id}`)}
+                                        >
+                                            <FaEye /> Ver detalle
+                                        </button>
+
+                                        <button
+                                            className="btn btn-success dash-btn-tabla flex-fill"
+                                            onClick={()=>activarCliente(cliente.id)}
+                                        >
+                                            <FaUserCheck /> Activar
+                                        </button>
+                                    </div>
+
+                                </div>
+
+                            ))}
+
+                        </div>
+                    </>
+                )}
 
             </div>
 

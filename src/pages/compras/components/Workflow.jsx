@@ -116,7 +116,9 @@ function Workflow({ detalle }) {
 
         <div className="workflow-card">
 
-            <div className="workflow">
+            <div className="overflow-x-auto">
+
+            <div className="workflow" style={{ minWidth: "480px" }}>
 
                 <div className="workflow-line"></div>
 
@@ -193,6 +195,8 @@ function Workflow({ detalle }) {
                     ))
 
                 }
+
+            </div>
 
             </div>
 

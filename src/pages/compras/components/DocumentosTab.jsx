@@ -167,7 +167,7 @@ function DocumentosTab({
                                 documentos.map((doc) => (
                                     <tr key={doc.id}>
 
-                                        <td className="fw-semibold">
+                                        <td className="fw-semibold text-break">
                                             {doc.nombreDocumento}
                                         </td>
 
@@ -219,7 +219,7 @@ function DocumentosTab({
                             <div className="modal-content">
 
                                 <div className="modal-header">
-                                    <h5 className="modal-title">
+                                    <h5 className="modal-title text-break">
                                         {nombreDocumento}
                                     </h5>
 

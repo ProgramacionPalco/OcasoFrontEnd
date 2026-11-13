@@ -8,7 +8,7 @@ export default function ImprimirRequisicion() {
     return (
         <div className="container py-4">
 
-            <div className="d-flex justify-content-between align-items-center mb-4">
+            <div className="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
                 <h4 className="mb-0">
                     Requisición #{id}
                 </h4>

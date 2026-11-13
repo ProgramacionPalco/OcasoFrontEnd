@@ -1,11 +1,14 @@
 import { jwtDecode } from "jwt-decode";
 import { FaBell, FaUserCircle } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
-import { FaBars } from "react-icons/fa";
+import { FaBars, FaMoon, FaSun, FaSignOutAlt } from "react-icons/fa";
+import { useTema } from "../context/ThemeContext";
 
 function Header({ setMobileOpen }) {
 
     const navigate = useNavigate();
+
+    const { tema, toggleTema } = useTema();
 
     const token = localStorage.getItem("token");
 
@@ -57,12 +60,22 @@ function Header({ setMobileOpen }) {
             </button>
 
             <div className="header-left">
-                <h5>Sistema Ocaso</h5>
+                <h5 className="text-truncate">Sistema Ocaso</h5>
             </div>
 
             <div className="header-right">
 
                 <span className="fecha">{fecha}</span>
+
+                <button
+                    type="button"
+                    className="theme-toggle"
+                    onClick={toggleTema}
+                    title={tema === "dark" ? "Cambiar a modo claro" : "Cambiar a modo oscuro"}
+                    aria-label={tema === "dark" ? "Cambiar a modo claro" : "Cambiar a modo oscuro"}
+                >
+                    {tema === "dark" ? <FaSun /> : <FaMoon />}
+                </button>
 
                 <FaBell className="icono-header" />
 
@@ -72,10 +85,13 @@ function Header({ setMobileOpen }) {
                 </div>
 
                 <button
-                    className="btn btn-sm btn-outline-danger ms-3"
+                    className="btn btn-sm btn-outline-danger ms-3 d-inline-flex align-items-center gap-1"
                     onClick={logout}
+                    title="Cerrar sesión"
+                    aria-label="Cerrar sesión"
                 >
-                    Cerrar sesión
+                    <FaSignOutAlt />
+                    <span className="d-none d-sm-inline">Cerrar sesión</span>
                 </button>
 
             </div>

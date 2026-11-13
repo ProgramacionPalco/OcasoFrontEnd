@@ -743,8 +743,8 @@ function IntermedioTab({
                                       <FaAddressBook size={22} />
                                     </div>
 
-                                    <div>
-                                      <h6 className="fw-bold mb-0">
+                                    <div style={{ minWidth: 0 }}>
+                                      <h6 className="fw-bold mb-0 text-break">
                                         {contacto.contacto || "Sin nombre"}
                                       </h6>
                                       <small className="text-muted">
@@ -902,7 +902,7 @@ function IntermedioTab({
                       style={{
                         width: "100%",
                         maxWidth: "100%",
-                        overflow: "hidden",
+                        overflowX: "auto",
                       }}
                     >
                       <DataGrid
@@ -996,7 +996,7 @@ function IntermedioTab({
                                     <small className="text-muted d-block">
                                       RFC
                                     </small>
-                                    <span className="fw-medium">
+                                    <span className="fw-medium text-break">
                                       {cliente.rfc || "Sin RFC"}
                                     </span>
                                   </div>

@@ -246,7 +246,7 @@ function DetalleOrdenCompra() {
                                 Orden de Compra
                             </h3>
 
-                            <h4 className="text-primary mb-0">
+                            <h4 className="text-primary mb-0 text-break">
                                 {orden.numeroOC}
                             </h4>
 
@@ -316,7 +316,7 @@ function DetalleOrdenCompra() {
 
                     <div className="row">
 
-                        <div className="col-md-3 mb-3">
+                        <div className="col-12 col-sm-6 col-md-3 mb-3">
 
                             <strong>Requisición</strong>
 
@@ -327,18 +327,18 @@ function DetalleOrdenCompra() {
                         </div>
 
 
-                        <div className="col-md-3 mb-3">
+                        <div className="col-12 col-sm-6 col-md-3 mb-3">
 
                             <strong>Proveedor</strong>
 
-                            <div>
+                            <div className="text-break">
                                 {orden.nombreProveedor || "--"}
                             </div>
 
                         </div>
 
 
-                        <div className="col-md-3 mb-3">
+                        <div className="col-12 col-sm-6 col-md-3 mb-3">
 
                             <strong>Fecha</strong>
 
@@ -353,7 +353,7 @@ function DetalleOrdenCompra() {
                         </div>
 
 
-                        <div className="col-md-3 mb-3">
+                        <div className="col-12 col-sm-6 col-md-3 mb-3">
 
                             <strong>Total OC</strong>
 

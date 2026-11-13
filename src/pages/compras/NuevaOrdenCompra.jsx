@@ -5,6 +5,18 @@ import {
     obtenerProductosDisponiblesOC,
     crearOrdenCompra
 } from "../../services/api";
+import {
+    FaClipboardList,
+    FaBuilding,
+    FaUser,
+    FaCalendarAlt,
+    FaTags,
+    FaFileInvoiceDollar,
+    FaHashtag,
+    FaTruck,
+    FaBoxOpen,
+    FaSave
+} from "react-icons/fa";
 
 function NuevaOrdenCompra() {
 
@@ -177,155 +189,159 @@ function NuevaOrdenCompra() {
 
     };
 
+    const moneda = (valor) =>
+        Number(valor || 0).toLocaleString("es-MX", {
+            style: "currency",
+            currency: "MXN"
+        });
+
+    const seleccionados = productos.filter(x => x.seleccionado).length;
+
+    const req = requisicion?.requisicion;
+
+    const RESUMEN = req
+        ? [
+            { label: "Empresa", valor: req.razonSocial, icono: <FaBuilding /> },
+            { label: "Solicitante", valor: req.solicitanteNombre, icono: <FaUser /> },
+            { label: "Fecha", valor: req.fecha ? new Date(req.fecha).toLocaleDateString("es-MX", { day: "2-digit", month: "short", year: "numeric" }) : "", icono: <FaCalendarAlt /> },
+            { label: "Categoría", valor: req.categoria, icono: <FaTags /> }
+        ]
+        : [];
+
     return (
 
-        <div className="container-fluid">
+        <div className="container-fluid dash">
 
-            <div className="card shadow-sm">
+            {/* ========================= */}
+            {/* ENCABEZADO */}
+            {/* ========================= */}
 
-                <div className="card-header">
+            <div className="dash-hero mb-4">
 
-                    <h3 className="mb-0">
-                        Nueva Orden de Compra
-                    </h3>
-
+                <div className="dash-hero-texto">
+                    <span className="dash-eyebrow">Compras</span>
+                    <h2 className="dash-titulo">Nueva orden de compra</h2>
+                    <div className="dash-contexto">
+                        <span><FaClipboardList /> Requisición REQ-{idRequisicion}</span>
+                    </div>
                 </div>
 
-                <div className="card-body">
+                <div className="nr-hero-total">
+                    <span>Total de la orden</span>
+                    <strong>{moneda(totalGeneral)}</strong>
+                </div>
 
-                    {
-                        requisicion &&
-                        (
-                            <>
+            </div>
 
-                                <div className="row mb-4">
+            {/* ========================= */}
+            {/* DATOS DE LA REQUISICIÓN */}
+            {/* ========================= */}
 
-                                    <div className="col-md-3">
+            {req && (
+                <div className="dash-panel nc-form p-0 overflow-hidden mb-4">
 
-                                        <label className="form-label fw-bold">
-                                            Empresa
-                                        </label>
+                    <div className="nc-form-header">
+                        <span className="nc-form-icono"><FaClipboardList /></span>
+                        <div>
+                            <h3 className="nc-form-titulo">Datos de la requisición</h3>
+                            <div className="nc-form-sub">Información de origen (solo lectura)</div>
+                        </div>
+                    </div>
 
-                                        <input
-                                            className="form-control"
-                                            value={requisicion.requisicion.razonSocial ?? ""}
-                                            readOnly
-                                        />
+                    <div className="nc-form-cuerpo">
 
+                        <div className="oc-resumen">
+                            {RESUMEN.map((r) => (
+                                <div className="oc-resumen-item" key={r.label}>
+                                    <span className="oc-resumen-icono">{r.icono}</span>
+                                    <div style={{ minWidth: 0 }}>
+                                        <small>{r.label}</small>
+                                        <span className="text-break">{r.valor || "—"}</span>
                                     </div>
-
-                                    <div className="col-md-3">
-
-                                        <label className="form-label fw-bold">
-                                            Solicitante
-                                        </label>
-
-                                        <input
-                                            className="form-control"
-                                            value={requisicion.requisicion.solicitanteNombre}
-                                            readOnly
-                                        />
-
-                                    </div>
-
-                                    <div className="col-md-3">
-
-                                        <label className="form-label fw-bold">
-                                            Fecha
-                                        </label>
-
-                                        <input
-                                            className="form-control"
-                                            value={new Date(requisicion.requisicion.fecha).toLocaleDateString()}
-                                            readOnly
-                                        />
-
-                                    </div>
-
-                                    <div className="col-md-3">
-
-                                        <label className="form-label fw-bold">
-                                            Categoría
-                                        </label>
-
-                                        <input
-                                            className="form-control"
-                                            value={requisicion.requisicion.categoria ?? ""}
-                                            readOnly
-                                        />
-
-                                    </div>
-
                                 </div>
+                            ))}
+                        </div>
 
-                                <div className="mb-3">
+                        {req.descripcion && (
+                            <div className="oc-descripcion">
+                                <small>Descripción</small>
+                                <p className="mb-0">{req.descripcion}</p>
+                            </div>
+                        )}
 
-                                    <label className="form-label fw-bold">
-                                        Descripción
-                                    </label>
+                    </div>
+                </div>
+            )}
 
-                                    <textarea
-                                        className="form-control"
-                                        rows="2"
-                                        value={requisicion.requisicion.descripcion}
-                                        readOnly
-                                    />
+            {/* ========================= */}
+            {/* DATOS DE LA ORDEN */}
+            {/* ========================= */}
 
-                                </div>
+            <div className="dash-panel nc-form p-0 overflow-hidden mb-4">
 
-                            </>
-                        )
-                    }
+                <div className="nc-form-header">
+                    <span className="nc-form-icono"><FaFileInvoiceDollar /></span>
+                    <div>
+                        <h3 className="nc-form-titulo">Datos de la orden</h3>
+                        <div className="nc-form-sub">Número de OC, proveedor y observaciones</div>
+                    </div>
+                </div>
 
-                    <hr />
-
+                <div className="nc-form-cuerpo">
                     <div className="row g-3">
 
                         <div className="col-md-4">
 
-                            <label className="form-label fw-bold">
-                                Número de Orden de Compra *
+                            <label className="form-label">
+                                Número de orden de compra <span className="text-danger">*</span>
                             </label>
 
-                            <input
-                                type="text"
-                                className="form-control"
-                                placeholder="Ej. OC-12345"
-                                value={numeroOC}
-                                onChange={(e) =>
-                                    setNumeroOC(e.target.value)
-                                }
-                            />
+                            <div className="nr-input-icono">
+                                <FaHashtag />
+                                <input
+                                    type="text"
+                                    className="form-control"
+                                    placeholder="Ej. OC-12345"
+                                    value={numeroOC}
+                                    onChange={(e) =>
+                                        setNumeroOC(e.target.value)
+                                    }
+                                />
+                            </div>
 
                         </div>
 
                         <div className="col-md-4">
 
-                            <label className="form-label fw-bold">
-                                Proveedor *
+                            <label className="form-label">
+                                Proveedor <span className="text-danger">*</span>
                             </label>
 
-                            <input
-                                type="text"
-                                className="form-control"
-                                placeholder="Nombre del proveedor"
-                                value={nombreProveedor}
-                                onChange={(e) =>
-                                    setNombreProveedor(e.target.value)
-                                }
-                            />
+                            <div className="nr-input-icono">
+                                <FaTruck />
+                                <input
+                                    type="text"
+                                    className="form-control"
+                                    placeholder="Nombre del proveedor"
+                                    value={nombreProveedor}
+                                    onChange={(e) =>
+                                        setNombreProveedor(e.target.value)
+                                    }
+                                />
+                            </div>
 
                         </div>
 
                         <div className="col-md-4">
 
-                            <label className="form-label fw-bold">
+                            <label className="form-label">
                                 Observaciones
                             </label>
 
                             <input
                                 type="text"
                                 className="form-control"
+                                placeholder="Opcional"
                                 value={observaciones}
                                 onChange={(e) =>
                                     setObservaciones(e.target.value)
@@ -335,88 +351,126 @@ function NuevaOrdenCompra() {
                         </div>
 
                     </div>
+                </div>
+            </div>
 
-                    <hr />
+            {/* ========================= */}
+            {/* PRODUCTOS */}
+            {/* ========================= */}
 
-                    <div className="table-responsive">
+            <div className="dash-panel nc-form p-0 overflow-hidden mb-4">
 
-                        <table className="table table-bordered table-hover align-middle">
+                <div className="nc-form-header">
+                    <span className="nc-form-icono"><FaBoxOpen /></span>
+                    <div>
+                        <h3 className="nc-form-titulo">Productos</h3>
+                        <div className="nc-form-sub">Marque los productos que incluirá esta orden</div>
+                    </div>
+                    <span className="nc-form-paso">
+                        {seleccionados} de {productos.length} seleccionados
+                    </span>
+                </div>
 
-                            <thead className="table-light">
+                {productos.length === 0 ? (
 
-                                <tr>
+                    <div className="dash-vacio">
+                        <FaBoxOpen />
+                        <span>No hay productos disponibles para esta requisición.</span>
+                    </div>
 
-                                    <th></th>
+                ) : (
 
-                                    <th>Concepto</th>
+                <div className="table-responsive">
 
-                                    <th width="120">
-                                        Disponible
-                                    </th>
+                    <table className="table align-middle docs-tabla tabla-cards productos-table oc-tabla">
 
-                                    <th width="150">
-                                        Cantidad
-                                    </th>
+                        <thead>
 
-                                    <th width="170">
-                                        Precio Unitario
-                                    </th>
+                            <tr>
 
-                                    <th width="150">
-                                        Total
-                                    </th>
+                                <th style={{ width: 50 }}></th>
 
-                                </tr>
+                                <th>Concepto</th>
 
-                            </thead>
+                                <th className="text-center" style={{ width: 120 }}>
+                                    Disponible
+                                </th>
 
-                            <tbody>
+                                <th style={{ width: 140 }}>
+                                    Cantidad
+                                </th>
 
-                                {
-                                    productos.map((p, i) => (
+                                <th style={{ width: 180 }}>
+                                    Precio unitario
+                                </th>
 
-                                        <tr key={p.idDetalleRequisicion}>
+                                <th className="text-end" style={{ width: 150 }}>
+                                    Total
+                                </th>
 
-                                            <td>
+                            </tr>
 
-                                                <input
-                                                    type="checkbox"
-                                                    checked={p.seleccionado}
-                                                    onChange={() => seleccionarProducto(i)}
-                                                />
+                        </thead>
 
-                                            </td>
+                        <tbody>
 
-                                            <td>
+                            {
+                                productos.map((p, i) => (
 
-                                                {p.descripcion}
+                                    <tr
+                                        key={p.idDetalleRequisicion}
+                                        className={p.seleccionado ? "oc-fila-sel" : "oc-fila"}
+                                    >
 
-                                            </td>
+                                        <td>
 
-                                            <td>
+                                            <input
+                                                type="checkbox"
+                                                className="form-check-input oc-check"
+                                                checked={p.seleccionado}
+                                                onChange={() => seleccionarProducto(i)}
+                                                aria-label={`Seleccionar ${p.descripcion}`}
+                                            />
 
+                                        </td>
+
+                                        <td
+                                            className="oc-concepto"
+                                            onClick={() => seleccionarProducto(i)}
+                                        >
+
+                                            {p.descripcion}
+
+                                        </td>
+
+                                        <td className="text-center">
+
+                                            <span className="rd-contador rd-contador-cero">
                                                 {p.cantidadDisponible}
+                                            </span>
 
-                                            </td>
+                                        </td>
 
-                                            <td>
+                                        <td>
 
-                                                <input
-                                                    type="number"
-                                                    className="form-control"
-                                                    min="0"
-                                                    max={p.cantidadDisponible}
-                                                    value={p.cantidad}
-                                                    disabled={!p.seleccionado}
-                                                    onChange={(e) =>
-                                                        cambiarCantidad(i, e.target.value)
-                                                    }
-                                                />
+                                            <input
+                                                type="number"
+                                                className="form-control"
+                                                min="0"
+                                                max={p.cantidadDisponible}
+                                                value={p.cantidad}
+                                                disabled={!p.seleccionado}
+                                                onChange={(e) =>
+                                                    cambiarCantidad(i, e.target.value)
+                                                }
+                                            />
 
-                                            </td>
+                                        </td>
 
-                                            <td>
+                                        <td>
 
+                                            <div className="nr-input-moneda">
+                                                <span>$</span>
                                                 <input
                                                     type="number"
                                                     className="form-control"
@@ -426,81 +480,74 @@ function NuevaOrdenCompra() {
                                                         cambiarPrecio(i, e.target.value)
                                                     }
                                                 />
+                                            </div>
 
-                                            </td>
+                                        </td>
 
-                                            <td className="text-end">
+                                        <td className="text-end nr-monto fw-semibold">
 
-                                                {(
-                                                    p.cantidad *
-                                                    p.precioUnitario
-                                                ).toLocaleString("es-MX", {
-                                                    style: "currency",
-                                                    currency: "MXN"
-                                                })}
+                                            {moneda(p.cantidad * p.precioUnitario)}
 
-                                            </td>
+                                        </td>
 
-                                        </tr>
+                                    </tr>
 
-                                    ))
-                                }
+                                ))
+                            }
 
-                            </tbody>
+                        </tbody>
 
-                        </table>
+                    </table>
 
+                </div>
+
+                )}
+
+                <div className="nr-productos-pie">
+                    <span className="listado-contador">
+                        Solo se suman los productos seleccionados
+                    </span>
+                    <div className="nr-total">
+                        <span>Total</span>
+                        <strong>{moneda(totalGeneral)}</strong>
                     </div>
+                </div>
 
-                    <div className="row mt-4">
+            </div>
 
-                        <div className="col-md-6">
+            {/* ========================= */}
+            {/* ACCIONES */}
+            {/* ========================= */}
 
-                            <h4>
+            <div className="nr-acciones mb-4">
 
-                                Total:
+                <div className="nr-acciones-total">
+                    <span>Total</span>
+                    <strong>{moneda(totalGeneral)}</strong>
+                </div>
 
-                                {" "}
+                <div className="d-flex gap-2 nr-acciones-botones">
 
-                                <span className="text-primary">
+                    <button
+                        className="btn btn-outline-secondary np-btn"
+                        onClick={() => navigate(-1)}
+                    >
 
-                                    {totalGeneral.toLocaleString("es-MX", {
-                                        style: "currency",
-                                        currency: "MXN"
-                                    })}
+                        Cancelar
 
-                                </span>
+                    </button>
 
-                            </h4>
+                    <button
+                        className="btn btn-primary np-btn"
+                        disabled={guardando}
+                        onClick={guardar}
+                    >
 
-                        </div>
+                        {guardando
+                            ? <><span className="spinner-border spinner-border-sm" role="status" /> Guardando...</>
+                            : <><FaSave /> Guardar orden de compra</>}
 
-                        <div className="col-md-6 text-end">
-
-                            <button
-                                className="btn btn-secondary me-2"
-                                onClick={() => navigate(-1)}
-                            >
-
-                                Cancelar
-
-                            </button>
-
-                            <button
-                                className="btn btn-primary"
-                                disabled={guardando}
-                                onClick={guardar}
-                            >
-
-                                {guardando
-                                    ? "Guardando..."
-                                    : "Guardar Orden de Compra"}
-
-                            </button>
-
-                        </div>
-
-                    </div>
+                    </button>
 
                 </div>
 

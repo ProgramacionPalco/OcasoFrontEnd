@@ -120,7 +120,7 @@ function ProspectosSeguimiento() {
       <div className="card shadow-sm mb-4">
         <div className="card-header">Seguimientos prospectos</div>
         <div className="card-body">
-          <h2 className="card-title">
+          <h2 className="card-title text-break">
             Nombre del prospecto: {prospecto.nombre}
           </h2>
           <Workflow estatusHistorial={estatusHistorial} />

@@ -10,6 +10,24 @@ import {
   FaFileUpload,
   FaDownload,
   FaHistory,
+  FaExclamationTriangle,
+  FaInfoCircle,
+  FaAddressBook,
+  FaFolderOpen,
+  FaChartLine,
+  FaUserTie,
+  FaBan,
+  FaClipboardCheck,
+  FaFileAlt,
+  FaEye,
+  FaTrashAlt,
+  FaFilePdf,
+  FaFileWord,
+  FaFileExcel,
+  FaFileImage,
+  FaEnvelope,
+  FaPhoneAlt,
+  FaMobileAlt,
 } from "react-icons/fa";
 import Swal from "sweetalert2";
 import dayjs from "dayjs";
@@ -19,6 +37,39 @@ import Select from "react-select";
 
 dayjs.extend(relativeTime);
 dayjs.locale("es");
+// ==============================
+// Helpers visuales de documentos
+// ==============================
+const estadoVencimiento = (fecha) => {
+  if (!fecha) return { tono: "sin", texto: "" };
+  const hoy = new Date();
+  hoy.setHours(0, 0, 0, 0);
+  const f = new Date(fecha);
+  f.setHours(0, 0, 0, 0);
+  const dias = Math.round((f - hoy) / 86400000);
+  if (dias < 0) return { tono: "vencido", texto: "Vencido" };
+  if (dias === 0) return { tono: "proximo", texto: "Vence hoy" };
+  if (dias <= 30) return { tono: "proximo", texto: `${dias} días` };
+  return { tono: "ok", texto: `${dias} días` };
+};
+
+const iniciales = (nombre) =>
+  (nombre || "?")
+    .trim()
+    .split(/s+/)
+    .slice(0, 2)
+    .map((p) => p.charAt(0).toUpperCase())
+    .join("");
+
+const tipoArchivo = (ruta) => {
+  const ext = (ruta || "").split(".").pop().toLowerCase();
+  if (ext === "pdf") return { clase: "pdf", icono: <FaFilePdf />, ext: "PDF" };
+  if (ext === "doc" || ext === "docx") return { clase: "word", icono: <FaFileWord />, ext: ext.toUpperCase() };
+  if (ext === "xls" || ext === "xlsx") return { clase: "excel", icono: <FaFileExcel />, ext: ext.toUpperCase() };
+  if (["jpg", "jpeg", "png", "gif", "webp"].includes(ext)) return { clase: "imagen", icono: <FaFileImage />, ext: ext.toUpperCase() };
+  return { clase: "otro", icono: <FaFileAlt />, ext: ext ? ext.toUpperCase() : "ARCHIVO" };
+};
+
 const FILE_SERVER = "http://192.168.1.234:9099";
 
 const obtenerHistorial = async () => {
@@ -529,275 +580,358 @@ function DetalleCliente() {
     obtenerProspectoPorCliente();
   }, [id]);
 
-  if (loading) return <p>Cargando...</p>;
-  if (!cliente) return <p>No se encontró el cliente.</p>;
+  if (loading) {
+    return (
+      <div className="container-fluid dash">
+        <div className="dash-panel">
+          <div className="dash-vacio">
+            <div className="spinner-border text-primary" role="status" />
+            <span>Cargando expediente…</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!cliente) {
+    return (
+      <div className="container-fluid dash">
+        <div className="dash-panel">
+          <div className="dash-vacio">
+            <FaExclamationTriangle />
+            <span>No se encontró el cliente.</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const inicial = (txt) => (txt || "?").trim().charAt(0).toUpperCase();
+
+  const porcentajeExpediente = Number(resumen?.porcentajeCompleto || 0);
+  const tonoExpediente =
+    porcentajeExpediente >= 80 ? "success" : porcentajeExpediente >= 50 ? "warning" : "danger";
+
+  const PESTANAS = [
+    { clave: "info", texto: "Información", icono: <FaInfoCircle /> },
+    { clave: "contactos", texto: "Contactos", icono: <FaAddressBook />, cuenta: resumen?.contactos },
+    { clave: "documentos", texto: "Documentos", icono: <FaFolderOpen /> },
+    { clave: "historial", texto: "Historial", icono: <FaHistory /> },
+    { clave: "prospeccion", texto: "Datos prospección", icono: <FaChartLine /> },
+  ];
+
+  const cambiarPestana = (clave) => {
+    if (clave === "historial") {
+      setTabActiva("historial");
+      cargarHistorial();
+      return;
+    }
+    if (clave === "prospeccion") {
+      if (prospectoPorCliente?.idProspecto) {
+        obtenerProspecto();
+        obtenerServicios();
+        obtenerTipoEmpresa();
+        obtenerServiciosRegistrados();
+      }
+      setTabActiva("prospeccion");
+      return;
+    }
+    setTabActiva(clave);
+  };
 
   return (
-    <div className="container-fluid">
-      {/* HEADER */}
-      {/* TARJETA PRINCIPAL DEL CLIENTE */}
-      <div className="card shadow-sm mb-4">
-        <div className="card-body d-flex justify-content-between align-items-center flex-wrap">
-          <div>
-            <h3 className="mb-1">{cliente.razonSocial}</h3>
-            <div className="d-flex gap-2 mt-2 flex-wrap">
-              <span className="badge bg-dark">RFC: {cliente.rfc}</span>
+    <div className="container-fluid dash detalle-cliente">
 
-              <span
-                className={`badge ${cliente.estadoClienteId === 3 ? "bg-success" : "bg-secondary"}`}
-              >
-                {cliente.estadoClienteId === 3 ? "Activo" : "Borrador"}
-              </span>
+      {/* ========================= */}
+      {/* ENCABEZADO DEL CLIENTE */}
+      {/* ========================= */}
 
-              <span
-                className={`badge ${cliente.personaFM === "F" ? "bg-info" : "bg-dark"}`}
-              >
-                {cliente.personaFM === "F" ? "Persona Física" : "Persona Moral"}
-              </span>
+      <div className="detalle-hero mb-4">
+
+        <div className="detalle-hero-cuerpo">
+
+          <div className="detalle-identidad">
+
+            <span className="detalle-avatar">{inicial(cliente.razonSocial)}</span>
+
+            <div style={{ minWidth: 0 }}>
+              <span className="dash-eyebrow">Expediente de cliente · #{cliente.id ?? id}</span>
+              <h2 className="detalle-nombre text-break">{cliente.razonSocial}</h2>
+
+              <div className="detalle-chips">
+                <span className="detalle-chip detalle-chip-rfc">RFC {cliente.rfc}</span>
+
+                {cliente.servicioNegado ? (
+                  <span className="detalle-chip detalle-chip-negado">
+                    <span className="estatus-punto" /> Servicio negado
+                  </span>
+                ) : cliente.estadoClienteId === 3 ? (
+                  <span className="detalle-chip detalle-chip-activo">
+                    <span className="estatus-punto" /> Activo
+                  </span>
+                ) : (
+                  <span className="detalle-chip detalle-chip-borrador">
+                    <span className="estatus-punto" /> Borrador
+                  </span>
+                )}
+
+                <span className="detalle-chip">
+                  {cliente.personaFM === "F" ? "Persona Física" : "Persona Moral"}
+                </span>
+              </div>
             </div>
+
           </div>
 
-          <div className="d-flex gap-4 justify-content-end">
+          <div className="detalle-ejecutivos">
+
             {/* Ejecutivo altas */}
-            <div>
-              <div className="text-muted small">Ejecutivo de altas</div>
+            <div className="detalle-ejecutivo">
+              <span className="detalle-ejecutivo-avatar">
+                <FaUserTie />
+              </span>
+              <div style={{ minWidth: 0 }}>
+                <div className="detalle-ejecutivo-rol">Ejecutivo de altas</div>
+                <div className="detalle-ejecutivo-nombre">
+                  {modoEdicion ? (
+                    <select
+                      className="form-select form-select-sm"
+                      value={clienteEditado.ejecutivoVentaId || ""}
+                      onChange={(e) =>
+                        setClienteEditado({
+                          ...clienteEditado,
+                          ejecutivoVentaId: e.target.value,
+                        })
+                      }
+                    >
+                      <option value="">No asignado</option>
 
-              <div className="fw-bold">
-                {modoEdicion ? (
-                  <select
-                    className="form-select"
-                    value={clienteEditado.ejecutivoVentaId || ""}
-                    onChange={(e) =>
-                      setClienteEditado({
-                        ...clienteEditado,
-                        ejecutivoVentaId: e.target.value,
-                      })
-                    }
-                  >
-                    <option value="">No asignado</option>
-
-                    {catalogoEjecutivosVentas.map((e) => (
-                      <option key={e.id} value={e.id}>
-                        {e.nombre}
-                      </option>
-                    ))}
-                  </select>
-                ) : (
-                  <span>{cliente.ejecutivoNombreVenta || "No asignado"}</span>
-                )}
+                      {catalogoEjecutivosVentas.map((e) => (
+                        <option key={e.id} value={e.id}>
+                          {e.nombre}
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    <span>{cliente.ejecutivoNombreVenta || "No asignado"}</span>
+                  )}
+                </div>
               </div>
             </div>
 
             {/* Ejecutivo ventas */}
-            <div>
-              <div className="text-muted small">Ejecutivo de ventas</div>
-
-              <div className="fw-bold">
-                {modoEdicion ? (
-                  <select className="form-select">
-                    <option value="">No asignado</option>
-                  </select>
-                ) : (
-                  <span>{cliente.ejecutivoNombreVentasProspecto || "No asignado"}</span>
-                )}
+            <div className="detalle-ejecutivo">
+              <span className="detalle-ejecutivo-avatar">
+                <FaChartLine />
+              </span>
+              <div style={{ minWidth: 0 }}>
+                <div className="detalle-ejecutivo-rol">Ejecutivo de ventas</div>
+                <div className="detalle-ejecutivo-nombre">
+                  {modoEdicion ? (
+                    <select className="form-select form-select-sm">
+                      <option value="">No asignado</option>
+                    </select>
+                  ) : (
+                    <span>{cliente.ejecutivoNombreVentasProspecto || "No asignado"}</span>
+                  )}
+                </div>
               </div>
             </div>
+
           </div>
+
         </div>
 
         {cliente.estadoClienteId !== 3 && (
-          <div className="card-footer bg-light text-end">
-            <button className="btn btn-success" onClick={cambiarEstatus}>
-              Activar Cliente
+          <div className="detalle-hero-pie">
+            <span>
+              <FaClock /> Este cliente está en borrador. Actívalo cuando el expediente esté completo.
+            </span>
+            <button className="btn btn-success dash-btn" onClick={cambiarEstatus}>
+              <FaCheckCircle /> Activar cliente
             </button>
           </div>
         )}
+
       </div>
 
+      {/* ========================= */}
       {/* ALERTA CONTACTOS */}
+      {/* ========================= */}
+
       {!tieneContactos && (
-        <div className="alert alert-warning d-flex align-items-center mb-4">
-          <div className="me-2">⚠</div>
-          <div>
-            <strong>Cliente incompleto. </strong>
-            Debe registrar al menos un contacto para continuar con el
-            expediente.
+        <div className="dash-aviso mb-4">
+          <span className="dash-aviso-icono"><FaExclamationTriangle /></span>
+          <div className="dash-aviso-texto">
+            <strong>Cliente incompleto</strong>
+            <span>Debe registrar al menos un contacto para continuar con el expediente.</span>
           </div>
         </div>
       )}
 
-      {/* Pestañas */}
-      <ul className="nav nav-tabs mb-4">
-        <li className="nav-item">
-          <button
-            className={`nav-link ${tabActiva === "info" ? "active" : ""}`}
-            onClick={() => setTabActiva("info")}
-          >
-            Información
-          </button>
-        </li>
-        <li className="nav-item">
-          <button
-            className={`nav-link ${tabActiva === "contactos" ? "active" : ""}`}
-            onClick={() => setTabActiva("contactos")}
-          >
-            Contactos
-          </button>
-        </li>
-        <li className="nav-item">
-          <button
-            className={`nav-link ${tabActiva === "documentos" ? "active" : ""}`}
-            onClick={() => setTabActiva("documentos")}
-          >
-            Documentos
-          </button>
-        </li>
-        <li className="nav-item">
-          <button
-            className={`nav-link ${tabActiva === "historial" ? "active" : ""}`}
-            onClick={() => {
-              setTabActiva("historial");
-              cargarHistorial();
-            }}
-          >
-            Historial
-          </button>
-        </li>
-        <li className="nav-item">
-          <button
-            className={`nav-link ${tabActiva === "prospeccion" ? "active" : ""}`}
-            onClick={() => {
-              if (prospectoPorCliente?.idProspecto) {
-                obtenerProspecto();
-                obtenerServicios();
-                obtenerTipoEmpresa();
-                obtenerServiciosRegistrados();
-              }
-              setTabActiva("prospeccion");
-            }}
-          >
-            Datos prospeccion
-          </button>
-        </li>
-      </ul>
+      {/* ========================= */}
+      {/* ACCIONES RÁPIDAS */}
+      {/* ========================= */}
 
-      {/* PANEL DE ACCIONES RÁPIDAS */}
-      <div className="card shadow-sm mb-4">
-        <div className="card-body">
-          <div className="d-flex gap-2 flex-wrap">
+      <div className="detalle-acciones mb-3">
+
+        <button
+          className="btn btn-primary dash-btn"
+          onClick={() => {
+            setTabActiva("contactos");
+            setMostrarForm(true);
+          }}
+        >
+          <FaUserPlus />
+          Nuevo contacto
+        </button>
+
+        <button
+          className="btn btn-outline-primary dash-btn"
+          disabled={!tieneContactos}
+          onClick={() => {
+            if (!tieneContactos) {
+              Swal.fire({
+                icon: "warning",
+                title: "Contacto requerido",
+                text: "Debe registrar al menos un contacto antes de subir documentos.",
+              });
+
+              return;
+            }
+
+            setTabActiva("documentos");
+          }}
+        >
+          <FaFileUpload />
+          Subir documento
+        </button>
+
+        <button className="btn btn-outline-success dash-btn" onClick={descargarExpediente}>
+          <FaDownload />
+          Descargar expediente
+        </button>
+
+        <button
+          className="btn btn-outline-secondary dash-btn"
+          onClick={() => {
+            setTabActiva("historial");
+            cargarHistorial();
+          }}
+        >
+          <FaHistory />
+          Historial
+        </button>
+
+        {!modoEdicion &&
+          permisoModulo("/clientes")?.puedeEditar &&
+          (!cliente?.servicioNegado ? (
             <button
-              className="btn btn-primary"
+              className="btn btn-outline-danger dash-btn detalle-accion-derecha"
               onClick={() => {
-                setTabActiva("contactos");
-                setMostrarForm(true);
+                setMotivoNegacion("");
+                setMostrarModalServicio(true);
               }}
             >
-              <FaUserPlus className="me-2" />
-              Nuevo contacto
+              <FaBan />
+              Negar servicio
             </button>
-
+          ) : (
             <button
-              className="btn btn-dark"
-              disabled={!tieneContactos}
-              onClick={() => {
-                if (!tieneContactos) {
-                  Swal.fire({
-                    icon: "warning",
-                    title: "Contacto requerido",
-                    text: "Debe registrar al menos un contacto antes de subir documentos.",
-                  });
-
-                  return;
-                }
-
-                setTabActiva("documentos");
-              }}
+              className="btn btn-success dash-btn detalle-accion-derecha"
+              onClick={reactivarServicio}
             >
-              <FaFileUpload className="me-2" />
-              Subir documento
+              <FaCheckCircle />
+              Reactivar cliente
             </button>
+          ))}
 
-            <button className="btn btn-success" onClick={descargarExpediente}>
-              <FaDownload className="me-2" />
-              Descargar expediente
-            </button>
+      </div>
 
-            <button
-              className="btn btn-outline-secondary"
-              onClick={() => {
-                setTabActiva("historial");
-                cargarHistorial();
-              }}
-            >
-              <FaHistory className="me-2" />
-              Historial
-            </button>
-            {!modoEdicion &&
-              permisoModulo("/clientes")?.puedeEditar &&
-              (!cliente?.servicioNegado ? (
-                <button
-                  className="btn btn-danger"
-                  onClick={() => {
-                    setMotivoNegacion("");
-                    setMostrarModalServicio(true);
-                  }}
-                >
-                  🚫 Negar servicio
-                </button>
-              ) : (
-                <button className="btn btn-success" onClick={reactivarServicio}>
-                  ✔ Reactivar cliente
-                </button>
-              ))}
-          </div>
-        </div>
+      {/* ========================= */}
+      {/* PESTAÑAS */}
+      {/* ========================= */}
+
+      <div className="detalle-tabs mb-4" role="tablist">
+        {PESTANAS.map((p) => (
+          <button
+            key={p.clave}
+            type="button"
+            role="tab"
+            aria-selected={tabActiva === p.clave}
+            className={`detalle-tab ${tabActiva === p.clave ? "activo" : ""}`}
+            onClick={() => cambiarPestana(p.clave)}
+          >
+            {p.icono}
+            {p.texto}
+            {p.cuenta > 0 && <span className="detalle-tab-cuenta">{p.cuenta}</span>}
+          </button>
+        ))}
       </div>
 
       {/*TabInformación*/}
       {tabActiva === "info" && (
         <>
           {resumen && (
-            <div className="card shadow-sm mb-4">
-              <div className="card-body">
-                <h5 className="mb-3">Resumen del Expediente</h5>
-                {/* PROGRESO */}
-                <div className="progress mb-4" style={{ height: "30px" }}>
-                  <div
-                    className={`progress-bar ${
-                      resumen.porcentajeCompleto >= 80
-                        ? "bg-success"
-                        : resumen.porcentajeCompleto >= 50
-                          ? "bg-warning"
-                          : "bg-danger"
-                    }`}
-                    style={{ width: `${resumen.porcentajeCompleto}%` }}
-                  >
-                    {resumen.porcentajeCompleto}% Expediente completo
-                  </div>
-                </div>
+            <div className="row g-3 mb-4">
 
-                {/* INDICADORES */}
-                <div className="row text-center">
-                  <div className="col-md-4 border-end">
-                    <div className="fs-3 fw-bold">{resumen.contactos}</div>
-                    <div className="text-muted">Contactos</div>
+              {/* PROGRESO DEL EXPEDIENTE */}
+              <div className="col-12 col-lg-6">
+                <div className="dash-kpi h-100">
+                  <div className="dash-kpi-top">
+                    <span className="dash-kpi-label">Expediente completo</span>
+                    <span className={`dash-kpi-icono dash-tono-${tonoExpediente}`}>
+                      <FaClipboardCheck />
+                    </span>
                   </div>
-
-                  <div className="col-md-4 border-end">
-                    <div className="fs-3 fw-bold">
-                      {resumen.documentosSubidos} /{" "}
-                      {resumen.documentosObligatorios}
-                    </div>
-                    <div className="text-muted">Documentos</div>
+                  <div className="dash-kpi-valor">
+                    {porcentajeExpediente}<small>%</small>
                   </div>
-                  <div className="col-md-4">
-                    <div className="fs-3 fw-bold text-danger">
-                      {resumen.documentosVencidos ?? 0}
-                    </div>
-                    <div className="text-muted">Vencidos</div>
+                  <div className="dash-barra detalle-barra-grande">
+                    <div
+                      className={`dash-barra-relleno dash-bg-${tonoExpediente}`}
+                      style={{ width: `${porcentajeExpediente}%` }}
+                    />
+                  </div>
+                  <div className="dash-kpi-pie">
+                    {porcentajeExpediente >= 80
+                      ? "Expediente en buen estado"
+                      : porcentajeExpediente >= 50
+                        ? "Faltan algunos documentos"
+                        : "Expediente con faltantes importantes"}
                   </div>
                 </div>
               </div>
+
+              {/* INDICADORES */}
+              <div className="col-4 col-lg-2">
+                <div className="dash-kpi h-100 detalle-mini">
+                  <span className="dash-kpi-icono dash-tono-primary"><FaAddressBook /></span>
+                  <div className="dash-kpi-valor">{resumen.contactos}</div>
+                  <div className="dash-kpi-label">Contactos</div>
+                </div>
+              </div>
+
+              <div className="col-4 col-lg-2">
+                <div className="dash-kpi h-100 detalle-mini">
+                  <span className="dash-kpi-icono dash-tono-info"><FaFileAlt /></span>
+                  <div className="dash-kpi-valor">
+                    {resumen.documentosSubidos}<small>/{resumen.documentosObligatorios}</small>
+                  </div>
+                  <div className="dash-kpi-label">Documentos</div>
+                </div>
+              </div>
+
+              <div className="col-4 col-lg-2">
+                <div className="dash-kpi h-100 detalle-mini">
+                  <span className="dash-kpi-icono dash-tono-danger"><FaExclamationTriangle /></span>
+                  <div className="dash-kpi-valor text-danger">
+                    {resumen.documentosVencidos ?? 0}
+                  </div>
+                  <div className="dash-kpi-label">Vencidos</div>
+                </div>
+              </div>
+
             </div>
           )}
 
@@ -1105,7 +1239,7 @@ function DetalleCliente() {
                 <strong>Ejecutivo de operaciones</strong>
 
                 <div className="d-flex align-items-center mt-2">
-                  <div
+                  <div className="flex-shrink-0"
                     style={{
                       width: "45px",
                       height: "45px",
@@ -1121,7 +1255,7 @@ function DetalleCliente() {
                     {cliente.ejecutivoNombreOp?.charAt(0) || "?"}
                   </div>
 
-                  <div className="ms-3">
+                  <div className="ms-3" style={{ minWidth: 0 }}>
                     {modoEdicion ? (
                       <select
                         className="form-select"
@@ -1161,7 +1295,7 @@ function DetalleCliente() {
                 <strong>Ejecutivo de altas</strong>
 
                 <div className="d-flex align-items-center mt-2">
-                  <div
+                  <div className="flex-shrink-0"
                     style={{
                       width: "45px",
                       height: "45px",
@@ -1177,7 +1311,7 @@ function DetalleCliente() {
                     {cliente.ejecutivoNombreVenta?.charAt(0) || "?"}
                   </div>
 
-                  <div className="ms-3">
+                  <div className="ms-3" style={{ minWidth: 0 }}>
                     <div className="fw-bold">
                       {modoEdicion ? (
                         <select
@@ -1323,14 +1457,19 @@ function DetalleCliente() {
           {/* CONTACTOS */}
           <div className="card p-3 mb-4">
             <div className="d-flex justify-content-between align-items-center mb-3">
-              <h5>Contactos</h5>
+              <div className="d-flex align-items-center gap-2">
+                <h5 className="mb-0">Contactos</h5>
+                {cliente.contactos?.length > 0 && (
+                  <span className="dash-chip">{cliente.contactos.length}</span>
+                )}
+              </div>
 
               {permisoModulo("/clientes")?.puedeCrear && (
                 <button
-                  className="btn btn-primary"
+                  className="btn btn-primary dash-btn"
                   onClick={() => setMostrarForm(true)}
                 >
-                  + Agregar Contacto
+                  <FaUserPlus /> Agregar contacto
                 </button>
               )}
             </div>
@@ -1346,36 +1485,81 @@ function DetalleCliente() {
               />
             )}
 
-            {cliente.contactos?.length === 0 ? (
-              <p>No hay contactos.</p>
+            {!cliente.contactos?.length ? (
+              <div className="dash-vacio">
+                <FaAddressBook />
+                <span>No hay contactos.</span>
+              </div>
             ) : (
-              <table className="table table-bordered table-striped">
-                <thead className="table-dark">
+              <div className="docs-lista">
+              <table className="table align-middle docs-tabla">
+                <thead>
                   <tr>
-                    <th>Nombre</th>
+                    <th>Contacto</th>
                     <th>Correo</th>
-                    <th>Teléfono Ofi</th>
-                    <th>Ext</th>
-                    <th>Celular</th>
-                    <th>Área</th>
-                    <th>Puesto</th>
-                    <th>Acciones</th>
+                    <th>Teléfonos</th>
+                    <th className="text-end">Acciones</th>
                   </tr>
                 </thead>
                 <tbody>
                   {cliente.contactos.map((c) => (
                     <tr key={c.id}>
-                      <td>{c.nombreContacto}</td>
-                      <td>{c.correoContacto}</td>
-                      <td>{c.numeroOficina}</td>
-                      <td>{c.ext}</td>
-                      <td>{c.telefonoContacto}</td>
-                      <td>{c.area}</td>
-                      <td>{c.puesto}</td>
                       <td>
+                        <div className="docs-nombre">
+                          <span className="contacto-avatar">
+                            {iniciales(c.nombreContacto)}
+                          </span>
+                          <div style={{ minWidth: 0 }}>
+                            <div className="fw-semibold text-break">{c.nombreContacto}</div>
+                            {(c.puesto || c.area) && (
+                              <div className="contacto-cargo">
+                                {c.puesto}
+                                {c.puesto && c.area && <span className="contacto-sep">·</span>}
+                                {c.area}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </td>
+                      <td>
+                        {c.correoContacto ? (
+                          <a className="contacto-dato" href={`mailto:${c.correoContacto}`}>
+                            <FaEnvelope />
+                            <span className="text-break">{c.correoContacto}</span>
+                          </a>
+                        ) : (
+                          <span className="text-muted">—</span>
+                        )}
+                      </td>
+                      <td>
+                        <div className="contacto-telefonos">
+                          {c.numeroOficina && (
+                            <a className="contacto-dato" href={`tel:${c.numeroOficina}`} title="Teléfono de oficina">
+                              <FaPhoneAlt />
+                              <span>
+                                {c.numeroOficina}
+                                {c.ext && <span className="contacto-ext">ext. {c.ext}</span>}
+                              </span>
+                            </a>
+                          )}
+                          {c.telefonoContacto && (
+                            <a className="contacto-dato" href={`tel:${c.telefonoContacto}`} title="Celular">
+                              <FaMobileAlt />
+                              <span>{c.telefonoContacto}</span>
+                            </a>
+                          )}
+                          {!c.numeroOficina && !c.telefonoContacto && (
+                            <span className="text-muted">—</span>
+                          )}
+                        </div>
+                      </td>
+                      <td>
+                        <div className="docs-acciones">
                         {permisoModulo("/clientes")?.puedeEliminar && (
                           <button
-                            className="btn btn-sm btn-danger"
+                            className="btn btn-sm btn-outline-danger explorador-btn-icono"
+                            title="Eliminar contacto"
+                            aria-label="Eliminar contacto"
                             onClick={async () => {
                               const confirm = await Swal.fire({
                                 title: "Eliminar contacto",
@@ -1408,14 +1592,16 @@ function DetalleCliente() {
                               }
                             }}
                           >
-                            🗑 Eliminar
+                            <FaTrashAlt />
                           </button>
                         )}
+                        </div>
                       </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
+              </div>
             )}
           </div>
         </>
@@ -1617,51 +1803,81 @@ function DetalleCliente() {
 
           {/* DOCUMENTOS SUBIDOS */}
           <div className="card p-3 mb-4">
-            <h5>Documentos Subidos</h5>
+            <div className="d-flex justify-content-between align-items-center mb-3">
+              <h5 className="mb-0">Documentos Subidos</h5>
+              {cliente.documentos?.length > 0 && (
+                <span className="dash-chip">{cliente.documentos.length} documentos</span>
+              )}
+            </div>
 
-            {cliente.documentos?.length === 0 ? (
-              <p>No hay documentos.</p>
+            {!cliente.documentos?.length ? (
+              <div className="dash-vacio">
+                <FaFolderOpen />
+                <span>No hay documentos.</span>
+              </div>
             ) : (
-              <table className="table table-bordered table-striped">
-                <thead className="table-dark">
+              <div className="docs-lista">
+              <table className="table align-middle docs-tabla">
+                <thead>
                   <tr>
                     <th>Documento</th>
                     <th>Vencimiento</th>
                     <th>Estado</th>
-                    <th>Acciones</th>
+                    <th className="text-end">Acciones</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {cliente.documentos.map((d) => (
+                  {cliente.documentos.map((d) => {
+                    const venc = estadoVencimiento(d.fechaVencimiento);
+                    const archivo = tipoArchivo(d.rutaDocumento);
+                    return (
                     <tr key={d.id}>
-                      <td className="fw-semibold">
-                        {d.nombreDocumento ?? `Documento ${d.idDocumento}`}
+                      <td>
+                        <div className="docs-nombre">
+                          <span className={`docs-icono docs-icono-${archivo.clase}`}>
+                            {archivo.icono}
+                          </span>
+                          <div style={{ minWidth: 0 }}>
+                            <div className="fw-semibold text-break">
+                              {d.nombreDocumento ?? `Documento ${d.idDocumento}`}
+                            </div>
+                            <small className="docs-ext">{archivo.ext}</small>
+                          </div>
+                        </div>
                       </td>
                       <td>
-                        {d.fechaVencimiento
-                          ? new Date(d.fechaVencimiento).toLocaleDateString()
-                          : "Sin vencimiento"}
+                        {d.fechaVencimiento ? (
+                          <div className="docs-vence">
+                            <span className="docs-fecha">
+                              {new Date(d.fechaVencimiento).toLocaleDateString()}
+                            </span>
+                            <span className={`docs-dias docs-dias-${venc.tono}`}>
+                              {venc.texto}
+                            </span>
+                          </div>
+                        ) : (
+                          <span className="text-muted">Sin vencimiento</span>
+                        )}
                       </td>
                       <td>
                         {d.noAplica ? (
-                          <span
-                            className="badge text-dark"
-                            style={{
-                              background: "rgb(223, 233, 138)",
-                              color: "white",
-                            }}
-                          >
-                            ⚠ Justificado
+                          <span className="estatus-pastilla estatus-borrador">
+                            <span className="estatus-punto" />
+                            Justificado
                           </span>
                         ) : (
-                          <span className="badge bg-success">
+                          <span className="estatus-pastilla estatus-activo">
+                            <span className="estatus-punto" />
                             Documento vigente
                           </span>
                         )}
                       </td>
                       <td>
+                        <div className="docs-acciones">
                         <button
-                          className="btn btn-sm btn-primary me-2"
+                          className="btn btn-sm btn-primary explorador-btn-icono"
+                          title="Ver documento"
+                          aria-label="Ver documento"
                           onClick={() => {
                             const url = `${api.defaults.baseURL}/documentos/ver?ruta=${encodeURIComponent(d.rutaDocumento)}`;
 
@@ -1687,46 +1903,82 @@ function DetalleCliente() {
                             }
                           }}
                         >
-                          Ver
+                          <FaEye />
                         </button>
                         <a
-                          className="btn btn-sm btn-dark me-2"
+                          className="btn btn-sm btn-outline-secondary explorador-btn-icono"
                           href={`${api.defaults.baseURL}/altas/clientes/documentos/descargar/${d.id}`}
                           target="_blank"
                           rel="noopener noreferrer"
+                          title="Descargar"
+                          aria-label="Descargar"
                         >
-                          Descargar
+                          <FaDownload />
                         </a>
+
+                        <button
+                          className="btn btn-sm btn-outline-secondary explorador-btn-icono"
+                          onClick={() => verHistorialDocumento(d.idDocumento)}
+                          title="Historial de versiones"
+                          aria-label="Historial de versiones"
+                        >
+                          <FaHistory />
+                        </button>
 
                         {!modoEdicion &&
                           permisoModulo("/clientes")?.puedeEditar && (
                             <button
-                              className="btn btn-sm btn-danger"
+                              className="btn btn-sm btn-outline-danger explorador-btn-icono"
                               onClick={() => eliminarDocumento(d.id)}
+                              title="Eliminar"
+                              aria-label="Eliminar"
                             >
-                              Eliminar
+                              <FaTrashAlt />
                             </button>
                           )}
-                        <button
-                          className="btn btn-secondary btn-sm"
-                          onClick={() => verHistorialDocumento(d.idDocumento)}
-                        >
-                          Historial
-                        </button>
+                        </div>
                       </td>
                     </tr>
-                  ))}
+                    );
+                  })}
                 </tbody>
               </table>
+              </div>
             )}
           </div>
 
           {/* DOCUMENTOS REQUERIDOS */}
+          {(() => {
+            const subidos = docsRequeridos.filter((d) => d.subido && !d.vencido).length;
+            const vencidos = docsRequeridos.filter((d) => d.vencido).length;
+            const pendientes = docsRequeridos.length - subidos - vencidos;
+            const pct = docsRequeridos.length
+              ? Math.round((subidos / docsRequeridos.length) * 100)
+              : 0;
+
+            return (
           <div className="card p-3">
-            <h5 className="mb-3">
-              Documentos Requeridos ({docsRequeridos.length})
-            </h5>
-            <div className="row">
+            <div className="d-flex justify-content-between align-items-center mb-3">
+              <h5 className="mb-0">
+                Documentos Requeridos ({docsRequeridos.length})
+              </h5>
+              <div className="docs-resumen">
+                <span className="docs-resumen-item docs-dias-ok"><FaCheckCircle /> {subidos}</span>
+                <span className="docs-resumen-item docs-dias-pendiente"><FaClock /> {pendientes}</span>
+                <span className="docs-resumen-item docs-dias-vencido"><FaTimesCircle /> {vencidos}</span>
+              </div>
+            </div>
+
+            {docsRequeridos.length > 0 && (
+              <div className="docs-progreso mb-3">
+                <div className="dash-barra">
+                  <div className="dash-barra-relleno dash-bg-success" style={{ width: `${pct}%` }} />
+                </div>
+                <small>{pct}% de los documentos requeridos están al día</small>
+              </div>
+            )}
+
+            <div className="docs-requeridos">
               {docsRequeridos.map((doc) => {
                 let icono;
                 let color;
@@ -1745,26 +1997,19 @@ function DetalleCliente() {
                   estado = "Pendiente";
                 }
                 return (
-                  <div className="col-md-4 mb-3" key={doc.id}>
-                    <div className={`card border-${color}`}>
-                      <div className="card-body d-flex justify-content-between align-items-center">
-                        <div>
-                          <div className="fw-semibold">{doc.nombre}</div>
-                          <small className="text-muted">{estado}</small>
-                        </div>
-                        <div
-                          className={`text-${color}`}
-                          style={{ fontSize: "20px" }}
-                        >
-                          {icono}
-                        </div>
-                      </div>
+                  <div className={`docs-requerido docs-requerido-${color}`} key={doc.id}>
+                    <span className="docs-requerido-icono">{icono}</span>
+                    <div style={{ minWidth: 0 }}>
+                      <div className="fw-semibold text-break">{doc.nombre}</div>
+                      <small>{estado}</small>
                     </div>
                   </div>
                 );
               })}
             </div>
           </div>
+            );
+          })()}
         </>
       )}
       {/*TabHistorial*/}
@@ -1911,10 +2156,13 @@ function DetalleCliente() {
           className="modal fade show d-block"
           style={{ background: "rgba(0,0,0,0.5)" }}
         >
-          <div className="modal-dialog modal-lg">
+          <div className="modal-dialog modal-lg modal-dialog-scrollable">
             <div className="modal-content">
               <div className="modal-header">
-                <h5>Historial del documento</h5>
+                <div className="d-flex align-items-center gap-3">
+                  <span className="explorador-modal-icono dash-tono-primary"><FaHistory /></span>
+                  <h5 className="mb-0">Historial del documento</h5>
+                </div>
 
                 <button
                   className="btn-close"
@@ -1923,7 +2171,8 @@ function DetalleCliente() {
               </div>
 
               <div className="modal-body">
-                <table className="table">
+                <div className="docs-lista">
+                <table className="table align-middle docs-tabla">
                   <thead>
                     <tr>
                       <th>Versión</th>
@@ -1937,7 +2186,7 @@ function DetalleCliente() {
                   <tbody>
                     {historialDocs.map((doc, index) => (
                       <tr key={doc.id}>
-                        <td>v{historialDocs.length - index}</td>
+                        <td><span className="explorador-version">v{historialDocs.length - index}</span>{index === 0 && <span className="docs-actual">Actual</span>}</td>
 
                         <td>{new Date(doc.creadoEn).toLocaleDateString()}</td>
 
@@ -1953,16 +2202,17 @@ function DetalleCliente() {
 
                         <td>
                           <button
-                            className="btn btn-primary btn-sm"
+                            className="btn btn-outline-primary btn-sm dash-btn-tabla"
                             onClick={() => descargarDocumento(doc.id)}
                           >
-                            Descargar
+                            <FaDownload /> Descargar
                           </button>
                         </td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
+                </div>
               </div>
             </div>
           </div>

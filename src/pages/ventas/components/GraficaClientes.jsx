@@ -86,7 +86,7 @@ export default function GraficaClientes({clientesAnuales}) {
           Clientes registrados anualmente
         </h6>
 
-        <div style={{ height: "260px" }}>
+        <div style={{ position: "relative", width: "100%", height: "260px" }}>
           <Bar data={data} options={options} />
         </div>
       </div>

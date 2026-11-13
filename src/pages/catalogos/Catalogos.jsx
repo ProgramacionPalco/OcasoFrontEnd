@@ -12,7 +12,7 @@ function Catalogos() {
             <div className="row">
 
                 {/* Documentos */}
-                <div className="col-md-3">
+                <div className="col-12 col-sm-6 col-md-3 mb-3">
                     <Link to="/catalogos/documentos" className="text-decoration-none text-dark">
                         <div className="card catalog-card text-center p-4 shadow-sm">
                             <div className="catalog-icon mb-3">
@@ -24,7 +24,7 @@ function Catalogos() {
                 </div>
 
                 {/* Empresas */}
-                <div className="col-md-3">
+                <div className="col-12 col-sm-6 col-md-3 mb-3">
                     <Link to="/catalogos/empresas" className="text-decoration-none text-dark">
                         <div className="card catalog-card text-center p-4 shadow-sm">
                             <div className="catalog-icon mb-3">
@@ -36,7 +36,7 @@ function Catalogos() {
                 </div>
 
                 {/* Ejecutivos */}
-                <div className="col-md-3">
+                <div className="col-12 col-sm-6 col-md-3 mb-3">
                     <Link to="/catalogos/ejecutivos" className="text-decoration-none text-dark">
                         <div className="card catalog-card text-center p-4 shadow-sm">
                             <div className="catalog-icon mb-3">
@@ -48,7 +48,7 @@ function Catalogos() {
                 </div>
 
                 {/* Ejecutivos de ventas */}
-                <div className="col-md-3">
+                <div className="col-12 col-sm-6 col-md-3 mb-3">
                     <Link to="/catalogos/ventas" className="text-decoration-none text-dark">
                         <div className="card catalog-card text-center p-4 shadow-sm">
                             <div className="catalog-icon mb-3">

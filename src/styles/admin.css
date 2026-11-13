@@ -536,3 +536,20 @@
     flex: 1;
   }
 }
+.proveedor-select {
+    width: 100%;
+}
+
+.proveedor-select__control {
+    min-height: 38px !important;
+    border-color: #dee2e6 !important;
+    box-shadow: none !important;
+}
+
+.proveedor-select__control:hover {
+    border-color: #86b7fe !important;
+}
+
+.proveedor-select__menu {
+    z-index: 1050 !important;
+}

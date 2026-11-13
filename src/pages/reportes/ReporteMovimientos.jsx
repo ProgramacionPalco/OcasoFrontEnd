@@ -6,7 +6,11 @@ import {
     FaSearch,
     FaFileAlt,
     FaUser,
-    FaAddressBook
+    FaAddressBook,
+    FaHistory,
+    FaCalendarAlt,
+    FaChevronLeft,
+    FaChevronRight
 } from "react-icons/fa";
 
 function ReporteMovimientos(){
@@ -86,16 +90,16 @@ function ReporteMovimientos(){
         switch(tipo){
 
             case "documento":
-                return "bg-success";
+                return "dash-tono-success";
 
             case "cliente":
-                return "bg-primary";
+                return "dash-tono-primary";
 
             case "contacto":
-                return "bg-warning text-dark";
+                return "dash-tono-warning";
 
             default:
-                return "bg-secondary";
+                return "dash-tono-secondary";
 
         }
 
@@ -121,213 +125,274 @@ function ReporteMovimientos(){
 
     };
 
+    const buscar = (e)=>{
+        e?.preventDefault();
+        setPage(1);
+        cargarMovimientos();
+    };
+
+    const fechaCorta = (valor)=>
+        valor
+            ? new Date(valor).toLocaleDateString("es-MX", { day:"2-digit", month:"short", year:"numeric" })
+            : "—";
+
+    const horaCorta = (valor)=>
+        valor
+            ? new Date(valor).toLocaleTimeString("es-MX", { hour:"2-digit", minute:"2-digit" })
+            : "";
+
+    const inicial = (texto)=> (texto || "?").trim().charAt(0).toUpperCase();
+
+    const conteoTipo = (tipo)=> movimientos.filter((m)=> m.tipo === tipo).length;
+
+    const KPIS = [
+        { label:"Movimientos", valor:movimientos.length, pie:`Página ${page}`, icono:<FaHistory />, tono:"primary" },
+        { label:"Documentos", valor:conteoTipo("documento"), pie:"Cargas y cambios", icono:<FaFileAlt />, tono:"success" },
+        { label:"Clientes", valor:conteoTipo("cliente"), pie:"Altas y ediciones", icono:<FaUser />, tono:"info" },
+        { label:"Contactos", valor:conteoTipo("contacto"), pie:"Altas y bajas", icono:<FaAddressBook />, tono:"warning" },
+    ];
+
     return(
 
-        <div className="container-fluid">
+        <div className="container-fluid dash">
 
-            <div className="card shadow-sm border-0">
+            {/* ========================= */}
+            {/* ENCABEZADO */}
+            {/* ========================= */}
 
-                <div className="card-body">
+            <div className="dash-hero mb-4">
+                <div className="dash-hero-texto">
+                    <span className="dash-eyebrow">Reportes</span>
+                    <h2 className="dash-titulo">Reporte de movimientos</h2>
+                    <div className="dash-contexto">
+                        <span><FaHistory /> Bitácora de cambios en clientes, contactos y documentos</span>
+                    </div>
+                </div>
+            </div>
 
-                    {/* HEADER */}
+            {/* ========================= */}
+            {/* INDICADORES */}
+            {/* ========================= */}
 
-                    <div className="row align-items-center mb-4">
-
-                        <div className="col-md-4">
-
-                            <div className="input-group shadow-sm">
-
-                                <span className="input-group-text bg-white">
-                                    <FaSearch />
-                                </span>
-
-                                <input
-                                    type="text"
-                                    className="form-control"
-                                    placeholder="Buscar cliente, usuario o movimiento..."
-                                    value={busqueda}
-                                    onChange={(e)=>setBusqueda(e.target.value)}
-                                />
-
+            <div className="row g-3 mb-4">
+                {KPIS.map((k)=>(
+                    <div className="col-6 col-lg-3" key={k.label}>
+                        <div className="dash-kpi h-100">
+                            <div className="dash-kpi-top">
+                                <span className="dash-kpi-label">{k.label}</span>
+                                <span className={`dash-kpi-icono dash-tono-${k.tono}`}>{k.icono}</span>
                             </div>
-
+                            <div className="dash-kpi-valor">
+                                {loading ? "—" : k.valor.toLocaleString("es-MX")}
+                            </div>
+                            <div className="dash-kpi-pie">{k.pie}</div>
                         </div>
+                    </div>
+                ))}
+            </div>
 
-                        <div className="col-md-4 text-center">
+            {/* ========================= */}
+            {/* LISTADO */}
+            {/* ========================= */}
 
-                            <h3 className="fw-bold mb-0">
-                                Reporte de Movimientos
-                            </h3>
+            <div className="dash-panel p-0 overflow-hidden mb-4">
 
+                {/* FILTROS */}
+
+                <form className="mv-filtros" onSubmit={buscar}>
+
+                    <div className="mv-filtro mv-filtro-buscar">
+                        <label className="form-label">Buscar</label>
+                        <div className="explorador-buscar">
+                            <FaSearch />
+                            <input
+                                type="text"
+                                placeholder="Cliente, usuario o movimiento..."
+                                value={busqueda}
+                                onChange={(e)=>setBusqueda(e.target.value)}
+                                aria-label="Buscar movimiento"
+                            />
                         </div>
-
-                        <div className="col-md-4 text-end">
-
-                            <span className="badge bg-dark fs-6 px-3 py-2">
-                                {movimientos.length} movimientos
-                            </span>
-
-                        </div>
-
                     </div>
 
-                    {/* FILTROS */}
-
-                    <div className="row mb-4">
-
-                        <div className="col-md-3">
-
-                            <label className="form-label">
-                                Fecha inicio
-                            </label>
-
-                            <input
-                                type="date"
-                                className="form-control"
-                                value={fechaInicio}
-                                onChange={(e)=>setFechaInicio(e.target.value)}
-                            />
-
-                        </div>
-
-                        <div className="col-md-3">
-
-                            <label className="form-label">
-                                Fecha fin
-                            </label>
-
-                            <input
-                                type="date"
-                                className="form-control"
-                                value={fechaFin}
-                                onChange={(e)=>setFechaFin(e.target.value)}
-                            />
-
-                        </div>
-
-                        <div className="col-md-2 d-flex align-items-end">
-
-                            <button
-                                className="btn btn-primary w-100"
-                                onClick={()=>{
-                                    setPage(1);
-                                    cargarMovimientos();
-                                }}
-                            >
-                                Buscar
-                            </button>
-
-                        </div>
-
+                    <div className="mv-filtro">
+                        <label className="form-label">
+                            <FaCalendarAlt /> Fecha inicio
+                        </label>
+                        <input
+                            type="date"
+                            className="form-control"
+                            value={fechaInicio}
+                            onChange={(e)=>setFechaInicio(e.target.value)}
+                        />
                     </div>
 
-                    {/* TABLA */}
+                    <div className="mv-filtro">
+                        <label className="form-label">
+                            <FaCalendarAlt /> Fecha fin
+                        </label>
+                        <input
+                            type="date"
+                            className="form-control"
+                            value={fechaFin}
+                            onChange={(e)=>setFechaFin(e.target.value)}
+                        />
+                    </div>
 
-                    <div className="table-responsive">
+                    <div className="mv-filtro mv-filtro-boton">
+                        <button
+                            type="submit"
+                            className="btn btn-primary np-btn w-100"
+                            disabled={loading}
+                        >
+                            {loading
+                                ? <span className="spinner-border spinner-border-sm" role="status" />
+                                : <FaSearch />}
+                            Buscar
+                        </button>
+                    </div>
 
-                        <table className="table table-hover align-middle">
+                </form>
 
-                            <thead className="table-dark">
+                {loading ? (
 
-                                <tr>
+                    <div className="dash-vacio">
+                        <div className="spinner-border text-primary" role="status" />
+                        <span>Cargando movimientos…</span>
+                    </div>
 
-                                    <th>Fecha</th>
-                                    <th>Hora</th>
-                                    <th>Usuario</th>
-                                    <th>Cliente</th>
-                                    <th>Tipo</th>
-                                    <th>Movimiento</th>
+                ) : movimientos.length === 0 ? (
 
-                                </tr>
+                    <div className="dash-vacio">
+                        <FaHistory />
+                        <span>No se encontraron movimientos.</span>
+                    </div>
 
-                            </thead>
+                ) : (
+                    <>
+                        {/* TABLA (escritorio) */}
 
-                            <tbody>
-                                {movimientos.map((m) => (
+                        <div className="table-responsive d-none d-md-block">
 
-                                    <tr key={m.id}>
+                            <table className="table align-middle docs-tabla no-cards">
 
-                                        <td>
-                                            {
-                                                new Date(m.fecha)
-                                                    .toLocaleDateString()
-                                            }
-                                        </td>
+                                <thead>
 
-                                        <td>
-                                            {
-                                                new Date(m.fecha)
-                                                    .toLocaleTimeString()
-                                            }
-                                        </td>
+                                    <tr>
 
-                                        <td>
-                                            <strong>
-                                                {m.usuario}
-                                            </strong>
-                                        </td>
-
-                                        <td>
-                                            {m.cliente}
-                                        </td>
-
-                                        <td>
-                                            <span className={"badge " + badgeTipo(m.tipo)}>
-
-                                                <span className="me-1">
-                                                    {iconoTipo(m.tipo)}
-                                                </span>
-
-                                                {m.tipo}
-
-                                            </span>
-
-                                        </td>
-
-                                        <td>
-                                            {m.texto}
-                                        </td>
+                                        <th>Fecha</th>
+                                        <th>Usuario</th>
+                                        <th>Cliente</th>
+                                        <th>Tipo</th>
+                                        <th>Movimiento</th>
 
                                     </tr>
 
-                                ))}
+                                </thead>
 
-                            </tbody>
+                                <tbody>
+                                    {movimientos.map((m) => (
 
-                        </table>
-                        <div className="d-flex justify-content-center mt-4 gap-2">
+                                        <tr key={m.id}>
 
-                            <button
-                                className="btn btn-outline-secondary"
-                                disabled={page === 1}
-                                onClick={()=>setPage(page - 1)}
-                            >
-                                Anterior
-                            </button>
+                                            <td>
+                                                <div className="mv-fecha">
+                                                    <span>{fechaCorta(m.fecha)}</span>
+                                                    <small>{horaCorta(m.fecha)}</small>
+                                                </div>
+                                            </td>
 
-                            <span className="d-flex align-items-center px-3">
-                                Página {page}
-                            </span>
+                                            <td>
+                                                <div className="cliente-nombre">
+                                                    <span className="cliente-avatar mv-avatar">{inicial(m.usuario)}</span>
+                                                    <span className="text-nowrap">{m.usuario}</span>
+                                                </div>
+                                            </td>
 
-                            <button
-                                className="btn btn-outline-secondary"
-                                disabled={movimientos.length < pageSize}
-                                onClick={()=>setPage(page + 1)}
-                            >
-                                Siguiente
-                            </button>
+                                            <td className="mv-cliente">
+                                                {m.cliente || <span className="text-muted">—</span>}
+                                            </td>
+
+                                            <td>
+                                                <span className={"mv-tipo " + badgeTipo(m.tipo)}>
+                                                    {iconoTipo(m.tipo)}
+                                                    {m.tipo}
+                                                </span>
+                                            </td>
+
+                                            <td className="mv-texto">
+                                                {m.texto}
+                                            </td>
+
+                                        </tr>
+
+                                    ))}
+
+                                </tbody>
+
+                            </table>
 
                         </div>
+
+                        {/* LÍNEA DE TIEMPO (celular) */}
+
+                        <div className="d-md-none p-3">
+                            <ul className="mv-timeline">
+                                {movimientos.map((m)=>(
+                                    <li key={m.id} className="mv-evento">
+                                        <span className={"mv-evento-icono " + badgeTipo(m.tipo)}>
+                                            {iconoTipo(m.tipo)}
+                                        </span>
+                                        <div className="mv-evento-cuerpo">
+                                            <div className="mv-evento-top">
+                                                <span className="fw-semibold">{m.usuario}</span>
+                                                <span className="mv-evento-fecha">
+                                                    {fechaCorta(m.fecha)} · {horaCorta(m.fecha)}
+                                                </span>
+                                            </div>
+                                            {m.cliente && <div className="mv-evento-cliente">{m.cliente}</div>}
+                                            <div className="mv-evento-texto">{m.texto}</div>
+                                        </div>
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+                    </>
+                )}
+
+                {/* PAGINACIÓN */}
+
+                <div className="rd-paginacion">
+
+                    <span className="listado-contador">
+                        <strong>{movimientos.length.toLocaleString("es-MX")}</strong> movimientos en esta página
+                    </span>
+
+                    <div className="d-flex align-items-center gap-2">
+
+                        <button
+                            className="btn btn-outline-secondary dash-btn-tabla"
+                            disabled={page === 1}
+                            onClick={()=>setPage(page - 1)}
+                            aria-label="Página anterior"
+                        >
+                            <FaChevronLeft /> <span className="d-none d-sm-inline">Anterior</span>
+                        </button>
+
+                        <span className="rd-pagina">
+                            Página {page}
+                        </span>
+
+                        <button
+                            className="btn btn-outline-secondary dash-btn-tabla"
+                            disabled={movimientos.length < pageSize}
+                            onClick={()=>setPage(page + 1)}
+                            aria-label="Página siguiente"
+                        >
+                            <span className="d-none d-sm-inline">Siguiente</span> <FaChevronRight />
+                        </button>
 
                     </div>
-
-                    {!loading && movimientos.length === 0 && (
-
-                        <div className="alert alert-warning mt-3 mb-0">
-                            No se encontraron movimientos.
-                        </div>
-
-                    )}
 
                 </div>
 

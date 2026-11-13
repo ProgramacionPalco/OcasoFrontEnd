@@ -1,8 +1,30 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import DataTable from "react-data-table-component";
+import {
+    FaPlus,
+    FaSearch,
+    FaEye,
+    FaClipboardList,
+    FaHourglassHalf,
+    FaShoppingCart,
+    FaTruck,
+    FaCheckCircle,
+    FaTimesCircle
+} from "react-icons/fa";
 
 import { obtenerMisRequisiciones } from "../../services/api";
+import estilosTabla from "../../components/estilosTabla";
+
+// Tarjetas de filtro rápido (usan el mismo filtro de estado del select)
+const FILTROS_ESTADO = [
+    { valor: "Todos", texto: "Todas", icono: <FaClipboardList />, tono: "primary" },
+    { valor: "Pendiente aprobación", texto: "Por aprobar", icono: <FaHourglassHalf />, tono: "warning" },
+    { valor: "Por comprar", texto: "Por comprar", icono: <FaShoppingCart />, tono: "purple" },
+    { valor: "Pendiente recepción", texto: "En recepción", icono: <FaTruck />, tono: "info" },
+    { valor: "Entregada", texto: "Entregadas", icono: <FaCheckCircle />, tono: "success" },
+    { valor: "Rechazada", texto: "Rechazadas", icono: <FaTimesCircle />, tono: "danger" }
+];
 
 export default function MisRequisiciones() {
 
@@ -97,31 +119,31 @@ export default function MisRequisiciones() {
         switch (estado) {
 
             case "Entregada":
-                return "badge bg-success";
+                return "estatus-pastilla dash-tono-success";
 
             case "Lista para entregar":
-                return "badge bg-success";
+                return "estatus-pastilla dash-tono-success";
 
             case "Recepción parcial":
-                return "badge bg-warning text-dark";
+                return "estatus-pastilla dash-tono-warning";
 
             case "Pendiente recepción":
-                return "badge bg-info text-dark";
+                return "estatus-pastilla dash-tono-info";
 
             case "Por comprar":
-                return "badge bg-primary";
+                return "estatus-pastilla dash-tono-purple";
 
             case "Pendiente aprobación":
-                return "badge bg-warning text-dark";
+                return "estatus-pastilla dash-tono-warning";
 
             case "Rechazada":
-                return "badge bg-danger";
+                return "estatus-pastilla dash-tono-danger";
 
             case "Cancelada":
-                return "badge bg-secondary";
+                return "estatus-pastilla dash-tono-secondary";
 
             default:
-                return "badge bg-secondary";
+                return "estatus-pastilla dash-tono-secondary";
         }
     };
 
@@ -160,6 +182,21 @@ export default function MisRequisiciones() {
             );
         });
 
+    const conteoEstado = (valor) =>
+        valor === "Todos"
+            ? requisiciones.length
+            : requisiciones.filter((r) => obtenerEstado(r) === valor).length;
+
+    const formatoMoneda = (valor) =>
+        Number(valor ?? 0)
+            .toLocaleString(
+                "es-MX",
+                {
+                    style: "currency",
+                    currency: "MXN"
+                }
+            );
+
 
     // ==============================
     // COLUMNAS
@@ -170,13 +207,21 @@ export default function MisRequisiciones() {
         {
             name: "REQ",
             selector: row => row.id,
+            cell: row => (
+                <span className="mr-folio">REQ-{row.id}</span>
+            ),
             sortable: true,
-            width: "100px"
+            width: "120px"
         },
 
         {
             name: "Descripción",
             selector: row => row.descripcion,
+            cell: row => (
+                <span className="mr-descripcion" title={row.descripcion}>
+                    {row.descripcion || <span className="text-muted">Sin descripción</span>}
+                </span>
+            ),
             sortable: true,
             grow: 2
         },
@@ -184,14 +229,24 @@ export default function MisRequisiciones() {
         {
             name: "Categoría",
             selector: row => row.categoria,
+            cell: row => (
+                row.categoria
+                    ? <span className="mr-categoria">{row.categoria}</span>
+                    : <span className="text-muted">—</span>
+            ),
             sortable: true
         },
 
         {
             name: "Fecha",
-            selector: row =>
+            selector: row => row.fecha,
+            format: row =>
                 new Date(row.fecha)
-                    .toLocaleDateString("es-MX"),
+                    .toLocaleDateString("es-MX", {
+                        day: "2-digit",
+                        month: "short",
+                        year: "numeric"
+                    }),
             sortable: true
         },
 
@@ -199,18 +254,12 @@ export default function MisRequisiciones() {
             name: "Total",
             selector: row => row.total,
             cell: row => (
-                <strong>
-                    {Number(row.total ?? 0)
-                        .toLocaleString(
-                            "es-MX",
-                            {
-                                style: "currency",
-                                currency: "MXN"
-                            }
-                        )}
+                <strong className="mr-total">
+                    {formatoMoneda(row.total)}
                 </strong>
             ),
-            sortable: true
+            sortable: true,
+            right: true
         },
 
         {
@@ -228,10 +277,12 @@ export default function MisRequisiciones() {
                             )
                         }
                     >
+                        <span className="estatus-punto" />
                         {estadoActual}
                     </span>
                 );
-            }
+            },
+            minWidth: "190px"
         },
 
         {
@@ -239,18 +290,19 @@ export default function MisRequisiciones() {
             cell: row => (
 
                 <button
-                    className="btn btn-outline-primary btn-sm"
+                    className="btn dash-btn-tabla dash-btn-suave"
                     onClick={() =>
                         navigate(
                             `/compras/detalle/${row.id}`
                         )
                     }
                 >
-                    Ver
+                    <FaEye /> Ver
                 </button>
 
             ),
-            width: "100px"
+            width: "110px",
+            right: true
         }
 
     ];
@@ -258,51 +310,75 @@ export default function MisRequisiciones() {
 
     return (
 
-        <div className="container-fluid">
+        <div className="container-fluid dash">
 
-            <div className="card shadow-sm">
+            {/* ========================= */}
+            {/* ENCABEZADO */}
+            {/* ========================= */}
 
-                <div className="card-body">
+            <div className="dash-hero mb-4">
 
-                    <div className="d-flex justify-content-between align-items-center mb-4">
-
-                        <div>
-
-                            <h3 className="mb-1">
-                                Mis Requisiciones
-                            </h3>
-
-                            <span className="text-muted">
-                                Consulta y seguimiento de tus requisiciones
-                            </span>
-
-                        </div>
-
-                        <button
-                            className="btn btn-primary"
-                            onClick={() =>
-                                navigate("/compras/nueva")
-                            }
-                        >
-                            Nueva requisición
-                        </button>
-
+                <div className="dash-hero-texto">
+                    <span className="dash-eyebrow">Compras</span>
+                    <h2 className="dash-titulo">Mis requisiciones</h2>
+                    <div className="dash-contexto">
+                        <span>
+                            <FaClipboardList /> Consulta y seguimiento de tus requisiciones
+                        </span>
                     </div>
+                </div>
 
+                <button
+                    className="btn btn-light dash-btn-hero"
+                    onClick={() =>
+                        navigate("/compras/nueva")
+                    }
+                >
+                    <FaPlus />
+                    Nueva requisición
+                </button>
 
-                    {/* FILTROS */}
+            </div>
 
-                    <div className="row g-3 mb-4">
+            {/* ========================= */}
+            {/* FILTRO RÁPIDO POR ESTADO */}
+            {/* ========================= */}
 
-                        <div className="col-md-8">
+            <div className="row g-3 mb-4">
+                {FILTROS_ESTADO.map((f) => (
+                    <div className="col-6 col-md-4 col-xl-2" key={f.valor}>
+                        <button
+                            type="button"
+                            className={`filtro-kpi ${estado === f.valor ? "activo" : ""}`}
+                            onClick={() => setEstado(f.valor)}
+                            aria-pressed={estado === f.valor}
+                        >
+                            <span className={`dash-kpi-icono dash-tono-${f.tono}`}>{f.icono}</span>
+                            <span className="filtro-kpi-texto">
+                                <span className="filtro-kpi-label">{f.texto}</span>
+                                <span className="filtro-kpi-valor">
+                                    {cargando ? "—" : conteoEstado(f.valor).toLocaleString("es-MX")}
+                                </span>
+                            </span>
+                        </button>
+                    </div>
+                ))}
+            </div>
 
-                            <label className="form-label">
-                                Buscar
-                            </label>
+            {/* ========================= */}
+            {/* LISTADO */}
+            {/* ========================= */}
 
+            <div className="dash-panel p-0 overflow-hidden mb-4">
+
+                <div className="listado-toolbar">
+
+                    <div className="d-flex flex-wrap gap-2 flex-grow-1">
+
+                        <div className="explorador-buscar listado-buscar">
+                            <FaSearch />
                             <input
                                 type="text"
-                                className="form-control"
                                 placeholder="REQ, descripción o categoría..."
                                 value={busqueda}
                                 onChange={(e) =>
@@ -310,87 +386,102 @@ export default function MisRequisiciones() {
                                         e.target.value
                                     )
                                 }
+                                aria-label="Buscar requisición"
                             />
-
                         </div>
 
+                        <select
+                            className="form-select listado-select"
+                            value={estado}
+                            onChange={(e) =>
+                                setEstado(
+                                    e.target.value
+                                )
+                            }
+                            aria-label="Filtrar por estado"
+                        >
 
-                        <div className="col-md-4">
+                            <option value="Todos">Todos los estados</option>
 
-                            <label className="form-label">
-                                Estado
-                            </label>
+                            <option value="Pendiente aprobación">
+                                Pendiente aprobación
+                            </option>
 
-                            <select
-                                className="form-select"
-                                value={estado}
-                                onChange={(e) =>
-                                    setEstado(
-                                        e.target.value
-                                    )
-                                }
-                            >
+                            <option value="Por comprar">
+                                Por comprar
+                            </option>
 
-                                <option value="Todos">Todos</option>
+                            <option value="Pendiente recepción">
+                                Pendiente recepción
+                            </option>
 
-                                <option value="Pendiente aprobación">
-                                    Pendiente aprobación
-                                </option>
+                            <option value="Recepción parcial">
+                                Recepción parcial
+                            </option>
 
-                                <option value="Por comprar">
-                                    Por comprar
-                                </option>
+                            <option value="Lista para entregar">
+                                Lista para entregar
+                            </option>
 
-                                <option value="Pendiente recepción">
-                                    Pendiente recepción
-                                </option>
+                            <option value="Entregada">
+                                Entregada
+                            </option>
 
-                                <option value="Recepción parcial">
-                                    Recepción parcial
-                                </option>
+                            <option value="Rechazada">
+                                Rechazada
+                            </option>
 
-                                <option value="Lista para entregar">
-                                    Lista para entregar
-                                </option>
+                            <option value="Cancelada">
+                                Cancelada
+                            </option>
 
-                                <option value="Entregada">
-                                    Entregada
-                                </option>
-
-                                <option value="Rechazada">
-                                    Rechazada
-                                </option>
-
-                                <option value="Cancelada">
-                                    Cancelada
-                                </option>
-
-                            </select>
-
-                        </div>
+                        </select>
 
                     </div>
 
-
-                    <DataTable
-                        columns={columnas}
-                        data={requisicionesFiltradas}
-                        progressPending={cargando}
-                        pagination
-                        paginationPerPage={10}
-                        paginationRowsPerPageOptions={[
-                            10,
-                            25,
-                            50
-                        ]}
-                        highlightOnHover
-                        striped
-                        responsive
-                        persistTableHead
-                        noDataComponent="No tienes requisiciones registradas."
-                    />
+                    <span className="listado-contador">
+                        Mostrando <strong>{requisicionesFiltradas.length.toLocaleString("es-MX")}</strong> de{" "}
+                        <strong>{requisiciones.length.toLocaleString("es-MX")}</strong>
+                    </span>
 
                 </div>
+
+                <DataTable
+                    columns={columnas}
+                    data={requisicionesFiltradas}
+                    progressPending={cargando}
+                    progressComponent={
+                        <div className="dash-vacio">
+                            <div className="spinner-border text-primary" role="status" />
+                            <span>Cargando requisiciones…</span>
+                        </div>
+                    }
+                    pagination
+                    paginationPerPage={10}
+                    paginationRowsPerPageOptions={[
+                        10,
+                        25,
+                        50
+                    ]}
+                    paginationComponentOptions={{
+                        rowsPerPageText: "Filas por página:",
+                        rangeSeparatorText: "de"
+                    }}
+                    highlightOnHover
+                    responsive
+                    persistTableHead
+                    customStyles={estilosTabla}
+                    noDataComponent={
+                        <div className="dash-vacio">
+                            <FaClipboardList />
+                            <span>
+                                {requisiciones.length
+                                    ? "Ninguna requisición coincide con los filtros."
+                                    : "No tienes requisiciones registradas."}
+                            </span>
+                        </div>
+                    }
+                />
 
             </div>
 
