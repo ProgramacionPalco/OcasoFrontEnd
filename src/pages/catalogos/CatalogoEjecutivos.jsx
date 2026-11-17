@@ -34,16 +34,33 @@ function CatalogoEjecutivos() {
         obtenerEjecutivos();
     },[]);
 
-    const guardarEjecutivo = async ()=>{
-        try{
-            await api.post("/catalogos/ejecutivos",nuevo);
+    const guardarEjecutivo = async () => {
+
+        if (!nuevo.nombre.trim() || !nuevo.correo.trim()) {
+            alert("Completa el nombre y correo del ejecutivo.");
+            return;
+        }
+
+        try {
+            const { data } = await api.post(
+                "/catalogos/ejecutivos",
+                nuevo
+            );
+
+            alert(data.mensaje || "Ejecutivo registrado correctamente.");
+
             setNuevo({
-                nombre:"",
-                correo:""
+                nombre: "",
+                correo: ""
             });
-            obtenerEjecutivos();
-        }catch{
-            alert("Error al guardar ejecutivo");
+
+            await obtenerEjecutivos();
+
+        } catch (error) {
+            alert(
+                error.response?.data?.mensaje ||
+                "Error al guardar ejecutivo."
+            );
         }
     };
 

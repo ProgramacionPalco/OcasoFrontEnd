@@ -22,7 +22,8 @@ import {
     FaCommentAlt,
     FaPaperclip,
     FaCloudUploadAlt,
-    FaFileAlt
+    FaFileAlt,
+    FaExclamationTriangle
 } from "react-icons/fa";
 
 export default function NuevaRequisicion() {
@@ -532,6 +533,22 @@ export default function NuevaRequisicion() {
                         ${formatoMonto(obtenerTotalRequisicion())}
                         <small>{form.tipocambio}</small>
                     </strong>
+                </div>
+            </div>
+
+            {/* ========================= */}
+            {/* AVISO DE VIGENCIA */}
+            {/* ========================= */}
+
+            <div className="nc-aviso nc-aviso-advertencia mb-4" role="alert">
+                <FaExclamationTriangle />
+                <div>
+                    <strong>Vigencia de la requisición: 6 meses</strong>
+                    <span>
+                        Si la requisición no ha sido aprobada dentro de los 6 meses posteriores a su
+                        registro, el sistema la dará de baja automáticamente. Dé seguimiento a su
+                        aprobación desde <b>Mis requisiciones</b>.
+                    </span>
                 </div>
             </div>
 

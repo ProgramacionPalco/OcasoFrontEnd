@@ -5162,6 +5162,25 @@ body > div > .rs__menu {
   color: var(--bs-secondary-color);
 }
 
+/* Variante de advertencia (ámbar) */
+.nc-aviso-advertencia {
+  border-color: rgba(var(--bs-warning-rgb), .45);
+  border-left: 4px solid var(--bs-warning);
+  background: var(--bs-warning-bg-subtle);
+}
+
+.nc-aviso-advertencia > svg {
+  color: var(--bs-warning);
+}
+
+.nc-aviso-advertencia strong {
+  color: var(--bs-warning-text-emphasis);
+}
+
+.nc-aviso-advertencia span {
+  color: var(--bs-body-color);
+}
+
 /* Contactos en móvil */
 .nc-contacto {
   display: flex;
