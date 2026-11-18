@@ -1068,6 +1068,9 @@ Tablas
     width: 256px !important;
     min-width: 256px !important;
     left: -256px;
+    /* El cajón debe quedar por encima del fondo oscuro (.sidebar-overlay, z-index 9998);
+       si queda debajo, cada toque cae en el fondo y cierra el menú */
+    z-index: 9999;
   }
 
   .sidebar.mobile-open {
