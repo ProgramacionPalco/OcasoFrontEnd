@@ -30,6 +30,7 @@ import ProspectosSeguimiento from "./pages/prospectos/ProspectosSeguimiento";
 import DashboardVentas from "./pages/ventas/DashboardVentas";
 
 import Aprobaciones from "./pages/compras/Aprobaciones";
+import Proveedores from "./pages/compras/Proveedores";
 import DetalleAprobacion from "./pages/compras/DetalleAprobacion";
 import DetalleOrdenCompra from "./pages/compras/DetalleOrdenCompra";
 import Recepciones from "./pages/compras/Recepciones";
@@ -122,6 +123,8 @@ function App() {
               <Route path="/compras/pendientes" element={<PendientesCompra />} />
 
               <Route path="/compras/aprobaciones" element={<Aprobaciones />} />
+
+              <Route path="/compras/proveedores" element={<Proveedores />} />
 
               <Route path="/compras/orden-compra/:id" element={<AdministrarOrdenesCompra />} />
 

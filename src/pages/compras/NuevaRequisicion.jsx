@@ -26,6 +26,14 @@ import {
     FaExclamationTriangle
 } from "react-icons/fa";
 
+// La API serializa en camelCase: "RFC" llega como "rfc". Se aceptan ambas formas.
+const rfcDe = (p) => p?.rfc ?? p?.RFC ?? "";
+
+const etiquetaProveedor = (p) => {
+    const rfc = rfcDe(p);
+    return `${p.razonSocial || p.nombre}${rfc ? ` | RFC: ${rfc}` : ""}${p.estatusRegistro === 1 ? " (Preregistro)" : ""}`;
+};
+
 export default function NuevaRequisicion() {
 
     const [empresas,setEmpresas]=useState([]);
@@ -331,7 +339,7 @@ export default function NuevaRequisicion() {
             // Identificar el proveedor recién registrado
             const proveedorNuevo = proveedoresRes.data.find(p =>
                 (datosProveedor.RFC &&
-                    p.RFC?.toUpperCase() === datosProveedor.RFC.toUpperCase()) ||
+                    rfcDe(p).toUpperCase() === datosProveedor.RFC.toUpperCase()) ||
                 (datosProveedor.razonSocial &&
                     p.razonSocial?.toUpperCase() === datosProveedor.razonSocial.toUpperCase()) ||
                 p.nombre?.toUpperCase() === datosProveedor.nombre.toUpperCase()
@@ -819,16 +827,16 @@ export default function NuevaRequisicion() {
                                 <Select
                                     options={proveedores.map(p => ({
                                         value: p.id,
-                                        label: `${p.razonSocial || p.nombre}${p.RFC ? ` | RFC: ${p.RFC}` : ""}${p.estatusRegistro === 1 ? " (Preregistro)" : ""}`,
+                                        label: etiquetaProveedor(p),
                                         nombre: p.nombre,
                                         razonSocial: p.razonSocial,
-                                        RFC: p.RFC
+                                        RFC: rfcDe(p)
                                     }))}
                                     value={
                                         proveedores
                                             .map(p => ({
                                                 value: p.id,
-                                                label: `${p.razonSocial || p.nombre}${p.RFC ? ` | RFC: ${p.RFC}` : ""}${p.estatusRegistro === 1 ? " (Preregistro)" : ""}`
+                                                label: etiquetaProveedor(p)
                                             }))
                                             .find(p => String(p.value) === String(proveedorSeleccionado)) || null
                                     }

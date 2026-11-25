@@ -17,7 +17,11 @@ import { useEffect } from "react";
 const EXCLUIR = ".no-cards, .productos-table";
 
 function textoEncabezado(el) {
-    return (el?.textContent || "").replace(/\s+/g, " ").trim();
+    return (el?.textContent || "")
+        // react-data-table-component agrega "▲"/"▼" como icono de ordenamiento
+        .replace(/[▲▼]/g, "")
+        .replace(/\s+/g, " ")
+        .trim();
 }
 
 function prepararTablaHtml(tabla) {

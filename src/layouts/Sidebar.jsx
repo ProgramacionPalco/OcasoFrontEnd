@@ -23,7 +23,8 @@ import {
    FaClipboardList,
    FaChartLine,
    FaFileInvoiceDollar,
-   FaClipboardCheck 
+   FaClipboardCheck,
+   FaTruck
 } from "react-icons/fa";
 
 function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobileOpen}){
@@ -464,12 +465,12 @@ function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobileOpen}){
         )}
 
                 {/**Sección de compras**/}
-        {(tienePermiso("/compras/dashboard") || tienePermiso("/compras/nueva") || tienePermiso("/compras/mis-requisiciones")
+        {(tienePermiso("/compras/dashboard") || tienePermiso("/compras/nueva") || tienePermiso("/compras/mis-requisiciones") || tienePermiso("/compras/proveedores")
         ) && !collapsed && (
           <li className="menu-section">Operación</li>
         )}
 
-        {(tienePermiso("/compras/dashboard") || tienePermiso("/compras/nueva") || tienePermiso("/compras/mis-requisiciones")
+        {(tienePermiso("/compras/dashboard") || tienePermiso("/compras/nueva") || tienePermiso("/compras/mis-requisiciones") || tienePermiso("/compras/proveedores")
         )
         && (
 
@@ -628,6 +629,31 @@ function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobileOpen}){
 
                                 {!collapsed &&
                                     "Mis requisiciones"
+                                }
+
+                            </NavLink>
+
+                        </li>
+
+                    )}
+
+                    {tienePermiso(
+                        "/compras/proveedores"
+                    ) && (
+
+                        <li>
+
+                            <NavLink
+                                to="/compras/proveedores"
+                                className="menu-link"
+                            >
+
+                                <FaTruck
+                                    className="icon"
+                                />
+
+                                {!collapsed &&
+                                    "Proveedores"
                                 }
 
                             </NavLink>
